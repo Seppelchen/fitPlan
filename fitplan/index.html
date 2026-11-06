@@ -801,7 +801,7 @@ function manualProduct(code,msg,pre){pre=pre||{};
       S.bc[code]={n,k:Math.round(k),p:Math.round((num($("mp").value)||0)*10)/10,kh:nn($("m_kh").value),zu:nn($("m_zu").value),fe:nn($("m_fe").value),bs:nn($("m_bs").value),u:$("mu").value,sq:sq>0?Math.round(sq):null,lastA:pre.lastA};save();productSheet(code)}})}
 
 /* ---------- Wasser ---------- */
-const HQ=[200,250,330,500];
+const HQ=[200,250,330,350,500];
 const waterSum=()=>day().h.reduce((a,h)=>a+h.ml,0);
 function renderWater(){const D=day(),G=S.g.ml,tot=waterSum();
   $("hc").textContent=fmt(tot)+" ml";$("hz").textContent="Ziel "+fmt(G)+" ml";
