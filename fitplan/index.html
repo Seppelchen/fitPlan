@@ -38,6 +38,7 @@ h2{font-size:16px;font-weight:600;margin:0 0 10px}
 .dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.15}.dc .big{font-size:24px}
 .dlr{display:flex;align-items:center;gap:2px;font-size:14px;padding:2px 0}.dlr span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dlr b{font-weight:600;font-variant-numeric:tabular-nums}
 .fi{flex:none;width:40px;height:40px;border-radius:10px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1}
+.st{margin:0;padding-left:22px}.st li{margin:0 0 6px;padding-left:2px}
 .chips.icp button{font-size:22px;padding:2px 9px;line-height:1.25}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px 0 0;vertical-align:0}
 .gh .m{font-weight:400}
@@ -141,7 +142,8 @@ ul.z{margin:0;padding-left:20px}
 <div class="chips" id="rec" style="margin:0"></div>
 </div>
 <div class="card">
-<div class="hd"><h2>Rezepte</h2><button class="pri" id="newR">＋ Neues Rezept</button></div>
+<div class="hd"><h2>Rezepte</h2><div style="display:flex;gap:6px"><button id="rman">Verwalten</button><button class="pri" id="newR">＋ Neu</button></div></div>
+<div id="rmb" style="display:none"></div>
 <div class="chips" id="rcats"></div>
 <div class="chips" id="rsub"></div>
 <input id="rq" placeholder="Rezept oder Zutat suchen" style="margin-bottom:4px">
@@ -330,9 +332,9 @@ const RB=[
 ["Abend","Omelett + 50 g Vollkornbrot",510,33,"12 Min.",["Wie Gemüse-Omelett mit Feta","50 g Vollkornbrot"],"Wie Gemüse-Omelett, dazu eine Scheibe Vollkornbrot."],
 ["Abend","Seelachs, Ofengemüse, Quinoa",460,38,"30 Min.",["150 g Seelachs oder Kabeljau","50 g Quinoa (trocken)","300 g Zucchini, Paprika, Tomaten","10 g Olivenöl","Kräuter, Salz, Pfeffer"],"Gemüse mit Öl bei 200 °C 20 Min. backen, Fisch dazulegen und 12 Min. weitergaren. Quinoa nach Packung kochen."],
 ["Abend","Tofu-Gemüse-Pfanne mit Reis",460,25,"20 Min.",["150 g Naturtofu","300 g Wokgemüse (TK geht)","40 g Vollkornreis (trocken)","5 g Sesamöl","10 ml Sojasauce","Knoblauch, Ingwer"],"Tofu würfeln und knusprig anbraten. Gemüse zugeben, 5–7 Min. braten. Mit Sojasauce ablöschen, mit Reis servieren."],
-["Snack","Apfel + 15 g Mandeln",170,4,"1 Min.",["1 Apfel (150 g)","15 g Mandeln"],""],
-["Snack","Magerquark mit Beeren",140,19,"2 Min.",["150 g Magerquark","100 g Beeren","Zimt"],"Verrühren, mit Zimt bestreuen."],
-["Snack","Gemüsesticks + Hummus",150,5,"3 Min.",["150 g Karotte, Gurke, Kohlrabi","50 g Hummus"],"Gemüse in Sticks schneiden und dippen."]];
+["Snack","Apfel + 15 g Mandeln",170,4,"1 Min.",["1 Apfel (150 g)","15 g Mandeln"],"Apfel waschen und in Spalten schneiden.\nMandeln dazu essen – am besten langsam kauen, das macht länger satt.\nTipp: Mandeln in kleine Dosen portionieren, dann bleibt es bei 15 g."],
+["Snack","Magerquark mit Beeren",140,19,"2 Min.",["150 g Magerquark","100 g Beeren","Zimt"],"Quark mit 1–2 EL Wasser oder Milch cremig rühren.\nBeeren unterheben (TK-Beeren vorher kurz antauen lassen).\nMit Zimt bestreuen."],
+["Snack","Gemüsesticks + Hummus",150,5,"3 Min.",["150 g Karotte, Gurke, Kohlrabi","50 g Hummus"],"Karotte schälen, Gurke und Kohlrabi waschen bzw. schälen.\nAlles in fingerdicke Sticks schneiden.\nHummus in ein Schälchen geben und das Gemüse dippen."]];
 // Kohlenhydrate, Fett, Ballaststoffe (g) je Portion, aus den Zutaten berechnet
 const RM={"Protein-Pancakes mit Beeren":[44,12,10],"Schoko-Bananen-Quark":[47,4,7],"Apfel-Zimt-Porridge":[54,7,7],"Erdbeer-Skyr-Bowl":[40,8,6],"Vanille-Chia-Pudding mit Himbeeren":[25,9,12],"French Toast mit Beeren":[37,12,9],"Milchreis light mit Apfelmus":[66,4,2],"Grießbrei mit Kirschen":[59,5,3],"Erdnuss-Bananen-Brot + Zimt-Skyr":[51,6,8],"Haferflocken-Quark-Bowl":[47,12,10],"Skyr mit Banane":[46,6,8],"Overnight Oats Apfel-Zimt":[46,11,7],"Beeren-Protein-Smoothie":[43,5,8],"Porridge Banane-Erdnuss mit Skyr":[54,12,7],"Skyr-Joghurt-Müsli":[34,10,8],"Rührei auf Vollkornbrot + Apfel":[44,17,9],"Hüttenkäse-Brot mit Tomate":[46,8,9],"Eier-Spinat-Wrap":[30,22,4],"Knäckebrot mit Thunfisch-Quark + Apfel":[48,2,11],"Avocado-Ei-Brot":[26,19,9],"Kräuterquark-Brot mit Radieschen":[46,2,9],"Lachs, Ofenkartoffeln, Brokkoli":[45,23,13],"Rotes Linsen-Curry mit Reis":[80,11,20],"Vollkornnudeln mit Thunfisch":[61,12,10],"Gemüse-Omelett mit Feta":[8,28,5],"Omelett + 50 g Vollkornbrot":[28,29,9],"Seelachs, Ofengemüse, Quinoa":[41,15,8],"Tofu-Gemüse-Pfanne mit Reis":[44,18,10],"Apfel + 15 g Mandeln":[18,8,5],"Magerquark mit Beeren":[12,1,4],"Gemüsesticks + Hummus":[12,8,6],"Protein-Porridge mit Birne":[52,7,8],"Skyr-Mango-Bowl":[36,6,5],"Bananen-Ei-Pfannkuchen mit Quark":[37,16,4],"Lachs-Frischkäse-Brot mit Gurke":[26,9,5],"Shakshuka light":[36,17,9],"Puten-Sandwich mit Gemüsesticks":[30,6,6],"Hähnchen-Reis-Bowl mit Gemüse":[56,8,7],"Chili sin Carne":[62,9,19],"Putengeschnetzeltes mit Champignons und Reis":[44,15,5],"Spaghetti Bolognese light":[61,14,11],"Ofen-Süßkartoffel mit Kräuterquark":[62,6,10],"Griechischer Hähnchen-Salat mit Feta":[28,19,7],"Kartoffel-Gemüse-Pfanne mit Spiegelei":[45,17,8],"Thunfisch-Bohnen-Salat":[40,13,13],"Gemüse-Linsen-Suppe":[62,3,16],"Lachs-Spinat-Nudeln":[48,23,10],"Zucchini-Hack-Pfanne mit Feta":[9,18,4],"Hähnchen-Gemüse-Blech":[32,13,7],"Thunfisch-Salat mit Ei":[15,23,5],"Gefüllte Paprika mit Hüttenkäse":[28,16,7],"Brokkoli-Hähnchen-Curry":[11,10,8],"Lachs mit grünen Bohnen und Kartoffeln":[35,22,8],"Tomate-Mozzarella-Omelett":[6,29,3],"Puten-Gemüse-Wok":[15,8,9],"Linsen-Bolognese mit Zucchininudeln":[48,11,15],"Hähnchen-Wrap mit Joghurtsoße":[34,6,5],"Quark-Kartoffeln mit Gurkensalat":[55,6,7],"Skyr mit Apfel und Zimt":[17,0,2],"Hüttenkäse mit Gurke und Tomate":[8,7,2],"Eier mit Paprikasticks":[6,11,2],"Edamame mit Meersalz":[6,5,5],"Protein-Schokopudding":[14,3,3],"Reiswaffeln mit Frischkäse und Gurke":[15,4,1],"Joghurt-Beeren-Eis":[18,3,4],"Banane mit Erdnussmus":[25,5,3],"Thunfisch-Gurken-Happen":[4,4,1],"Heißer Kakao mit Milch":[13,5,2],"Putenröllchen mit Frischkäse":[4,4,1],"Rührei mit Spinat und Hüttenkäse auf Toast":[27,19,6],"Overnight Oats Schoko-Kirsch":[44,6,7],"Apfel-Zimt-Quark-Brot":[43,1,7],"Schinken-Ei-Toast":[27,14,5],"Heidelbeer-Smoothie-Bowl":[36,4,9],"Hähnchen-Gemüse-Couscous":[42,12,6],"Ofenkartoffel mit Thunfisch-Quark":[55,2,8],"Gemüse-Reis-Pfanne mit Ei":[50,18,9],"Linsen-Dal mit Spinat und Reis":[68,8,13],"Rindergeschnetzeltes mit Paprika und Nudeln":[61,12,12],"Kichererbsen-Salat mit Feta":[33,16,10],"Seelachs mit Kartoffelpüree und Möhren":[50,7,12],"Vollkorn-Pizza-Toast":[32,12,8],"Hähnchen-Fajita-Pfanne":[44,12,8],"Nudelsalat light mit Hähnchen":[51,4,9],"Gemüse-Frittata aus dem Ofen":[11,24,4],"Kabeljau in Tomatensoße mit Zucchini":[45,9,7],"Hähnchen-Caesar-Salat light":[17,12,4],"Asiatische Nudelsuppe mit Hähnchen":[43,4,9],"Ofen-Feta mit Gemüse und Kichererbsen":[26,21,9],"Hackbällchen in Tomatensoße mit Brokkoli":[16,9,10],"Hähnchen-Spieße mit Tzatziki und Salat":[33,10,9],"Blumenkohl-Kichererbsen-Curry":[38,12,17],"Pilz-Rührei mit Hüttenkäse und Tomate":[8,24,6],"Apfel mit Zimt-Quark-Dip":[25,0,3],"Karotten mit Kräuterquark":[12,1,6],"Gefrorene Weintrauben":[23,0,2],"Mini-Caprese-Spieße":[3,10,1],"Buttermilch-Beeren-Shake":[20,2,4],"Knäckebrot mit Hüttenkäse und Radieschen":[16,5,4],"Erdbeeren mit Zartbitter-Schokolade":[14,5,4]};
 // Rezepte, die mit Version 2 dazukamen – werden bestehenden Nutzern einmalig ergänzt
@@ -405,7 +407,7 @@ const RB3=[
 ["Snack","Karotten mit Kräuterquark",110,13,"4 Min.",["150 g Karotte","100 g Magerquark","1 EL TK-Kräuter","Salz, Pfeffer"],"Karotten in Sticks schneiden. Quark mit Kräutern, Salz, Pfeffer und etwas Wasser cremig rühren."],
 ["Snack","Gefrorene Weintrauben",105,1,"2 Min. + 2 Std. Gefrierfach",["150 g Weintrauben"],"Trauben waschen, gut abtrocknen und mindestens 2 Std. einfrieren. Schmeckt wie Sorbet."],
 ["Snack","Mini-Caprese-Spieße",145,10,"5 Min.",["100 g Cherrytomaten","50 g Mozzarella","Basilikum, Balsamico, Pfeffer"],"Tomaten und Mozzarella-Stücke abwechselnd mit Basilikum auf Zahnstocher stecken, mit Balsamico beträufeln."],
-["Snack","Buttermilch-Beeren-Shake",150,10,"3 Min.",["250 ml Buttermilch","100 g TK-Beeren","1 TL Honig (5 g)"],"Alles im Mixer 30 Sek. pürieren."],
+["Snack","Buttermilch-Beeren-Shake",150,10,"3 Min.",["250 ml Buttermilch","100 g TK-Beeren","1 TL Honig (5 g)"],"Buttermilch, gefrorene Beeren und Honig in den Mixer geben.\n30 Sek. fein pürieren.\nSofort trinken – mit TK-Beeren wird der Shake schön kalt und cremig."],
 ["Snack","Knäckebrot mit Hüttenkäse und Radieschen",180,15,"3 Min.",["20 g Knäckebrot (2 Scheiben)","100 g Hüttenkäse","50 g Radieschen","Schnittlauch, Pfeffer"],"Knäckebrot mit Hüttenkäse bestreichen, mit Radieschenscheiben und Schnittlauch belegen."],
 ["Snack","Erdbeeren mit Zartbitter-Schokolade",120,2,"5 Min.",["200 g Erdbeeren","10 g Zartbitterschokolade 70 %"],"Schokolade im Wasserbad oder 20 Sek. in der Mikrowelle schmelzen und über die Erdbeeren träufeln."]];
 RB.push(...RB2,...RB3);
@@ -468,7 +470,7 @@ const KEY="fitplan.v1";
 const CATS=["Frühstück","Mittag","Abend","Snack"];
 const PQ=[.5,1,1.5,2];
 const MZ=[["b","Bauch"],["h","Hüfte"],["o","Oberschenkel"],["a","Oberarm"]];
-let rvMode="k",rvSel=null;
+let rvMode="k",rvSel=null,rMan=false;
 let S,rcat="Frühstück",rsub="Süß",edA=false,edE=false,libCat="Oberkörper",wr=90,ekMode="w";
 
 const $=id=>document.getElementById(id);
@@ -555,6 +557,8 @@ function fix(){
     const fill=f=>{const r=byN[f.n];if(r&&f.kh1==null&&Math.abs(r.k-f.k1)<=r.k*.15){f.kh1=r.kh;f.fe1=r.fe;f.bs1=r.bs}};
     Object.values(S.d).forEach(D=>D.f.forEach(fill));S.fav.forEach(fill);S.mv=1}
   if(S.mv<2){S.R.forEach(r=>{if(!r.ic&&RI[r.n])r.ic=RI[r.n]});S.mv=2}
+  // Einmalig: fehlende oder sehr knappe Zubereitungen der Standardrezepte ergänzen
+  if(S.mv<3){const fixS=new Set(["Apfel + 15 g Mandeln","Magerquark mit Beeren","Gemüsesticks + Hummus","Buttermilch-Beeren-Shake"]);S.R.forEach(r=>{const d=RB.find(x=>x[1]===r.n);if(d&&d[6]&&(!r.s||fixS.has(r.n)&&r.s.length<45))r.s=d[6]});S.mv=3}
 }
 function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}fix()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Speichern fehlgeschlagen")}}
@@ -606,8 +610,13 @@ function renderFood(){
   if(q)items=items.filter(r=>r.n.toLowerCase().includes(q)||(r.z||[]).join(" ").toLowerCase().includes(q));
   const RL=$("rlist");RL.innerHTML="";
   if(!items.length)RL.innerHTML='<p class="sm" style="margin:8px 0 0">Keine Rezepte gefunden.</p>';
-  items.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t" style="cursor:pointer">'+esc(r.n)+(r.tg==="s"?'<span class="bdg s">süß</span>':'')+(quick(r)?'<span class="bdg">schnell</span>':'')+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+(r.t?' · '+esc(r.t):'')+'</div></div><button class="ic" aria-label="Eintragen">＋</button>');
-    row.querySelector(".t").onclick=row.querySelector(".fi").onclick=()=>recipeDetail(r.id);row.querySelector("button").onclick=()=>addRecipe(r,1);RL.appendChild(row)});
+  $("rman").textContent=rMan?"Fertig":"Verwalten";$("rman").className=rMan?"on":"";const MB=$("rmb");MB.style.display=rMan?"":"none";
+  if(rMan){const miss=RB.filter(x=>!S.R.some(y=>y.n.toLowerCase()===x[1].toLowerCase()));
+    MB.innerHTML='<p class="sm" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">Tippe 🗑 zum Löschen – auch bei den mitgelieferten Rezepten. Antippen öffnet das Rezept zum Bearbeiten.</p>'+
+      (miss.length?'<button class="full" id="rres" style="margin-bottom:10px">↺ '+miss.length+' gelöschte'+(miss.length===1?'s Standardrezept':' Standardrezepte')+' wiederherstellen</button>':'');
+    if(miss.length)$("rres").onclick=()=>{miss.forEach(x=>S.R.push(mkR(x)));save();renderFood();toast(miss.length+(miss.length===1?" Rezept":" Rezepte")+" wiederhergestellt")}}
+  items.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t" style="cursor:pointer">'+esc(r.n)+(r.tg==="s"?'<span class="bdg s">süß</span>':'')+(quick(r)?'<span class="bdg">schnell</span>':'')+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+(r.t?' · '+esc(r.t):'')+'</div></div>'+(rMan?'<button class="ic del" aria-label="Löschen">🗑</button>':'<button class="ic" aria-label="Eintragen">＋</button>'));
+    row.querySelector(".t").onclick=row.querySelector(".fi").onclick=()=>rMan?recipeForm(r.id):recipeDetail(r.id);row.querySelector("button").onclick=()=>rMan?delRecipe(r):addRecipe(r,1);RL.appendChild(row)});
 }
 $("rq").oninput=renderFood;
 // Tagessumme: Kohlenhydrate, Fett, Ballaststoffe und Verteilung der Kalorien
@@ -671,6 +680,14 @@ $("cpy").onclick=()=>{const yk=addDays(dt.value,-1),fs=(S.d[yk]||{}).f||[];
     $("cpall").onclick=()=>{cp(fs);closeSheet();toast(fs.length+" Einträge übernommen")}})};
 
 // ctx: {k,c} = aus dem Wochenplan geöffnet, {k,c,pick:1} = Vorschau bei der Rezeptauswahl
+// Zubereitung in Schritte teilen: eine Zeile = ein Schritt, sonst nach Sätzen
+// (ohne Lookbehind-Regex, damit auch ältere iPhones die Seite laden)
+const ABR=/(?:^|\s)(?:ca|min|std|sek|bzw|evtl|ggf|z|u|d|z\.\s?b|u\.\s?a|d\.\s?h|pkg|stk|el|tl|nr|max|mind|gr)\.$/i;
+const steps=t=>{t=String(t||"").trim();if(!t)return[];let L=t.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  if(L.length<2){L=[];const re=/[.!?]\s+(?=[A-ZÄÖÜ0-9])/g;let last=0,cur="",m;
+    while((m=re.exec(t))){cur+=t.slice(last,m.index+1);last=re.lastIndex;if(ABR.test(cur))cur+=" ";else{L.push(cur);cur=""}}
+    L.push(cur+t.slice(last))}
+  return L.map(x=>x.replace(/^\d+[.)]\s*/,"").trim()).filter(Boolean)};
 function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=1;const pk=ctx&&ctx.pick,pl=ctx&&!pk,when=ctx?wd(ctx.k)+" "+dd(ctx.k):"";
   openSheet(icOf(r)+" "+esc(r.n),
   (pk?'<button id="rdBk" style="margin:0 0 10px;font-size:14px;padding:5px 12px">‹ Zurück zur Auswahl</button>':'')+
@@ -679,22 +696,25 @@ function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=
   '<div class="g3" style="margin:8px 0 10px">'+MK.map(([c,l])=>'<div class="mc"><div class="sm">'+l+'</div><b>'+(r[c]==null?"–":fmt(r[c])+" g")+'</b></div>').join("")+'</div>'+
   '<p class="sm" style="margin:0 0 8px">'+esc(r.c)+(r.t?' · ⏱ '+esc(r.t):'')+'</p>'+
   (r.z&&r.z.length?'<p class="lb">Zutaten '+(r.pz>1?'(für '+r.pz+' Portionen – Nährwerte oben gelten für 1 Portion)':'(1 Portion)')+'</p><ul class="z">'+r.z.map(z=>'<li>'+esc(z)+'</li>').join("")+'</ul>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
-  (r.s?'<p class="lb" style="margin-top:12px">Zubereitung</p><p style="margin:0;white-space:pre-line">'+esc(r.s)+'</p>':'')+
+  '<p class="lb" style="margin-top:12px">Zubereitung</p>'+(steps(r.s).length?'<ol class="st">'+steps(r.s).map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>':'<p class="sm" style="margin:0 0 6px">Noch keine Zubereitung hinterlegt.</p><button id="rdS">＋ Zubereitung hinzufügen</button>')+
   (pk?'<button class="full pri" id="rdPl" style="margin-top:16px">📅 Für '+when+' · '+esc(ctx.c)+' einplanen</button>':
   '<p class="lb" style="margin-top:16px">Portion</p><div class="chips" id="rdq"></div>'+(pl?'':mealSel("rdm",r.c))+
   '<button class="full pri" id="rdAdd" style="margin-top:10px"></button>'+
   (pl?'<div class="g2" style="margin-top:8px"><button id="rdCh">Anderes Rezept</button><button class="del" id="rdRm">Aus dem Plan</button></div><button class="full" id="rdEd" style="margin-top:8px">Rezept bearbeiten</button>'
     :'<div class="g2" style="margin-top:8px"><button id="rdEd">Bearbeiten</button><button class="del" id="rdDel">Löschen</button></div>')),
-  ()=>{if(pk){$("rdBk").onclick=()=>pickRecipe(ctx.k,ctx.c);$("rdPl").onclick=()=>{planSet(ctx.k,ctx.c,r.id);closeSheet();toast("Eingeplant · "+when)};return}
+  ()=>{if($("rdS"))$("rdS").onclick=()=>recipeForm(r.id,"fS");
+    if(pk){$("rdBk").onclick=()=>pickRecipe(ctx.k,ctx.c);$("rdPl").onclick=()=>{planSet(ctx.k,ctx.c,r.id);closeSheet();toast("Eingeplant · "+when)};return}
     const dr=()=>{qChips("rdq",q,v=>{q=v;dr()});$("rdAdd").textContent="＋ Eintragen"+(pl?" für "+when:"")+" · "+fmt(r.k*q)+" kcal"};dr();
     $("rdEd").onclick=()=>recipeForm(r.id);
     if(pl){$("rdAdd").onclick=()=>{const D=S.d[ctx.k]||(S.d[ctx.k]={f:[],s:[],x:{},h:[]});D.f.push(mkEntry(r.n,r.k,r.p,ctx.c,q,r));save();closeSheet();renderFood();renderPlan();toast("Eingetragen · "+ctx.c+", "+when)};
       $("rdCh").onclick=()=>pickRecipe(ctx.k,ctx.c);
       $("rdRm").onclick=()=>{planSet(ctx.k,ctx.c,null);closeSheet();toast("Aus dem Plan genommen",()=>{planSet(ctx.k,ctx.c,r.id)})};return}
     $("rdAdd").onclick=()=>{addRecipe(r,q,$("rdm").value);closeSheet()};
-    $("rdDel").onclick=()=>{if(confirm("Rezept „"+r.n+"“ löschen?")){S.R=S.R.filter(x=>x.id!==r.id);save();closeSheet();renderFood()}}})}
+    $("rdDel").onclick=()=>{closeSheet();delRecipe(r)}})}
+function delRecipe(r){const i=S.R.indexOf(r);if(i<0)return;S.R.splice(i,1);save();renderFood();renderPlan();
+  toast("„"+r.n+"“ gelöscht",()=>{S.R.splice(Math.min(i,S.R.length),0,r);save();renderFood();renderPlan()})}
 
-function recipeForm(id){const r=id?S.R.find(x=>x.id===id):null;
+function recipeForm(id,focus){const r=id?S.R.find(x=>x.id===id):null;
   const tg=r?(r.tg||"h"):(rcat==="Frühstück"&&rsub==="Süß"?"s":"h");
   openSheet(r?"Rezept bearbeiten":"Neues Rezept",
   '<label class="f">Name</label><input id="fN" value="'+esc(r?r.n:"")+'" placeholder="Bananen-Haferkekse">'+
@@ -710,10 +730,11 @@ function recipeForm(id){const r=id?S.R.find(x=>x.id===id):null;
   '<p class="sm" id="rcs" style="margin:8px 0 0"></p></div>'+
   '<label class="f">Zubereitungszeit</label><input id="fZt" value="'+esc(r?r.t:"")+'" placeholder="10 Min.">'+
   '<label class="f" id="fZl">Zutaten – eine pro Zeile, mit Menge</label><textarea id="fZ" rows="6" placeholder="50 g Haferflocken&#10;200 ml Milch 1,5 %">'+esc(r?(r.z||[]).join("\n"):"")+'</textarea>'+
-  '<label class="f">Zubereitung</label><textarea id="fS" rows="5" placeholder="Schritt für Schritt">'+esc(r?r.s:"")+'</textarea>'+
+  '<label class="f">Zubereitung – ein Schritt pro Zeile</label><textarea id="fS" rows="6" placeholder="Zwiebel würfeln und anbraten.&#10;Tomaten zugeben und 10 Min. köcheln.&#10;Mit Salz und Pfeffer abschmecken.">'+esc(r?r.s:"")+'</textarea>'+
   (r?'':'<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="fNow" style="width:auto"> Heute direkt eintragen</label>')+
   '<button class="full pri" id="fSave" style="margin-top:14px">Speichern</button><p class="err" id="fErr"></p>',
   ()=>{["fN","fK"].forEach(i=>$(i).oninput=()=>$("fErr").textContent="");
+    if(focus)setTimeout(()=>{const f=$(focus);if(f){f.scrollIntoView({block:"center"});f.focus()}},80);
     let ic=r&&r.ic||"";const icd=()=>{const B=$("fIc");B.innerHTML="";const a=el("button",ic?"":"on",'<span style="font-size:13px">Auto</span> '+foodIc($("fN").value));a.onclick=()=>{ic="";icd()};B.appendChild(a);
       ICS.forEach(e=>{const b=el("button",e===ic?"on":"",e);b.setAttribute("aria-label","Bild "+e);b.onclick=()=>{ic=e;icd()};B.appendChild(b)})};icd();
     $("fN").addEventListener("input",()=>{if(!ic)$("fIc").firstChild.lastChild.textContent=" "+foodIc($("fN").value)});
@@ -734,7 +755,7 @@ function recipeForm(id){const r=id?S.R.find(x=>x.id===id):null;
       const o={c:$("fC").value,tg:$("fT").value,n,k:Math.round(k),p:Math.round(num($("fP").value)||0),kh:nn($("f_kh").value),fe:nn($("f_fe").value),bs:nn($("f_bs").value),ci:ci.length?ci:undefined,pz:pzv()>1?pzv():undefined,ic:ic||undefined,t:$("fZt").value.trim(),z:$("fZ").value.split("\n").map(s=>s.trim()).filter(Boolean),s:$("fS").value.trim()};
       if(r)Object.assign(r,o);else{o.id=uid();S.R.push(o);if($("fNow").checked)day().f.push(mkEntry(o.n,o.k,o.p,o.c,1,o))}
       rcat=o.c;if(o.c==="Frühstück")rsub=o.tg==="s"?"Süß":"Herzhaft";save();closeSheet();renderFood();toast("Rezept gespeichert")}})}
-$("newR").onclick=()=>recipeForm(null);
+$("newR").onclick=()=>recipeForm(null);$("rman").onclick=()=>{rMan=!rMan;renderFood()};
 
 $("qm").innerHTML=CATS.map(c=>'<option>'+c+'</option>').join("");$("qm").value=guessMeal();
 ["qn","qk","qp","qkh","qfe"].forEach(i=>$(i).oninput=()=>$("qerr").textContent="");
@@ -1183,7 +1204,7 @@ function drawChart(){const c=$("wch"),W=c.clientWidth,H=180;if(!W)return;const d
   const vals=ks.map(k=>S.w[k]),tr=ks.map(trendAt);let lo=Math.min(...vals,...tr),hi=Math.max(...vals,...tr);
   // Prognose: gestrichelt in die Zukunft verlängern (max. 40 % der gezeigten Zeitspanne)
   const rt=wRate(),lt=tr[tr.length-1];let ext=0;
-  if(rt!=null&&rt<=-.05&&lt>S.g.z&&ks[ks.length-1]===wKeys().at(-1)){ext=Math.round(Math.min((lt-S.g.z)/-rt*7,Math.max(14,dayDiff(ks[0],ks[ks.length-1]))*.4));lo=Math.min(lo,lt+rt*ext/7)}
+  if(rt!=null&&rt<=-.05&&lt>S.g.z&&ks[ks.length-1]===wKeys().slice(-1)[0]){ext=Math.round(Math.min((lt-S.g.z)/-rt*7,Math.max(14,dayDiff(ks[0],ks[ks.length-1]))*.4));lo=Math.min(lo,lt+rt*ext/7)}
   const showG=S.g.z>=lo-6;if(showG)lo=Math.min(lo,S.g.z);const mn=Math.floor(lo-1),mx=Math.ceil(hi+1);
   const t=k=>new Date(k+"T12:00").getTime(),t0=t(ks[0]),t1=t(ks[ks.length-1]),te=t1+ext*864e5,B=H-18;
   const px=v=>34+(v-t0)/(te-t0)*(W-44),py=v=>8+(mx-v)/(mx-mn)*(B-8);

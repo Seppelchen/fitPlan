@@ -87,6 +87,16 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Fortschritt → Wochenrückblick:** Das Balkendiagramm lässt sich umschalten auf
   **Kalorien**, **Mahlzeiten** oder **Nährstoffe**. Einen Tag antippen zeigt die genauen Werte.
 
+## Rezepte bearbeiten und löschen
+
+- Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
+- Eigene Rezepte: **Essen → Rezepte → ＋ Neu**. Unter „Zubereitung – ein Schritt pro Zeile“
+  schreibst du jeden Schritt in eine eigene Zeile. Fehlt die Zubereitung, steht im Rezept
+  „＋ Zubereitung hinzufügen“.
+- **Verwalten** (neben „＋ Neu“): 🗑 löscht ein Rezept, auch die mitgelieferten. Das lässt sich
+  rückgängig machen. Gelöschte Standardrezepte holst du dort mit **↺ wiederherstellen**
+  zurück.
+
 ## Wochenplan
 
 - Ein geplantes Essen antippen: Du siehst Nährwerte, Zutaten und Zubereitung. Von dort kannst du
