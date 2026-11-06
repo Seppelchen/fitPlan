@@ -1132,19 +1132,29 @@ function parseFW(t){const out=[];let g="Sonstiges",sep=false,title="";
     if(!sep&&!out.length&&!title){title=l;return}
     if(l===title)return;
     out.push({n:l,g,c:false})});
+  // Nur eine Zeile wie „Einkaufen: Milch, Eier, Brot“ → in Artikel aufteilen
+  if(!out.length&&title&&/[,;]/.test(title)){const m=title.match(/^([^:]{1,30}):\s*(.+)$/);const body=m?m[2]:title;if(m)title=m[1].trim();
+    body.split(/\s*[,;]\s*/).map(x=>x.replace(/^[❏❑☐□▢◻⬜○◯•·*-]\s*/u,"").trim()).filter(Boolean).forEach(n=>out.push({n,g:"Sonstiges",c:false}))}
   return{title,items:out.filter(x=>x.n)}}
+const isIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const FW_IOS='<b>So klappt es auf dem iPhone:</b><ol style="margin:6px 0 0;padding-left:20px"><li>In FamilyWall die Liste öffnen → <b>Senden/Teilen</b> → <b>Notizen</b> wählen (nicht „Kopieren“) → Sichern.</li><li>Die neue Notiz öffnen, lange in den Text tippen → <b>Alles auswählen</b> → <b>Kopieren</b>.</li><li>Hier ins Feld tippen → <b>Einfügen</b>.</li></ol><p style="margin:6px 0 0">Klappt „Notizen“ nicht, geht es genauso mit <b>Mail</b> an dich selbst: im Mail-Entwurf den Text markieren und kopieren.</p>';
 function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.readText);
-  openSheet("Aus FamilyWall einfügen",'<p class="sm" style="margin:0 0 8px">In FamilyWall die Einkaufsliste öffnen → Teilen → Kopieren, dann hier einfügen. Auf Android geht es noch schneller: in FamilyWall Teilen → FitPlan wählen.</p>'+
+  openSheet("Aus FamilyWall einfügen",(isIOS()?'<div class="sm" style="margin:0 0 10px;padding:10px;border-radius:10px;background:var(--accbg);color:var(--text)">'+FW_IOS+'</div>'
+    :'<p class="sm" style="margin:0 0 8px">Am schnellsten: in FamilyWall die Liste öffnen → Teilen → <b>FitPlan</b> wählen. Oder Teilen → Kopieren und hier einfügen.</p>')+
   (canRead?'<button class="full" id="fwp">📋 Aus Zwischenablage einfügen</button>':'')+
   '<textarea id="fwt" rows="8" style="margin-top:8px" placeholder="Text aus FamilyWall hier einfügen"></textarea><p class="sm" id="fwi" style="margin:6px 0 0"></p>'+
+  '<div class="sm" id="fwh" style="display:none;margin:8px 0 0;padding:10px;border-radius:10px;border:1px solid var(--warn);color:var(--text)"></div>'+
   (S.fw?'<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:15px"><input type="checkbox" id="fwr" checked style="width:auto"> Bisherige FamilyWall-Liste ersetzen</label>':'')+
   '<button class="full pri" id="fwo" style="margin-top:12px">Übernehmen</button><p class="err" id="fwe"></p>',
   ()=>{const t=$("fwt");if(pre)t.value=pre;
     const up=()=>{$("fwe").textContent="";const r=parseFW(t.value),gs=new Set(r.items.map(x=>x.g)),ck=r.items.filter(x=>x.c).length;
-      $("fwi").textContent=r.items.length?r.items.length+" Artikel in "+gs.size+(gs.size===1?" Kategorie":" Kategorien")+" erkannt"+(ck?" ("+ck+" schon abgehakt)":""):""};
+      $("fwi").textContent=r.items.length?r.items.length+" Artikel in "+gs.size+(gs.size===1?" Kategorie":" Kategorien")+" erkannt"+(ck?" ("+ck+" schon abgehakt)":""):"";
+      // Nur der Listenname angekommen (typisch für iPhone → Teilen → Kopieren)
+      const only=!r.items.length&&!!r.title,H=$("fwh");H.style.display=only?"":"none";
+      if(only)H.innerHTML='⚠️ Es ist nur der Listenname „'+esc(r.title)+'“ angekommen, nicht die Artikel.'+(isIOS()?' Wähle in FamilyWall beim Senden <b>Notizen</b> statt „Kopieren“ – siehe die 3 Schritte oben.':' Kopiere den ganzen Text der Liste (z. B. über Teilen → Notizen oder Mail an dich selbst) und füge ihn hier ein.')};
     t.oninput=up;up();
     if(canRead)$("fwp").onclick=()=>navigator.clipboard.readText().then(x=>{t.value=x;up()},()=>{$("fwe").textContent="Kein Zugriff auf die Zwischenablage. Tippe lange ins Feld und wähle „Einfügen“."});
-    $("fwo").onclick=()=>{const r=parseFW(t.value);if(!r.items.length){$("fwe").textContent="Keine Artikel erkannt. Füge den Text aus FamilyWall ein.";return}
+    $("fwo").onclick=()=>{const r=parseFW(t.value);if(!r.items.length){$("fwe").textContent=r.title?"Nur der Listenname ist angekommen – siehe Hinweis oben.":"Keine Artikel erkannt. Füge den Text aus FamilyWall ein.";return}
       const old=S.fw&&{...S.fw,items:S.fw.items.map(x=>({...x}))};
       if(!S.fw||!$("fwr")||$("fwr").checked)S.fw={at:todayK(),t:r.title,items:r.items};
       else{const have=new Set(S.fw.items.map(x=>x.n.toLowerCase()));r.items.forEach(x=>{if(!have.has(x.n.toLowerCase()))S.fw.items.push(x)});S.fw.at=todayK()}
