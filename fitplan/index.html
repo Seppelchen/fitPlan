@@ -1121,23 +1121,27 @@ function shopBulk(all){const wk=ekK(),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw})
 $("ekdc").onclick=()=>shopBulk(false);$("ekclr").onclick=()=>shopBulk(true);
 
 /* FamilyWall-Liste einlesen (Text aus „Teilen“ in FamilyWall) */
-function parseFW(t){const out=[];let g="Sonstiges",sep=false,title="";
+function parseFW(t){const out=[];let g="Sonstiges",sep=false,title="",mk=0;
   const tc=l=>l.toLowerCase().replace(/(^|[\s&\/-])(\p{L})/gu,(a,b,c)=>b+c.toUpperCase());
   String(t||"").split(/\r?\n/).forEach(raw=>{const l=raw.replace(/\uFE0F/g,"").trim();if(!l)return;
     if(/^[*=_~\-–—]{3,}$/.test(l)){sep=true;return}
-    if(/gesendet mit familywall|familywall\.com/i.test(l))return;
-    let m=l.match(/^[❏❑☐□▢◻⬜○◯•·*-]\s*(.+)$/u);if(m){out.push({n:m[1].trim(),g,c:false});return}
-    m=l.match(/^[☑☒✓✔✅■▣●]\s*(.+)$/u);if(m){out.push({n:m[1].trim(),g,c:true});return}
+    if(/gesendet mit familywall|familywall\.com|mit familywall verschicken|kostenlos verfügbar für handy/i.test(l))return;
+    let m=l.match(/^[❏❑☐□▢◻⬜○◯•·*-]\s*(.+)$/u);if(m){mk++;out.push({n:m[1].trim(),g,c:false});return}
+    m=l.match(/^[☑☒✓✔✅■▣●]\s*(.+)$/u);if(m){mk++;out.push({n:m[1].trim(),g,c:true});return}
     if(/\p{Lu}/u.test(l)&&l===l.toUpperCase()&&l.length<=40){g=/^unkategorisiert$/i.test(l)?"Sonstiges":tc(l);return}
     if(!sep&&!out.length&&!title){title=l;return}
     if(l===title)return;
     out.push({n:l,g,c:false})});
+  // iPhone-FamilyWall schickt nur Listenname, Werbezeile und Absender – das sind keine Artikel
+  const stub=!mk&&/mit familywall verschicken|kostenlos verfügbar für handy/i.test(t);if(stub)out.length=0;
   // Nur eine Zeile wie „Einkaufen: Milch, Eier, Brot“ → in Artikel aufteilen
-  if(!out.length&&title&&/[,;]/.test(title)){const m=title.match(/^([^:]{1,30}):\s*(.+)$/);const body=m?m[2]:title;if(m)title=m[1].trim();
+  if(!stub&&!out.length&&title&&/[,;]/.test(title)){const m=title.match(/^([^:]{1,30}):\s*(.+)$/);const body=m?m[2]:title;if(m)title=m[1].trim();
     body.split(/\s*[,;]\s*/).map(x=>x.replace(/^[❏❑☐□▢◻⬜○◯•·*-]\s*/u,"").trim()).filter(Boolean).forEach(n=>out.push({n,g:"Sonstiges",c:false}))}
   return{title,items:out.filter(x=>x.n)}}
 const isIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-const FW_IOS='<b>So klappt es auf dem iPhone:</b><ol style="margin:6px 0 0;padding-left:20px"><li>In FamilyWall die Liste öffnen → <b>Senden/Teilen</b> → <b>Notizen</b> wählen (nicht „Kopieren“) → Sichern.</li><li>Die neue Notiz öffnen, lange in den Text tippen → <b>Alles auswählen</b> → <b>Kopieren</b>.</li><li>Hier ins Feld tippen → <b>Einfügen</b>.</li></ol><p style="margin:6px 0 0">Klappt „Notizen“ nicht, geht es genauso mit <b>Mail</b> an dich selbst: im Mail-Entwurf den Text markieren und kopieren.</p>';
+// FamilyWall auf dem iPhone verschickt beim Teilen keine Artikel (nur Listenname + Werbezeile)
+const FW_IOS='<b>Hinweis fürs iPhone:</b> Die FamilyWall-App auf dem iPhone schickt beim Teilen nur den Listennamen mit, <b>ohne die Artikel</b>. So bekommst du die Liste trotzdem:<ol style="margin:6px 0 0;padding-left:20px"><li><b>Am besten vom Android-Handy:</b> Die Liste ist in FamilyWall für alle synchron. Dort Liste öffnen → Teilen → <b>FitPlan</b>.</li><li><b>Oder über die FamilyWall-Webseite:</b> In Safari <b>app.familywall.com</b> öffnen, Liste öffnen, die Artikel markieren → Kopieren → hier einfügen.</li></ol>';
+const fwStub=t=>/mit familywall verschicken|kostenlos verfügbar für handy|gesendet mit familywall/i.test(t);
 function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.readText);
   openSheet("Aus FamilyWall einfügen",(isIOS()?'<div class="sm" style="margin:0 0 10px;padding:10px;border-radius:10px;background:var(--accbg);color:var(--text)">'+FW_IOS+'</div>'
     :'<p class="sm" style="margin:0 0 8px">Am schnellsten: in FamilyWall die Liste öffnen → Teilen → <b>FitPlan</b> wählen. Oder Teilen → Kopieren und hier einfügen.</p>')+
@@ -1150,11 +1154,12 @@ function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.
     const up=()=>{$("fwe").textContent="";const r=parseFW(t.value),gs=new Set(r.items.map(x=>x.g)),ck=r.items.filter(x=>x.c).length;
       $("fwi").textContent=r.items.length?r.items.length+" Artikel in "+gs.size+(gs.size===1?" Kategorie":" Kategorien")+" erkannt"+(ck?" ("+ck+" schon abgehakt)":""):"";
       // Nur der Listenname angekommen (typisch für iPhone → Teilen → Kopieren)
-      const only=!r.items.length&&!!r.title,H=$("fwh");H.style.display=only?"":"none";
-      if(only)H.innerHTML='⚠️ Es ist nur der Listenname „'+esc(r.title)+'“ angekommen, nicht die Artikel.'+(isIOS()?' Wähle in FamilyWall beim Senden <b>Notizen</b> statt „Kopieren“ – siehe die 3 Schritte oben.':' Kopiere den ganzen Text der Liste (z. B. über Teilen → Notizen oder Mail an dich selbst) und füge ihn hier ein.')};
+      const stub=!r.items.length&&fwStub(t.value),only=!r.items.length&&(!!r.title||stub),H=$("fwh");H.style.display=only?"":"none";
+      if(only)H.innerHTML='⚠️ '+(stub?'FamilyWall hat nur den Listennamen und eine Werbezeile geschickt – <b>die Artikel fehlen</b>. Das passiert, wenn die Liste von einem iPhone geteilt wird.':'Es ist nur der Listenname „'+esc(r.title)+'“ angekommen, nicht die Artikel.')+
+        (isIOS()?' Siehe die Möglichkeiten oben.':'<br><br>'+FW_IOS.replace('<b>Hinweis fürs iPhone:</b> ',''))};
     t.oninput=up;up();
     if(canRead)$("fwp").onclick=()=>navigator.clipboard.readText().then(x=>{t.value=x;up()},()=>{$("fwe").textContent="Kein Zugriff auf die Zwischenablage. Tippe lange ins Feld und wähle „Einfügen“."});
-    $("fwo").onclick=()=>{const r=parseFW(t.value);if(!r.items.length){$("fwe").textContent=r.title?"Nur der Listenname ist angekommen – siehe Hinweis oben.":"Keine Artikel erkannt. Füge den Text aus FamilyWall ein.";return}
+    $("fwo").onclick=()=>{const r=parseFW(t.value);if(!r.items.length){$("fwe").textContent=r.title||fwStub(t.value)?"Es sind keine Artikel angekommen – siehe Hinweis.":"Keine Artikel erkannt. Füge den Text aus FamilyWall ein.";return}
       const old=S.fw&&{...S.fw,items:S.fw.items.map(x=>({...x}))};
       if(!S.fw||!$("fwr")||$("fwr").checked)S.fw={at:todayK(),t:r.title,items:r.items};
       else{const have=new Set(S.fw.items.map(x=>x.n.toLowerCase()));r.items.forEach(x=>{if(!have.has(x.n.toLowerCase()))S.fw.items.push(x)});S.fw.at=todayK()}

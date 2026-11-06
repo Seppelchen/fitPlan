@@ -151,14 +151,12 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   (FitPlan erscheint im Teilen-Menü erst, nachdem Chrome die installierte App aktualisiert
   hat. Das kann bis zu einem Tag dauern. Sofort geht es, wenn du FitPlan neu installierst.
   Vorher unbedingt **Mehr → Exportieren**, sonst sind die Daten weg.)
-- **iPhone:** Das iPhone kann Text nicht direkt an FitPlan senden. „Kopieren“ im Teilen-Menü
-  übernimmt dabei nur den Listennamen. So geht es:
-  1. In FamilyWall die Liste öffnen → **Senden/Teilen** → **Notizen** → Sichern.
-  2. Die Notiz öffnen → lange in den Text tippen → **Alles auswählen** → **Kopieren**.
-  3. In FitPlan **Plan → Einkaufsliste → Aus FamilyWall einfügen** → ins Feld tippen →
-     **Einfügen** → **Übernehmen**.
-
-  Statt Notizen geht auch eine **Mail an dich selbst**: Text im Entwurf markieren und kopieren.
+- **iPhone:** Die FamilyWall-App auf dem iPhone schickt beim Teilen nur den Listennamen und
+  eine Werbezeile, **keine Artikel**. Daran lässt sich in FitPlan nichts ändern. Stattdessen:
+  1. **Vom Android-Handy teilen:** Die Liste ist in FamilyWall für alle synchron.
+  2. **Oder über die FamilyWall-Webseite:** In Safari `app.familywall.com` öffnen, Liste
+     öffnen, Artikel markieren → Kopieren → in FitPlan unter **Aus FamilyWall einfügen**
+     einfügen.
 - **Android ohne Teilen-Menü:** In FamilyWall Teilen → **Kopieren**, dann wie oben einfügen.
 - Die Kategorien aus FamilyWall bleiben erhalten. Ein neuer Import ersetzt die vorherige
   FamilyWall-Liste.
