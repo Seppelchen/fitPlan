@@ -14,11 +14,15 @@ fitplan/
 └── icon-512.png    Android-Icon (groß)
 ```
 
-## Schritt 1: Ordner auf den PC holen
+## Die App ist online
 
-Lege den Ordner `fitplan` an einen Ort, an dem du ihn wiederfindest, z. B. auf den Desktop.
+**https://seppelchen.github.io/fitPlan/**
 
-## Schritt 2: Bei Netlify hochladen (am PC)
+Sie wird über GitHub Pages aus dem Repo `Seppelchen/fitPlan` veröffentlicht. Jede
+Änderung, die nach GitHub hochgeladen wird (`git push`), ist nach etwa einer Minute online.
+Weiter mit Schritt 3.
+
+## (Alternative) Bei Netlify hochladen (am PC)
 
 1. Öffne **https://app.netlify.com/signup** und lege ein kostenloses Konto an
    (z. B. mit E-Mail). Ohne Konto wird die Seite nach kurzer Zeit wieder gelöscht.
@@ -65,6 +69,6 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 1. Datei im Ordner `fitplan` ändern.
 2. In `sw.js` die Zeile `const VERSION = 'fitplan-v1';` hochzählen, z. B. auf `'fitplan-v2'`.
-3. Bei Netlify deine Seite öffnen → **Deploys** → den Ordner `fitplan` erneut ins Feld ziehen.
+3. Änderung committen und mit `git push` zu GitHub hochladen. Nach etwa einer Minute ist sie online.
 4. Auf dem iPhone FitPlan mit Internet öffnen, ganz schließen und noch einmal öffnen.
    Dann ist die neue Version da. Deine Daten bleiben erhalten.
