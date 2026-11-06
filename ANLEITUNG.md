@@ -166,7 +166,8 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 Zwei Personen teilen sich eine Einkaufsliste: Was einer einträgt oder abhakt, sieht der andere
 nach wenigen Sekunden. Das läuft über **Firebase** (Google), kostenlos und ohne Kreditkarte.
-Nur die gemeinsame Liste liegt dort, alle anderen FitPlan-Daten bleiben auf dem Handy.
+Nur die gemeinsame Liste (inklusive übernommener FamilyWall-Artikel) liegt dort, alle anderen
+FitPlan-Daten bleiben auf dem Handy.
 
 ### Einmalig: Firebase einrichten (am PC, ca. 10 Minuten)
 
@@ -222,7 +223,8 @@ Nur die gemeinsame Liste liegt dort, alle anderen FitPlan-Daten bleiben auf dem 
 2. **Neue Liste anlegen** → deinen Namen eintragen → den `firebaseConfig`-Block einfügen → **Verbinden**.
 3. **📨 Andere Person einladen** → die Einladung z. B. per WhatsApp schicken.
 
-Eigene Einträge, die schon auf der Liste standen, wandern dabei in die gemeinsame Liste.
+Eigene Einträge und die FamilyWall-Liste, die schon auf der Liste standen, wandern dabei in die
+gemeinsame Liste.
 
 ### Zweites Handy: Einladung annehmen
 
@@ -247,7 +249,10 @@ Eigene Einträge, die schon auf der Liste standen, wandern dabei in die gemeinsa
   Einträge erhalten.
 - Wer die Einladung hat, kann die Liste sehen und ändern. Schick sie nur an die Person, mit der du
   die Liste teilen willst.
-- Die FamilyWall-Liste bleibt wie bisher nur auf dem eigenen Handy.
+- **FamilyWall:** Eine übernommene FamilyWall-Liste landet bei Verbindung ebenfalls in der gemeinsamen
+  Liste (Abschnitt „📋 FamilyWall · gemeinsam“, nach Kategorien). Übernimmt das andere Handy dieselbe
+  Liste, entstehen keine doppelten Artikel. Eine FamilyWall-Liste, die schon vor dem Verbinden auf
+  dem Handy war, wird automatisch mit übernommen.
 
 ## App später ändern
 
