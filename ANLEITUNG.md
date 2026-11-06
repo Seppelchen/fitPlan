@@ -79,6 +79,29 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Unter **Mehr → Ziele** kannst du Ziele für Kohlenhydrate, Fett und Ballaststoffe setzen
   (leer lassen = kein Ziel).
 
+## Lebensmittel suchen
+
+- **Essen → 🔍 Lebensmittel suchen**, z. B. „Apfel“ oder „Skyr“.
+- Rund 130 Grundnahrungsmittel (Obst, Gemüse, Brot, Milchprodukte …) sind fest eingebaut und
+  funktionieren auch ohne Internet. Dabei sind typische Portionen wie „1 Stück · 150 g“.
+- Markenprodukte sucht FitPlan online bei Open Food Facts. Gesendet wird nur der Suchbegriff.
+
+## Rezept aus Zutaten berechnen
+
+- Beim Anlegen oder Bearbeiten eines Rezepts: **🧮 Aus Zutaten berechnen → ＋ Zutat**.
+  Jede Zutat suchen oder scannen und die Menge wählen.
+- Kalorien, Eiweiß, Kohlenhydrate, Fett und Ballaststoffe werden automatisch ausgerechnet. Die
+  Zutatenliste füllt sich mit.
+- Bei **„Ergibt Portionen“** z. B. 4 eintragen: Die Werte gelten dann pro Portion, und die
+  Einkaufsliste rechnet die Mengen anteilig um.
+
+## Gewichtsprognose
+
+- Unter **Fortschritt → Verlauf** steht, wann du bei deinem aktuellen Tempo die nächsten
+  5-kg-Etappen und dein Ziel erreichst. Im Diagramm zeigt eine gestrichelte Linie den weiteren
+  Verlauf.
+- Berechnet wird aus den letzten 4 Wochen. Die Prognose erscheint ab etwa 2 Wochen Messungen.
+
 ## Barcode-Scanner
 
 - **Essen → Schnell eintragen → 📷 Barcode scannen.** Beim ersten Mal fragt das iPhone nach
