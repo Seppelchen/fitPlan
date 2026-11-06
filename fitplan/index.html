@@ -688,23 +688,41 @@ const steps=t=>{t=String(t||"").trim();if(!t)return[];let L=t.split(/\n+/).map(x
     while((m=re.exec(t))){cur+=t.slice(last,m.index+1);last=re.lastIndex;if(ABR.test(cur))cur+=" ";else{L.push(cur);cur=""}}
     L.push(cur+t.slice(last))}
   return L.map(x=>x.replace(/^\d+[.)]\s*/,"").trim()).filter(Boolean)};
+// Zutatenzeile auf q Portionen umrechnen: "100 g Quark" → "50 g Quark", "1 Ei (M)" → "½ Ei (M)"
+const FRC={"½":.5,"¼":.25,"¾":.75};
+const pnum=x=>{x=String(x).replace(/\s+/g,"");const m=x.match(/^(\d*)([½¼¾])$/);return m?(+(m[1]||0))+FRC[m[2]]:parseFloat(x.replace(",","."))};
+const qfr=v=>{let i=Math.floor(v+1e-9),f=Math.round((v-i)*4)/4;if(f>=1){i++;f=0}const g={0:"",.25:"¼",.5:"½",.75:"¾"}[f];return g==null?nf(v):(i||!g?String(i||0):"")+g};
+const qfmt=(v,u)=>/^(g|ml|kg|l)$/i.test(u)?(v>=10?fmt(v):nf(Math.round(v*10)/10)):Math.abs(Math.round(v*4)/4-v)<.02||v<20?qfr(v):fmt(v);
+function scaleZ(line,q){if(q===1)return line;
+  const one=seg=>seg.replace(/^((?:\d+(?:[.,]\d+)?(?:\s?[½¼¾])?|[½¼¾]))(?:\s*([–-])\s*(\d+(?:[.,]\d+)?|[½¼¾]))?(\s*)([^\s,()]*)/,(m,a,dash,b,sp,u)=>{
+    const v=pnum(a)*q,w=b!=null?pnum(b)*q:null;let unit=u;
+    if(/^eier$/i.test(u)&&v<=1&&w==null)unit="Ei";else if(/^ei$/i.test(u)&&v>1)unit="Eier";else if(/^prise$/i.test(u)&&v>1)unit="Prisen";else if(/^prisen$/i.test(u)&&v<=1)unit="Prise";
+    return qfmt(v,u)+(w!=null?dash+qfmt(w,u):"")+sp+unit});
+  return line.split(/,\s+/).map(one).join(", ")
+    .replace(/\((\d+(?:[.,]\d+)?)\s*(g|ml)\)/g,(m,a,u)=>"("+qfmt(pnum(a)*q,u)+" "+u+")")
+    .replace(/\((\d+)\s+Scheiben?\)/g,(m,a)=>{const v=pnum(a)*q;return"("+qfr(v)+" Scheibe"+(v>1?"n":"")+")"})
+    .replace(/\((\d+)\s+Stück\)/g,(m,a)=>"("+qfr(pnum(a)*q)+" Stück)")}
 function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=1;const pk=ctx&&ctx.pick,pl=ctx&&!pk,when=ctx?wd(ctx.k)+" "+dd(ctx.k):"";
   openSheet(icOf(r)+" "+esc(r.n),
   (pk?'<button id="rdBk" style="margin:0 0 10px;font-size:14px;padding:5px 12px">‹ Zurück zur Auswahl</button>':'')+
   (ctx?'<p class="sm" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">📅 '+(pk?'Auswahl für ':'Geplant für ')+when+' · '+esc(ctx.c)+'</p>':'')+
-  '<div class="g2"><div class="mc"><div class="sm">Kalorien</div><b>'+fmt(r.k)+' kcal</b></div><div class="mc"><div class="sm">Eiweiß</div><b>'+fmt(r.p)+' g</b></div></div>'+
-  '<div class="g3" style="margin:8px 0 10px">'+MK.map(([c,l])=>'<div class="mc"><div class="sm">'+l+'</div><b>'+(r[c]==null?"–":fmt(r[c])+" g")+'</b></div>').join("")+'</div>'+
-  '<p class="sm" style="margin:0 0 8px">'+esc(r.c)+(r.t?' · ⏱ '+esc(r.t):'')+'</p>'+
-  (r.z&&r.z.length?'<p class="lb">Zutaten '+(r.pz>1?'(für '+r.pz+' Portionen – Nährwerte oben gelten für 1 Portion)':'(1 Portion)')+'</p><ul class="z">'+r.z.map(z=>'<li>'+esc(z)+'</li>').join("")+'</ul>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
+  '<p class="lb">Portion</p><div class="chips" id="rdq"></div>'+
+  '<div class="g2"><div class="mc"><div class="sm">Kalorien</div><b id="rdk"></b></div><div class="mc"><div class="sm">Eiweiß</div><b id="rdp"></b></div></div>'+mt3("rd_")+
+  '<p class="sm" style="margin:10px 0 8px">'+esc(r.c)+(r.t?' · ⏱ '+esc(r.t):'')+'</p>'+
+  (r.z&&r.z.length?'<p class="lb" id="rdzl"></p><ul class="z" id="rdz"></ul>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
   '<p class="lb" style="margin-top:12px">Zubereitung</p>'+(steps(r.s).length?'<ol class="st">'+steps(r.s).map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>':'<p class="sm" style="margin:0 0 6px">Noch keine Zubereitung hinterlegt.</p><button id="rdS">＋ Zubereitung hinzufügen</button>')+
   (pk?'<button class="full pri" id="rdPl" style="margin-top:16px">📅 Für '+when+' · '+esc(ctx.c)+' einplanen</button>':
-  '<p class="lb" style="margin-top:16px">Portion</p><div class="chips" id="rdq"></div>'+(pl?'':mealSel("rdm",r.c))+
+  (pl?'':'<label class="f" style="margin-top:16px">Mahlzeit</label>'+mealSel("rdm",r.c))+
   '<button class="full pri" id="rdAdd" style="margin-top:10px"></button>'+
   (pl?'<div class="g2" style="margin-top:8px"><button id="rdCh">Anderes Rezept</button><button class="del" id="rdRm">Aus dem Plan</button></div><button class="full" id="rdEd" style="margin-top:8px">Rezept bearbeiten</button>'
     :'<div class="g2" style="margin-top:8px"><button id="rdEd">Bearbeiten</button><button class="del" id="rdDel">Löschen</button></div>')),
   ()=>{if($("rdS"))$("rdS").onclick=()=>recipeForm(r.id,"fS");
+    // Portion ändert Nährwerte und – außer bei Rezepten für mehrere Portionen – die Zutatenmengen
+    const show=()=>{qChips("rdq",q,v=>{q=v;show()});$("rdk").textContent=fmt(r.k*q)+" kcal";$("rdp").textContent=fmt(r.p*q)+" g";mt3set("rd_",c=>r[c]==null?null:r[c]*q);
+      if($("rdz")){const pz=r.pz>1;$("rdzl").textContent="Zutaten "+(pz?"(für alle "+r.pz+" Portionen – Nährwerte oben gelten für "+(q===1?"1 Portion":fq(q)+" Portionen")+")":"("+(q===1?"1 Portion":fq(q)+(q<=1?" Portion":" Portionen"))+")");
+        $("rdz").innerHTML=r.z.map(z=>'<li>'+esc(pz?z:scaleZ(z,q))+'</li>').join("")}
+      if($("rdAdd"))$("rdAdd").textContent="＋ Eintragen"+(pl?" für "+when:"")+" · "+fq(q)+(q<=1?" Portion":" Portionen")+" · "+fmt(r.k*q)+" kcal"};show();
     if(pk){$("rdBk").onclick=()=>pickRecipe(ctx.k,ctx.c);$("rdPl").onclick=()=>{planSet(ctx.k,ctx.c,r.id);closeSheet();toast("Eingeplant · "+when)};return}
-    const dr=()=>{qChips("rdq",q,v=>{q=v;dr()});$("rdAdd").textContent="＋ Eintragen"+(pl?" für "+when:"")+" · "+fmt(r.k*q)+" kcal"};dr();
     $("rdEd").onclick=()=>recipeForm(r.id);
     if(pl){$("rdAdd").onclick=()=>{const D=S.d[ctx.k]||(S.d[ctx.k]={f:[],s:[],x:{},h:[]});D.f.push(mkEntry(r.n,r.k,r.p,ctx.c,q,r));save();closeSheet();renderFood();renderPlan();toast("Eingetragen · "+ctx.c+", "+when)};
       $("rdCh").onclick=()=>pickRecipe(ctx.k,ctx.c);
