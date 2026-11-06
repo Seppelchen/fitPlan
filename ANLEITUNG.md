@@ -67,6 +67,18 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Hast du schon Daten in einer alten Version? Dort **Exportieren**, in der neuen App
   **Importieren**.
 
+## Nährwerte
+
+- Bei jedem Eintrag, jeder Mahlzeit und jedem Rezept stehen Kalorien, **E**iweiß,
+  **K**ohlen**h**ydrate und **F**ett, z. B. „405 kcal · E 25 · KH 44 · F 12 g“.
+- Oben im Tab **Essen** siehst du die Tagessumme mit Ballaststoffen und einen Balken, wie
+  sich die Kalorien auf Eiweiß, Kohlenhydrate und Fett verteilen.
+- Die mitgelieferten Rezepte haben Werte, die aus den Zutaten berechnet sind. Gescannte Produkte
+  bekommen sie von Open Food Facts. Bei eigenen Rezepten und freien Einträgen sind sie optional.
+- Ältere Einträge ohne Werte: antippen → „Kohlenhydrate, Fett, Ballaststoffe ergänzen“.
+- Unter **Mehr → Ziele** kannst du Ziele für Kohlenhydrate, Fett und Ballaststoffe setzen
+  (leer lassen = kein Ziel).
+
 ## Barcode-Scanner
 
 - **Essen → Schnell eintragen → 📷 Barcode scannen.** Beim ersten Mal fragt das iPhone nach
