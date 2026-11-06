@@ -89,6 +89,8 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 ## Rezepte bearbeiten und löschen
 
+- Alle 100 mitgelieferten Rezepte sind vegetarisch, mit Lachs als einziger Ausnahme, und
+  ohne Pilze. Statt Parmesan steht „vegetarischer Hartkäse (Parmesan-Art)“ im Rezept.
 - Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
 - Eigene Rezepte: **Essen → Rezepte → ＋ Neu**. Unter „Zubereitung – ein Schritt pro Zeile“
   schreibst du jeden Schritt in eine eigene Zeile. Fehlt die Zubereitung, steht im Rezept
