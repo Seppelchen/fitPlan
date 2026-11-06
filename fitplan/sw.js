@@ -1,10 +1,10 @@
 // FitPlan Service Worker – macht die App offline verfügbar.
 // Bei jeder Änderung an der App VERSION hochzählen, damit Handys die neue Version laden.
-const VERSION = 'fitplan-v2';
+const VERSION = 'fitplan-v3';
 
 // Dateien, die beim ersten Öffnen sofort gespeichert werden.
 // Weitere Dateien (CSS, JS, Bilder) werden beim ersten Laden automatisch mitgespeichert.
-const PRECACHE = ['./', './index.html', './manifest.json', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png'];
+const PRECACHE = ['./', './index.html', './manifest.json', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './zxing.min.js'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -11,7 +11,9 @@ fitplan/
 ├── icon.svg        Icon
 ├── icon-180.png    iPhone-Icon
 ├── icon-192.png    Android-Icon
-└── icon-512.png    Android-Icon (groß)
+├── icon-512.png    Android-Icon (groß)
+├── zxing.min.js    Barcode-Scanner (läuft offline)
+└── zxing-LICENSE.txt  Lizenz des Barcode-Scanners
 ```
 
 ## Die App ist online
@@ -38,8 +40,8 @@ Weiter mit Schritt 3.
 ## Schritt 3: Auf dem iPhone installieren
 
 1. Öffne den Link in **Safari** (nicht in Chrome, nicht aus WhatsApp heraus).
-2. Warte, bis die App geladen ist, und tippe einmal durch alle vier Tabs unten
-   (Essen, Sport, Gewicht, Mehr).
+2. Warte, bis die App geladen ist, und tippe einmal durch alle fünf Tabs unten
+   (Essen, Plan, Sport, Fortschritt, Mehr).
 3. Tippe auf das **Teilen-Symbol** (Quadrat mit Pfeil nach oben).
 4. Scrolle nach unten und tippe auf **„Zum Home-Bildschirm“**.
 5. Falls angezeigt: **„Als Web-App öffnen“** eingeschaltet lassen.
@@ -65,10 +67,20 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Hast du schon Daten in einer alten Version? Dort **Exportieren**, in der neuen App
   **Importieren**.
 
+## Barcode-Scanner
+
+- **Essen → Schnell eintragen → 📷 Barcode scannen.** Beim ersten Mal fragt das iPhone nach
+  der Kamera – „Erlauben“ tippen. Falls versehentlich abgelehnt: Einstellungen → Safari → Kamera.
+- Die Nährwerte kommen von **Open Food Facts** (freie Datenbank). Gesendet wird nur die
+  Barcode-Nummer. Unbekannte Produkte kannst du selbst eintragen.
+- Einmal gescannte Produkte merkt sich FitPlan – sie funktionieren danach auch ohne Internet.
+- Klappt die Kamera nicht, die Nummer unter dem Barcode einfach eintippen.
+
 ## App später ändern
 
 1. Datei im Ordner `fitplan` ändern.
-2. In `sw.js` die Zeile `const VERSION = 'fitplan-v1';` hochzählen, z. B. auf `'fitplan-v2'`.
-3. Änderung committen und mit `git push` zu GitHub hochladen. Nach etwa einer Minute ist sie online.
-4. Auf dem iPhone FitPlan mit Internet öffnen, ganz schließen und noch einmal öffnen.
+2. Änderung committen und mit `git push` zu GitHub hochladen. Nach etwa einer Minute ist sie online.
+   Die Cache-Version in `sw.js` wird dabei automatisch neu gesetzt – nichts hochzählen nötig.
+   (Nur bei Netlify per Drag-and-drop: in `sw.js` die Zeile `const VERSION = …` von Hand ändern.)
+3. Auf dem iPhone FitPlan mit Internet öffnen, ganz schließen und noch einmal öffnen.
    Dann ist die neue Version da. Deine Daten bleiben erhalten.

@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Jede Veröffentlichung bekommt eine neue Cache-Version, damit Handys das Update laden.
+      - name: Cache-Version automatisch setzen
+        run: sed -i "s/^const VERSION = .*/const VERSION = 'fitplan-${GITHUB_SHA::8}';/" fitplan/sw.js && grep "^const VERSION" fitplan/sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: fitplan
