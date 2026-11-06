@@ -524,8 +524,8 @@ const rById=id=>id?S.R.find(r=>r.id===id):null;
 function guessMeal(){const d=new Date(),h=d.getHours()+d.getMinutes()/60;return h<10.5?"Frühstück":h<14.5?"Mittag":h<17.5?"Snack":"Abend"}
 const mealSel=(id,v)=>'<select id="'+id+'">'+CATS.map(c=>'<option'+(c===v?' selected':'')+'>'+c+'</option>').join("")+'</select>';
 
-function toast(t,undo){const e=$("toast");e.textContent=t;
-  if(undo){const b=el("button","","Rückgängig");b.onclick=()=>{e.classList.remove("on");undo()};e.appendChild(b)}
+function toast(t,undo,lbl){const e=$("toast");e.textContent=t;
+  if(undo){const b=el("button","",lbl||"Rückgängig");b.onclick=()=>{e.classList.remove("on");undo()};e.appendChild(b)}
   e.classList.toggle("act",!!undo);e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),undo?5000:1800)}
 function undoDel(arr,i,label,re){if(i<0)return;const x=arr.splice(i,1)[0];save();re();
   toast(label+" gelöscht",()=>{arr.splice(Math.min(i,arr.length),0,x);save();re()})}
@@ -1285,7 +1285,11 @@ load();all();
 (()=>{const q=new URLSearchParams(location.search),tx=q.get("text")||"",ti=q.get("title")||"",t=((ti&&!tx.includes(ti)?ti+"\n":"")+tx+(q.get("url")&&!tx.includes(q.get("url"))?"\n"+q.get("url"):"")).trim();
   if(!t)return;history.replaceState(null,"",location.pathname);show("plan");fwSheet(t)})();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
-if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");
+// Updates: beim Zurückholen der App nach neuer Version fragen und sie sofort laden
+if("serviceWorker" in navigator&&location.protocol==="https:"){const SW=navigator.serviceWorker,had=!!SW.controller;let rl=false;
+  SW.register("sw.js").then(reg=>{document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")reg.update().catch(()=>{})})}).catch(()=>{});
+  SW.addEventListener("controllerchange",()=>{if(!had||rl)return;rl=true;const a=document.activeElement,busy=sheetOpen()||$("sheet2").classList.contains("open")||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.value);
+    if(!busy)location.reload();else{toast("Neue Version von FitPlan ist da",()=>location.reload(),"Jetzt laden");clearTimeout(toast.h)}})}
 </script>
 </body>
 </html>

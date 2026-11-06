@@ -29,8 +29,10 @@ self.addEventListener('fetch', (event) => {
   // Seitenaufrufe: erst online versuchen (neueste Version), offline aus dem Speicher.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
+      // cache: 'no-cache' – nicht die bis zu 10 Min. alte Kopie aus dem Browser-Cache nehmen
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then((res) => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put('./index.html', copy));
           return res;
