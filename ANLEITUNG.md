@@ -62,7 +62,8 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Öffne FitPlan immer über das Icon auf dem Home-Bildschirm**, nicht über Safari.
   Dort bleiben deine Daten dauerhaft gespeichert. Die Daten in Safari und in der
   Home-Bildschirm-App sind getrennt.
-- Deine Daten liegen **nur auf deinem iPhone**, nicht bei Netlify. Wenn du das Icon
+- Deine Daten liegen **nur auf deinem iPhone**, nicht bei Netlify. Einzige Ausnahme ist die
+  gemeinsame Einkaufsliste, wenn du sie einrichtest (siehe unten). Wenn du das Icon
   löschst, sind die Daten weg. Nutze deshalb regelmäßig **Mehr → Exportieren**.
 - Hast du schon Daten in einer alten Version? Dort **Exportieren**, in der neuen App
   **Importieren**.
@@ -160,6 +161,93 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Android ohne Teilen-Menü:** In FamilyWall Teilen → **Kopieren**, dann wie oben einfügen.
 - Die Kategorien aus FamilyWall bleiben erhalten. Ein neuer Import ersetzt die vorherige
   FamilyWall-Liste.
+
+## Gemeinsame Einkaufsliste für zwei Handys (Firebase)
+
+Zwei Personen teilen sich eine Einkaufsliste: Was einer einträgt oder abhakt, sieht der andere
+nach wenigen Sekunden. Das läuft über **Firebase** (Google), kostenlos und ohne Kreditkarte.
+Nur die gemeinsame Liste liegt dort, alle anderen FitPlan-Daten bleiben auf dem Handy.
+
+### Einmalig: Firebase einrichten (am PC, ca. 10 Minuten)
+
+1. **https://console.firebase.google.com** öffnen und mit einem Google-Konto anmelden.
+2. **Projekt erstellen** (bzw. „Neues Firebase-Projekt erstellen“) → Name z. B. `fitplan-einkauf`
+   → Google Analytics **ausschalten** → Projekt erstellen.
+3. **Anonyme Anmeldung einschalten:** Links **Erstellen/Build → Authentication** → „Jetzt starten“
+   → Tab **Anmeldemethode** (Sign-in method) → **Anonym** → Aktivieren → Speichern.
+4. **Datenbank anlegen:** Links **Erstellen/Build → Firestore Database** → **Datenbank erstellen**.
+   Falls gefragt: **Standard-Edition**, Datenbank-ID `(default)` lassen.
+   Standort: **europe-west3 (Frankfurt)** oder **eur3 (Europa)**. Danach **Im Produktionsmodus starten**
+   → Erstellen.
+5. **Regeln setzen:** In Firestore Database den Tab **Regeln** öffnen, alles löschen, Folgendes einfügen und
+   **Veröffentlichen** tippen:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /lists/{code} {
+         allow get: if request.auth != null;
+         allow create, update: if request.auth != null
+           && code.size() == 20
+           && request.resource.data.keys().hasOnly(['v', 'items'])
+           && request.resource.data.get('items', {}).size() <= 500;
+       }
+     }
+   }
+   ```
+
+   Damit kann nur lesen und schreiben, wer den 20-stelligen Listen-Code aus der Einladung kennt.
+   Listen durchsuchen oder löschen kann niemand.
+6. **Web-App anlegen:** Oben links auf **⚙️ → Projekteinstellungen** → ganz unten bei „Meine Apps“
+   auf das Symbol **`</>`** (Web) → Name z. B. `FitPlan` → „Firebase Hosting“ **nicht** ankreuzen →
+   **App registrieren**. Es erscheint ein Block, der so beginnt:
+
+   ```
+   const firebaseConfig = {
+     apiKey: "AIza…",
+     authDomain: "fitplan-einkauf.firebaseapp.com",
+     projectId: "fitplan-einkauf",
+     …
+   };
+   ```
+
+   Diesen ganzen Block kopieren und dir z. B. per Mail oder Notiz aufs Handy schicken.
+   (Später wiederzufinden unter ⚙️ → Projekteinstellungen → Allgemein → Meine Apps.)
+   Der Block ist kein Passwort. Er sagt FitPlan nur, welches Firebase-Projekt es nutzen soll.
+
+### Erstes Handy: Liste anlegen
+
+1. FitPlan → **Plan** → unten bei der Einkaufsliste **👥 Mit anderem Handy teilen**.
+2. **Neue Liste anlegen** → deinen Namen eintragen → den `firebaseConfig`-Block einfügen → **Verbinden**.
+3. **📨 Andere Person einladen** → die Einladung z. B. per WhatsApp schicken.
+
+Eigene Einträge, die schon auf der Liste standen, wandern dabei in die gemeinsame Liste.
+
+### Zweites Handy: Einladung annehmen
+
+1. FitPlan installieren (siehe oben) und öffnen.
+2. **Plan** → **👥 Mit anderem Handy teilen** → **Einladung annehmen**.
+3. Namen eintragen, die **ganze Nachricht** mit der Einladung einfügen → **Verbinden**.
+
+### So funktioniert die gemeinsame Liste
+
+- **👥 Gemeinsame Liste:** Alles, was hier steht, sehen beide. Neue Einträge über das Eingabefeld landen
+  automatisch hier. Bei Einträgen der anderen Person steht „von …“.
+- **🗓️ Aus deinem Plan · nur hier:** Die Zutaten aus dem eigenen Essensplan bleiben zunächst nur auf
+  dem eigenen Handy. Mit **↑ teilen** kommen alle offenen Zutaten in die gemeinsame Liste. Ändert sich
+  später die Menge im Plan, erscheint die Zutat hier wieder. Erneutes Teilen aktualisiert dann den
+  Eintrag in der gemeinsamen Liste, statt ihn zu verdoppeln.
+- Abhaken, ✕, **Abgehakte löschen**, **Liste leeren** und **Haken zurücksetzen** wirken bei
+  gemeinsamen Einträgen auf **beiden** Handys.
+- Abgeglichen wird, solange der Tab **Plan** offen ist, etwa alle 5 Sekunden. Oben rechts in der Liste
+  steht „✓ aktuell“. **Ohne Internet** kann man weiter abhaken und eintragen. FitPlan schickt die
+  Änderungen, sobald wieder Netz da ist.
+- **Verbindung trennen** (im selben Menü): Offene Einträge bleiben auf diesem Handy als eigene
+  Einträge erhalten.
+- Wer die Einladung hat, kann die Liste sehen und ändern. Schick sie nur an die Person, mit der du
+  die Liste teilen willst.
+- Die FamilyWall-Liste bleibt wie bisher nur auf dem eigenen Handy.
 
 ## App später ändern
 
