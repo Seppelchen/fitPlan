@@ -172,6 +172,7 @@ ul.z{margin:0;padding-left:20px}
 <div class="chips" id="ekm"></div>
 <div id="ekl"></div>
 <div style="display:flex;gap:8px;margin-top:10px"><input id="eki" placeholder="Eigener Eintrag, z. B. Spülmittel"><button class="pri" id="eka" aria-label="Hinzufügen">＋</button></div>
+<button class="full" id="eksy" style="margin-top:8px">👥 Mit anderem Handy teilen</button>
 <button class="full" id="ekfw" style="margin-top:8px">⬇ Aus FamilyWall einfügen</button>
 <div class="g2" style="margin-top:8px"><button id="ekdc">Abgehakte löschen</button><button class="del" id="ekclr">Liste leeren</button></div>
 <button class="full" id="ekr" style="margin-top:8px">Haken zurücksetzen</button>
@@ -553,6 +554,7 @@ function fix(){
   if(!Array.isArray(S.E))S.E=DE.map(e=>({...e}));
   S.g=Object.assign({k:1650,pz:90,s:110,z:80,ml:2000,kh:0,fe:0,bs:30},S.g||{});
   if(!Array.isArray(S.fav))S.fav=[];
+  if(S.sy&&!(S.sy.code&&S.sy.k&&S.sy.p))S.sy=null;if(S.sy){S.sy.q=Array.isArray(S.sy.q)?S.sy.q:[];S.sy.it=S.sy.it||{};S.sy.me=S.sy.me||uid()}
   S.m=S.m||{};S.pl=S.pl||{};S.ek=S.ek||{};S.bc=S.bc||{};if(!S.fw||!Array.isArray(S.fw.items))S.fw=null;
   Object.values(S.d).forEach(D=>{D.f=D.f||[];D.x=D.x||{};D.h=D.h||[];D.s=D.s||(D.a||[]).map(a=>({n:a,m:0}));delete D.a;
     D.f.forEach(f=>{f.q=f.q||1;if(f.k1==null){f.k1=f.k/f.q;f.p1=(f.p||0)/f.q}})});
@@ -576,7 +578,7 @@ $("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);$("today").onclic
 let view="essen";
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
 function show(v){view=v;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));window.scrollTo(0,0);
-  if(v==="fort"){renderReview();renderWeight()}else if(v==="plan")renderPlan();else if(v==="essen")renderFood()}
+  if(v==="fort"){renderReview();renderWeight()}else if(v==="plan"){renderPlan();syLoop()}else if(v==="essen")renderFood()}
 
 // L2: zweite Ebene über einem offenen Sheet (Zutat fürs Rezept auswählen, Formular bleibt darunter erhalten)
 let L2=false,pickCb=null;
@@ -1090,19 +1092,31 @@ function shopItems(){let W=weekKeys();if(ekMode==="r")W=W.filter(k=>k>=todayK())
 function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=1000){a/=1000;u="kg"}if(u==="ml"&&a>=1000){a/=1000;u="l"}
   if((u==="g"||u==="ml")&&a>=10)a=Math.round(a);const n=o.n==="Ei"&&a>1?"Eier":o.n;return fq(Math.round(a*100)/100)+(u?" "+u:"")+" "+n}
 // Gelöschte Plan-Zutaten bleiben ausgeblendet, bis sich ihre Menge im Plan ändert
-const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};return E};
-const visItems=E=>shopItems().filter(o=>!(o.key in E.hd&&E.hd[o.key]===(o.a??0)));
-function renderShop(){const wk=ekK(),E=ekOf(wk);
+// In die gemeinsame Liste übernommene Plan-Zutaten (E.sh) ebenso, bis sich ihre Menge ändert
+const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};E.sh=E.sh||{};return E};
+const hid=(M,o)=>o.key in M&&M[o.key]===(o.a??0);
+const visItems=E=>shopItems().filter(o=>!hid(E.hd,o)&&!hid(E.sh,o));
+function renderShop(){const wk=ekK(),E=ekOf(wk),sy=SY();
   const ch=$("ekm");ch.innerHTML="";[["w",prd().auto?"Ganze Woche":"Ganzer Zeitraum"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
-  const its=visItems(E),nh=shopItems().length-its.length,L=$("ekl");L.innerHTML="";
+  const its=visItems(E),nh=shopItems().filter(o=>hid(E.hd,o)&&!hid(E.sh,o)).length,L=$("ekl");L.innerHTML="";
+  $("eksy").textContent=sy?"👥 Gemeinsame Liste verwalten":"👥 Mit anderem Handy teilen";
   const FW=S.fw&&S.fw.items.length?S.fw:null,keep=()=>{S.ek[wk]=E;save()};
   const restore=()=>{if(!nh)return;const b=el("button","full","↺ "+nh+(nh===1?" gelöschte Zutat":" gelöschte Zutaten")+" aus dem Plan wieder anzeigen");b.style.cssText="margin-top:10px;font-size:13px";b.onclick=()=>{E.hd={};keep();renderShop()};L.appendChild(b)};
-  if(!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">'+(nh?'Die Liste ist leer.':'Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.')+'</p>';restore();return}
+  if(!sy&&!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">'+(nh?'Die Liste ist leer.':'Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.')+'</p>';restore();return}
   const row=(label,sub,on,tog,del)=>{const r=el("div","ek"+(on?" ok":""),'<input type="checkbox"'+(on?' checked':'')+'><div class="t" style="flex:1;min-width:0">'+esc(label)+(sub?'<div class="sm">'+sub+'</div>':'')+'</div>');
     r.onclick=e=>{if(e.target.tagName==="BUTTON")return;tog();keep();renderShop()};
     if(del){const b=el("button","ic","✕");b.setAttribute("aria-label","Entfernen");b.onclick=()=>{del();keep();renderShop()};r.appendChild(b)}L.appendChild(r)};
   const srt=(a,b)=>(!!E.c[a.key]-!!E.c[b.key])||a.n.localeCompare(b.n,"de");
   const wa=its.filter(o=>o.a!=null).sort(srt),wo=its.filter(o=>o.a==null).sort(srt);
+  if(sy){const h=el("div","gh",'<span>👥 Gemeinsame Liste</span><span class="sm" id="syst"></span>');h.style.marginTop="0";L.appendChild(h);
+    const sh=Object.entries(sy.it).map(([id,x])=>({id,...x})).sort((a,b)=>(!!a.c-!!b.c)||(a.t||0)-(b.t||0));
+    if(!sh.length)L.appendChild(el("p","sm","Noch leer. Neue Einträge unten landen hier – auch auf dem anderen Handy.")).style.margin="6px 0 0";
+    sh.forEach(x=>{const mine=x.d===sy.me,who=x.b&&!mine?esc(x.b):"";
+      row(x.n,x.p?(mine?"aus deinem Plan":"aus dem Plan von "+(who||"der anderen Person")):who?"von "+who:"",!!x.c,()=>syOp({id:x.id,f:"c",v:!x.c}),()=>syOp({id:x.id,v:null}))});
+    syStat();
+    const open=its.filter(o=>!E.c[o.key]).length;
+    if(its.length){const h2=el("div","gh",'<span>🗓️ Aus deinem Plan · nur hier</span>');h2.style.cssText="margin-top:18px;align-items:center";
+      if(open){const b=el("button","pri","↑ "+open+" teilen");b.style.cssText="font-size:12px;padding:4px 10px";b.onclick=()=>syPushPlan(E);h2.appendChild(b)}L.appendChild(h2)}}
   wa.forEach(o=>row(shopLabel(o),o.s.size>1?"für "+o.s.size+" Mahlzeiten":"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}));
   if(wo.length){L.appendChild(el("div","gh","<span>Vorrat & Gewürze</span><span></span>"));wo.forEach(o=>row(o.n,"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}))}
   if(E.x.length){L.appendChild(el("div","gh","<span>Eigene Einträge</span><span></span>"));E.x.forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{E.x=E.x.filter(y=>y!==x)}))}
@@ -1112,12 +1126,15 @@ function renderShop(){const wk=ekK(),E=ekOf(wk);
     gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";
       FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}
   restore()}
-function shopBulk(all){const wk=ekK(),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
+function shopBulk(all){const sy=SY();if(all&&sy&&Object.keys(sy.it).length&&!confirm("Die gemeinsame Liste wird auch auf dem anderen Handy geleert. Fortfahren?"))return;
+  const wk=ekK(),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
   visItems(E).forEach(o=>{if(go(E.c[o.key])){E.hd[o.key]=o.a??0;delete E.c[o.key];n++}});
   n+=E.x.filter(x=>go(x.c)).length;E.x=E.x.filter(x=>!go(x.c));
   if(S.fw){n+=S.fw.items.filter(x=>go(x.c)).length;S.fw.items=S.fw.items.filter(x=>!go(x.c));if(!S.fw.items.length)S.fw=null}
+  const sd=sy?Object.entries(sy.it).filter(([,x])=>go(x.c)).map(([id,x])=>({id,v:{...x}})):[];n+=sd.length;
   if(!n){toast(all?"Die Liste ist schon leer":"Nichts abgehakt");return}
-  S.ek[wk]=E;save();renderShop();toast(all?"Liste geleert":n+(n===1?" Eintrag":" Einträge")+" gelöscht",()=>{const b=JSON.parse(bak);S.ek[wk]=b.E;S.fw=b.fw;save();renderShop()})}
+  sd.forEach(o=>syOp({id:o.id,v:null}));
+  S.ek[wk]=E;save();renderShop();toast(all?"Liste geleert":n+(n===1?" Eintrag":" Einträge")+" gelöscht",()=>{const b=JSON.parse(bak);S.ek[wk]=b.E;S.fw=b.fw;if(SY()===sy)sd.forEach(syOp);save();renderShop()})}
 $("ekdc").onclick=()=>shopBulk(false);$("ekclr").onclick=()=>shopBulk(true);
 
 /* FamilyWall-Liste einlesen (Text aus „Teilen“ in FamilyWall) */
@@ -1166,11 +1183,13 @@ function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.
       save();closeSheet();show("plan");const c=$("ekl").closest(".card");c.scrollIntoView();window.scrollBy(0,-70);
       toast(r.items.length+" Artikel übernommen",()=>{S.fw=old;save();renderShop()})}})}
 $("ekfw").onclick=()=>fwSheet("");
-$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
+$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const sy=SY();
+  if(sy){syOp({id:"i"+syRnd(10),v:{n,c:false,b:sy.name,d:sy.me,t:Date.now()}});$("eki").value="";renderShop();return}
+  const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
-$("ekr").onclick=()=>{const wk=ekK(),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);save();renderShop();toast("Haken zurückgesetzt")};
+$("ekr").onclick=()=>{const wk=ekK(),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);const sy=SY();if(sy)Object.entries(sy.it).forEach(([id,x])=>{if(x.c)syOp({id,f:"c",v:false})});save();renderShop();toast("Haken zurückgesetzt")};
 $("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
-  const lines=visItems(E).filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
+  const lines=visItems(E).filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(SY()?Object.values(SY().it).filter(x=>!x.c).sort((a,b)=>(a.t||0)-(b.t||0)).map(x=>x.n):[],E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
   if(!lines.length){toast("Nichts mehr offen");return}
   const W=weekKeys(),boxed="Einkaufsliste "+(prd().auto?"KW "+kw(wk):dd(W[0])+" – "+dd(W[W.length-1]))+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
   const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};
@@ -1187,6 +1206,117 @@ $("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
   '<textarea id="ekx" rows="6" style="display:none;margin-top:12px" readonly></textarea>',
   ()=>{$("ekc1").onclick=()=>copy(plain);
     $("ekc2").onclick=()=>{if(navigator.share)navigator.share({title:"Einkaufsliste",text:boxed}).catch(e=>{if(e.name!=="AbortError")copy(boxed)});else copy(boxed)}})};
+
+/* ---------- Gemeinsame Einkaufsliste (Firebase) ----------
+   Zwei Handys teilen eine Liste: ein Firestore-Dokument lists/<Code>, jeder Eintrag ein Feld in „items“.
+   Ohne Firebase-Bibliothek: REST-Aufrufe mit anonymer Anmeldung. Änderungen gehen sofort raus (offline in
+   einer Warteschlange), abgeholt wird alle 5 s, solange der Plan-Tab offen ist. Nur die gemeinsame Liste
+   verlässt das Handy – alles andere bleibt lokal. */
+const SY=()=>S.sy&&S.sy.code?S.sy:null;
+let syTok=null,syTokT=0,syBusy=false,syErr="",syTimer=null;
+const syRnd=n=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>a[x%32]).join("")};
+const syHash=t=>{let h=2166136261;for(const c of t){h^=c.codePointAt(0);h=Math.imul(h,16777619)>>>0}return h.toString(36)};
+const fsV=v=>typeof v==="boolean"?{booleanValue:v}:typeof v==="number"?{integerValue:String(Math.round(v))}:{stringValue:String(v)};
+const fsMap=o=>({mapValue:{fields:Object.fromEntries(Object.entries(o).filter(([,v])=>v!=null).map(([k,v])=>[k,fsV(v)]))}});
+const fsGet=f=>{const o={};Object.entries(f||{}).forEach(([k,v])=>{o[k]="booleanValue" in v?v.booleanValue:"integerValue" in v?+v.integerValue:"doubleValue" in v?v.doubleValue:v.stringValue});return o};
+async function syFetch(url,opt){let r;try{r=await fetch(url,opt)}catch(e){const x=new Error("offline");x.off=1;throw x}
+  const t=await r.text();let j={};try{j=t?JSON.parse(t):{}}catch(e){}
+  if(!r.ok){const er=j.error||{},x=new Error(String(er.message||er.status||"HTTP "+r.status));x.st=r.status;throw x}return j}
+async function syToken(s,force){if(!force&&syTok&&Date.now()<syTokT)return syTok;const k=encodeURIComponent(s.k);
+  if(s.rt){try{const r=await syFetch("https://securetoken.googleapis.com/v1/token?key="+k,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"grant_type=refresh_token&refresh_token="+encodeURIComponent(s.rt)});
+      syTok=r.id_token;s.rt=r.refresh_token||s.rt;syTokT=Date.now()+((+r.expires_in||3600)-300)*1e3;return syTok}
+    catch(e){if(e.off||e.st>=500)throw e;s.rt=null}}  // abgelaufene Anmeldung → neu anmelden
+  const r=await syFetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="+k,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({returnSecureToken:true})});
+  syTok=r.idToken;s.rt=r.refreshToken;syTokT=Date.now()+((+r.expiresIn||3600)-300)*1e3;if(SY()===s)save();return syTok}
+async function syCall(s,method,qs,body){const url="https://firestore.googleapis.com/v1/projects/"+encodeURIComponent(s.p)+"/databases/(default)/documents/lists/"+s.code+(qs||"");
+  for(let i=0;;i++){const tok=await syToken(s,i>0);
+    try{return await syFetch(url,{method,headers:Object.assign({Authorization:"Bearer "+tok},body?{"Content-Type":"application/json"}:{}),body:body?JSON.stringify(body):undefined})}
+    catch(e){if(e.st===401&&!i)continue;if(e.st===404&&method==="GET"&&!/does not exist/i.test(e.message))return{};throw e}}}
+function syMsg(e){const m=e.message||"";
+  if(e.off)return"Kein Internet – Änderungen werden später übertragen.";
+  if(/OPERATION_NOT_ALLOWED|ADMIN_ONLY/.test(m))return"In Firebase ist die anonyme Anmeldung nicht eingeschaltet (Authentication → Anmeldemethode → Anonym).";
+  if(/API.?key|API_KEY/i.test(m))return"Der apiKey wird nicht akzeptiert. Prüfe die Firebase-Konfiguration.";
+  if(/does not exist|has not been used|disabled/i.test(m))return"Die Firestore-Datenbank fehlt noch (Firebase → Firestore Database → Datenbank erstellen).";
+  if(e.st===403||/PERMISSION_DENIED|permission/i.test(m))return"Zugriff verweigert – prüfe die Firestore-Regeln aus der Anleitung.";
+  return"Abgleich fehlgeschlagen: "+m}
+// Änderung an einem Eintrag: {id,v} setzt/löscht ihn ganz, {id,f,v} ändert nur ein Feld (z. B. den Haken)
+function syApply(it,o){if(o.f){if(it[o.id])it[o.id][o.f]=o.v}else if(o.v)it[o.id]={...o.v};else delete it[o.id]}
+function syOp(o){const s=SY();if(!s)return;o={...o,v:o.v&&typeof o.v==="object"?{...o.v}:o.v};s.q.push(o);syApply(s.it,o);save();clearTimeout(syOp.h);syOp.h=setTimeout(sySync,150)}
+function syBody(ops){const W={};
+  ops.forEach(o=>{const w=W[o.id];if(o.f){if(w&&!w.f){if(w.v)w.v[o.f]=o.v}else W[o.id]={id:o.id,f:o.f,v:o.v}}else W[o.id]={id:o.id,v:o.v&&{...o.v}}});
+  const F={},L=Object.values(W);
+  L.forEach(o=>{if(o.f)F[o.id]={mapValue:{fields:{[o.f]:fsV(o.v)}}};else if(o.v)F[o.id]=fsMap(o.v)});
+  return{qs:"?"+L.map(o=>"updateMask.fieldPaths="+encodeURIComponent("items."+o.id+(o.f?"."+o.f:""))).join("&"),body:{fields:{items:{mapValue:{fields:F}}}}}}
+async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;
+  try{while(s.q.length){const n=Math.min(s.q.length,80),b=syBody(s.q.slice(0,n));await syCall(s,"PATCH",b.qs,b.body);s.q.splice(0,n);if(SY()===s)save()}
+    const d=await syCall(s,"GET");if(SY()!==s)return;
+    const f=d.fields&&d.fields.items&&d.fields.items.mapValue&&d.fields.items.mapValue.fields||{},it={};
+    Object.entries(f).forEach(([id,v])=>{const x=fsGet(v.mapValue&&v.mapValue.fields);if(x.n)it[id]=x});
+    s.q.forEach(o=>syApply(it,o));  // während des Abrufs Geändertes nicht überschreiben
+    const ch=JSON.stringify(it)!==JSON.stringify(s.it);s.it=it;s.at=Date.now();syErr="";save();if(ch)renderShop()}
+  catch(e){syErr=syMsg(e)}finally{syBusy=false;syStat()}}
+function syStat(){const s=SY(),e=$("syst");if(!s||!e)return;const pend=s.q.length;
+  e.textContent=syErr?"⚠️ "+(/^Kein Internet/.test(syErr)?"offline":"Fehler"):pend?"wird übertragen …":s.at?"✓ "+(Date.now()-s.at<6e4?"aktuell":"Stand "+new Date(s.at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})):"";
+  e.title=syErr;e.style.color=syErr?"var(--warn)":"";const m=$("syerr");if(m)m.textContent=syErr}
+function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||sheetOpen());
+  if(act)sySync();syTimer=setTimeout(syLoop,act?5000:20000)}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syLoop();else if(SY()&&SY().q.length)sySync()});
+window.addEventListener("online",syLoop);
+// Offene Plan-Zutaten in die gemeinsame Liste – gleiche Zutat aus demselben Plan wird aktualisiert statt verdoppelt
+function syPushPlan(E){const s=SY(),wk=ekK(),its=visItems(E).filter(o=>!E.c[o.key]);if(!s||!its.length)return;const ids=[],t=Date.now();
+  its.forEach((o,i)=>{const id="p"+syHash(s.me+"|"+o.key);ids.push([id,o.key]);syOp({id,v:{n:shopLabel(o),c:false,b:s.name,d:s.me,p:true,t:t+i}});E.sh[o.key]=o.a??0});
+  S.ek[wk]=E;save();renderShop();
+  toast(its.length+(its.length===1?" Zutat":" Zutaten")+" geteilt",()=>{if(SY()!==s)return;ids.forEach(([id,k])=>{syOp({id,v:null});delete E.sh[k]});save();renderShop()})}
+// Einladung = Firebase-Projekt + Listen-Code, als ein Textbaustein zum Weiterschicken
+const syInvite=s=>"FPL1-"+btoa(JSON.stringify({k:s.k,p:s.p,c:s.code})).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+function syParseInvite(t){const m=String(t).match(/FPL1-([A-Za-z0-9_-]+)/);if(!m)return null;
+  try{const b=m[1].replace(/-/g,"+").replace(/_/g,"/");const o=JSON.parse(atob(b+"===".slice((b.length+3)%4)));return o.k&&o.p&&/^[A-Z0-9]{20}$/.test(o.c)?o:null}catch(e){return null}}
+function syParseCfg(t){const g=k=>{const m=String(t).match(new RegExp('["\']?'+k+'["\']?\\s*:\\s*["\']([^"\']+)["\']'));return m&&m[1].trim()};const k=g("apiKey"),p=g("projectId");return k&&p?{k,p}:null}
+function syShare(s){const t="Lass uns die FitPlan-Einkaufsliste teilen:\n1. FitPlan öffnen → Plan → Einkaufsliste → „👥 Mit anderem Handy teilen“\n2. „Einladung annehmen“ wählen und diese Nachricht einfügen:\n\n"+syInvite(s);
+  const copy=()=>{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast("Einladung kopiert – jetzt verschicken"),()=>{$("syx").style.display="";$("syx").value=t;$("syx").select()});else{$("syx").style.display="";$("syx").value=t;$("syx").select()}};
+  if(navigator.share)navigator.share({title:"FitPlan-Einkaufsliste",text:t}).catch(e=>{if(e.name!=="AbortError")copy()});else copy()}
+function sySheet(){const s=SY();
+  if(s){openSheet("Gemeinsame Einkaufsliste",
+    '<p class="sm" style="margin:0 0 10px">Verbunden. Neue Einträge und Haken erscheinen nach wenigen Sekunden auch auf dem anderen Handy. Nur diese Liste wird über Firebase geteilt, alle anderen Daten bleiben auf dem Handy.</p>'+
+    '<label class="f">Dein Name (sieht die andere Person bei deinen Einträgen)</label><div style="display:flex;gap:8px"><input id="syn" maxlength="30"><button id="synok">Speichern</button></div>'+
+    '<p class="err" id="syerr" style="margin-top:8px"></p>'+
+    '<button class="full pri" id="syinv" style="margin-top:12px">📨 Andere Person einladen</button>'+
+    '<p class="sm" style="margin:6px 0 0">Wer die Einladung hat, kann die Liste sehen und ändern. Schick sie nur an Personen, mit denen du die Liste teilen willst.</p>'+
+    '<textarea id="syx" rows="5" style="display:none;margin-top:8px" readonly></textarea>'+
+    '<button class="full" id="synow" style="margin-top:12px">↻ Jetzt abgleichen</button>'+
+    '<button class="full del" id="syoff" style="margin-top:8px">Verbindung trennen</button>',
+    ()=>{$("syn").value=s.name||"";syStat();
+      $("synok").onclick=()=>{s.name=$("syn").value.trim();save();toast("Name gespeichert")};
+      $("syinv").onclick=()=>syShare(s);
+      $("synow").onclick=()=>{toast("Wird abgeglichen …");sySync().then(()=>{if(!syErr)toast("Liste ist aktuell")})};
+      $("syoff").onclick=()=>{if(!confirm("Dieses Handy von der gemeinsamen Liste trennen? Offene Einträge bleiben hier als eigene Einträge erhalten. Auf dem anderen Handy ändert sich nichts."))return;
+        const wk=ekK(),E=S.ek[wk]=ekOf(wk);Object.values(s.it).filter(x=>!x.c).forEach(x=>E.x.push({n:x.n,c:false}));
+        S.sy=null;syTok=null;syErr="";save();closeSheet();renderShop();toast("Verbindung getrennt")}});return}
+  let mode="neu";
+  openSheet("Gemeinsame Einkaufsliste",
+    '<p class="sm" style="margin:0 0 10px">Zwei Handys teilen eine Einkaufsliste: Was einer einträgt oder abhakt, sieht der andere nach wenigen Sekunden. Dafür braucht es einmal ein kostenloses Firebase-Projekt – die Schritte stehen in der Anleitung. Nur diese Liste wird geteilt, alles andere bleibt auf dem Handy.</p>'+
+    '<div class="chips" id="sym"></div>'+
+    '<label class="f">Dein Name</label><input id="syn" maxlength="30" placeholder="z. B. Laura">'+
+    '<div id="syneu"><label class="f">Firebase-Konfiguration</label><textarea id="syc" rows="7" placeholder="const firebaseConfig = {\n  apiKey: &quot;…&quot;,\n  projectId: &quot;…&quot;,\n  …\n};"></textarea>'+
+    '<p class="sm" style="margin:6px 0 0">Aus Firebase: ⚙️ Projekteinstellungen → Allgemein → Meine Apps → Web-App. Den ganzen Block mit <b>firebaseConfig</b> kopieren und hier einfügen.</p></div>'+
+    '<div id="syjoin" style="display:none"><label class="f">Einladung</label><textarea id="syi" rows="5" placeholder="Nachricht mit der Einladung hier einfügen (enthält FPL1-…)"></textarea></div>'+
+    '<button class="full pri" id="syok" style="margin-top:12px">Verbinden</button><p class="err" id="syerr"></p>',
+    ()=>{const dm=()=>{const c=$("sym");c.innerHTML="";[["neu","Neue Liste anlegen"],["join","Einladung annehmen"]].forEach(([v,l])=>{const b=el("button",v===mode?"on":"",l);b.onclick=()=>{mode=v;dm()};c.appendChild(b)});
+        $("syneu").style.display=mode==="neu"?"":"none";$("syjoin").style.display=mode==="join"?"":"none";$("syerr").textContent=""};dm();
+      $("syok").onclick=async()=>{const E=$("syerr"),btn=$("syok");E.textContent="";let c;
+        if(mode==="neu"){c=syParseCfg($("syc").value);if(!c){E.textContent="Darin stehen kein apiKey und keine projectId. Kopiere den ganzen firebaseConfig-Block.";return}c.code=syRnd(20)}
+        else{const o=syParseInvite($("syi").value);if(!o){E.textContent="Keine gültige Einladung gefunden. Füge die ganze Nachricht ein.";return}c={k:o.k,p:o.p,code:o.c}}
+        const s={...c,name:$("syn").value.trim(),me:syRnd(8),rt:null,q:[],it:{},at:0};
+        btn.disabled=true;btn.textContent="Verbinde …";syTok=null;
+        try{const d=await syCall(s,"GET");
+          if(mode==="neu")await syCall(s,"PATCH","?updateMask.fieldPaths=v",{fields:{v:{integerValue:"1"}}});
+          else if(!d.fields){E.textContent="Diese Liste gibt es nicht (mehr). Lass dir eine neue Einladung schicken.";return}
+          S.sy=s;syErr="";
+          const wk=ekK(),Ek=S.ek[wk];if(Ek&&Ek.x.length){Ek.x.forEach((x,i)=>syOp({id:"i"+syRnd(10),v:{n:x.n,c:!!x.c,b:s.name,d:s.me,t:Date.now()+i}}));Ek.x=[]}
+          save();await sySync();renderShop();syLoop();
+          if(mode==="neu"){sySheet();toast("Liste angelegt – jetzt die andere Person einladen")}else{closeSheet();toast("Verbunden mit der gemeinsamen Liste")}}
+        catch(e){E.textContent=syMsg(e)}finally{if($("syok")===btn){btn.disabled=false;btn.textContent="Verbinden"}}}})}
+$("eksy").onclick=sySheet;
 
 /* ---------- Fortschritt ---------- */
 const wKeys=()=>Object.keys(S.w).sort();
@@ -1307,7 +1437,7 @@ $("gsave").onclick=()=>{const k=parseInt($("gk").value),p=parseInt($("gp").value
   if(k>=800&&k<=5000)S.g.k=k;if(w>=500&&w<=6000)S.g.ml=w;if(p>0&&p<400)S.g.pz=p;if(s>30&&s<300)S.g.s=s;if(z>30&&z<300)S.g.z=z;
   ["kh","fe","bs"].forEach(c=>{const v=parseInt($("g"+c).value);S.g[c]=v>0&&v<1000?v:0});save();all();toast("Ziele gespeichert")};
 function doExport(){const name="fitplan-sicherung-"+todayK()+".json";
-  const data=JSON.stringify({app:"FitPlan",version:1,exportiert:new Date().toISOString(),daten:S});
+  const data=JSON.stringify({app:"FitPlan",version:1,exportiert:new Date().toISOString(),daten:{...S,sy:undefined}});
   const file=new File([data],name,{type:"application/json"});
   const done=()=>{S.lastExp=new Date().toISOString();save();renderMore();renderBackup();toast("Sicherung erstellt")};
   const dl=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);done()};
@@ -1317,13 +1447,13 @@ $("imp").onclick=()=>{$("derr").textContent="";$("impf").click()};
 $("impf").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{let x=JSON.parse(rd.result);if(x&&x.daten)x=x.daten;if(!x||typeof x.d!=="object"||typeof x.w!=="object")throw 0;
     if(!confirm("Die aktuellen Daten auf diesem Gerät werden durch die Sicherung ersetzt. Fortfahren?"))return;
-    S=x;fix();save();all();toast("Daten importiert")}catch(err){$("derr").textContent="Die Datei ist keine gültige FitPlan-Sicherung."}finally{$("impf").value=""}};
+    const sy=S.sy;S=x;S.sy=sy;fix();save();all();toast("Daten importiert")}catch(err){$("derr").textContent="Die Datei ist keine gültige FitPlan-Sicherung."}finally{$("impf").value=""}};
   rd.readAsText(f)};
 $("reset").onclick=()=>{if(!confirm("Wirklich alle Daten auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen."))return;
   localStorage.removeItem(KEY);S=null;fix();save();all();toast("Daten gelöscht")};
 
 function all(){renderFood();renderWater();renderSport();renderPlan();renderReview();renderWeight();renderMeasure();renderMore()}
-load();all();
+load();all();syLoop();
 // Android: Liste wurde aus einer anderen App (z. B. FamilyWall) an FitPlan geteilt
 (()=>{const q=new URLSearchParams(location.search),tx=q.get("text")||"",ti=q.get("title")||"",t=((ti&&!tx.includes(ti)?ti+"\n":"")+tx+(q.get("url")&&!tx.includes(q.get("url"))?"\n"+q.get("url"):"")).trim();
   if(!t)return;history.replaceState(null,"",location.pathname);show("plan");fwSheet(t)})();
