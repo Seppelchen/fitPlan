@@ -81,6 +81,16 @@ ul.z{margin:0;padding-left:20px}
 <div class="bar"><div id="kbar"></div></div>
 <p class="sm" id="krest" style="margin:6px 0 0"></p>
 </div>
+<div class="card">
+<div class="hd"><h2>Wasser</h2><span class="sm" id="hz"></span></div>
+<div class="big" id="hc">0 ml</div>
+<div class="bar" style="margin-top:6px"><div id="hbar"></div></div>
+<p class="sm" id="hrest" style="margin:6px 0 10px"></p>
+<div class="chips" id="hq"></div>
+<div style="display:flex;gap:8px"><input id="hi" type="number" inputmode="numeric" placeholder="Eigene Menge in ml"><button class="pri" id="hadd" style="white-space:nowrap">＋ ml</button></div>
+<p class="err" id="herr"></p>
+<div id="hlist" style="margin-top:6px"></div>
+</div>
 <div class="card"><h2>Gegessen</h2><div id="flist"></div></div>
 <div class="card">
 <div class="hd"><h2>Rezepte</h2><button class="pri" id="newR">＋ Neues Rezept</button></div>
@@ -151,6 +161,8 @@ ul.z{margin:0;padding-left:20px}
 <div class="g2">
 <div><label class="f">Kalorien pro Tag</label><input id="gk" type="number" inputmode="numeric"></div>
 <div><label class="f">Eiweiß pro Tag (g)</label><input id="gp" type="number" inputmode="numeric"></div>
+<div><label class="f">Wasser pro Tag (ml)</label><input id="gw" type="number" inputmode="numeric"></div>
+<div></div>
 <div><label class="f">Startgewicht (kg)</label><input id="gs" inputmode="decimal"></div>
 <div><label class="f">Zielgewicht (kg)</label><input id="gz" inputmode="decimal"></div>
 </div>
@@ -251,14 +263,14 @@ function fix(){
   S.R.forEach(r=>{r.id=r.id||uid();if(!Array.isArray(r.z)){const d=RB.find(x=>x[1]===r.n);if(d){r.t=d[4];r.z=d[5].slice();r.s=d[6];r.tg=d[7]||""}else{r.z=[];r.s=r.s||"";r.t=r.t||"";r.tg=r.tg||""}}});
   if(!Array.isArray(S.A))S.A=DA.map(a=>({...a}));S.A.forEach(a=>{a.p=a.p||1;a.g=a.g||1});
   if(!Array.isArray(S.E))S.E=DE.map(e=>({...e}));
-  S.g=Object.assign({k:1650,pz:90,s:110,z:80},S.g||{});
-  Object.values(S.d).forEach(D=>{D.f=D.f||[];D.x=D.x||{};D.s=D.s||(D.a||[]).map(a=>({n:a,m:0}));delete D.a});
+  S.g=Object.assign({k:1650,pz:90,s:110,z:80,ml:2000},S.g||{});
+  Object.values(S.d).forEach(D=>{D.f=D.f||[];D.x=D.x||{};D.h=D.h||[];D.s=D.s||(D.a||[]).map(a=>({n:a,m:0}));delete D.a});
 }
 function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}fix()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Speichern fehlgeschlagen")}}
 
 const dt=$("dt");dt.value=iso(new Date());
-const day=()=>{const k=dt.value||iso(new Date());if(!S.d[k])S.d[k]={f:[],s:[],x:{}};return S.d[k]};
+const day=()=>{const k=dt.value||iso(new Date());if(!S.d[k])S.d[k]={f:[],s:[],x:{},h:[]};return S.d[k]};
 function shift(n){const d=new Date(dt.value+"T12:00");d.setDate(d.getDate()+n);dt.value=iso(d);all()}
 $("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);$("today").onclick=()=>{dt.value=iso(new Date());all()};dt.onchange=all;
 
@@ -329,6 +341,23 @@ $("qadd").onclick=()=>{const n=$("qn").value.trim(),k=num($("qk").value);
   if(!n){$("qerr").textContent="Gib einen Namen ein.";return}
   if(!(k>0)){$("qerr").textContent="Gib die Kalorien ein.";return}
   day().f.push({n,k:Math.round(k),p:Math.round(num($("qp").value)||0)});$("qn").value=$("qk").value=$("qp").value="";save();renderFood();toast("Eingetragen")};
+
+/* ---------- Wasser ---------- */
+const HQ=[200,250,330,500];
+const waterSum=()=>day().h.reduce((a,h)=>a+h.ml,0);
+function renderWater(){const D=day(),G=S.g.ml,tot=waterSum();
+  $("hc").textContent=fmt(tot)+" ml";$("hz").textContent="Ziel "+fmt(G)+" ml";
+  $("hbar").style.width=Math.min(100,tot/G*100)+"%";$("hbar").style.background=tot>=G?"var(--ok)":"var(--accent)";
+  $("hrest").textContent=tot>=G?"Ziel erreicht! 💧":"Noch "+fmt(G-tot)+" ml bis zum Ziel";
+  const q=$("hq");q.innerHTML="";HQ.forEach(m=>{const b=el("button","","＋ "+m+" ml");b.onclick=()=>addWater(m);q.appendChild(b)});
+  const L=$("hlist");L.innerHTML="";
+  D.h.map((h,i)=>({h,i})).reverse().forEach(({h,i})=>{const r=el("div","row",'<div class="t">'+fmt(h.ml)+' ml'+(h.t?' <span class="sm">· '+esc(h.t)+' Uhr</span>':'')+'</div><button class="ic" aria-label="Löschen">✕</button>');
+    r.querySelector("button").onclick=()=>{D.h.splice(i,1);save();renderWater()};L.appendChild(r)})}
+function addWater(m){const before=waterSum();day().h.push({ml:Math.round(m),t:new Date().toTimeString().slice(0,5)});save();renderWater();
+  toast(before<S.g.ml&&waterSum()>=S.g.ml?"Wasserziel erreicht 💧":"+"+fmt(m)+" ml")}
+$("hi").oninput=()=>$("herr").textContent="";
+$("hadd").onclick=()=>{const m=num($("hi").value);if(!(m>0&&m<=5000)){$("herr").textContent="Gib eine Menge in ml ein (z. B. 300).";return}addWater(m);$("hi").value=""};
+$("hi").onkeydown=e=>{if(e.key==="Enter")$("hadd").click()};
 
 /* ---------- Sport ---------- */
 function weekStart(){const d=new Date(dt.value+"T12:00");d.setDate(d.getDate()-((d.getDay()+6)%7));return d}
@@ -422,11 +451,11 @@ $("wadd").onclick=()=>{const v=num($("wi").value);if(!(v>30&&v<300)){$("werr").t
   S.w[dt.value]=Math.round(v*10)/10;$("wi").value="";save();renderWeight();toast("Gewicht gespeichert")};
 
 /* ---------- Mehr / Daten ---------- */
-function renderMore(){$("gk").value=S.g.k;$("gp").value=S.g.pz;$("gs").value=String(S.g.s).replace(".",",");$("gz").value=String(S.g.z).replace(".",",");
+function renderMore(){$("gk").value=S.g.k;$("gp").value=S.g.pz;$("gw").value=S.g.ml;$("gs").value=String(S.g.s).replace(".",",");$("gz").value=String(S.g.z).replace(".",",");
   const le=$("lastExp");if(S.lastExp){const days=Math.floor((Date.now()-new Date(S.lastExp))/864e5);le.textContent="Letzte Sicherung: "+new Date(S.lastExp).toLocaleDateString("de-DE")+(days>=14?" – Zeit für eine neue":"");le.style.color=days>=14?"var(--warn)":""}
   else{le.textContent="Noch keine Sicherung erstellt.";le.style.color="var(--warn)"}}
-$("gsave").onclick=()=>{const k=parseInt($("gk").value),p=parseInt($("gp").value),s=num($("gs").value),z=num($("gz").value);
-  if(k>=800&&k<=5000)S.g.k=k;if(p>0&&p<400)S.g.pz=p;if(s>30&&s<300)S.g.s=s;if(z>30&&z<300)S.g.z=z;save();all();toast("Ziele gespeichert")};
+$("gsave").onclick=()=>{const k=parseInt($("gk").value),p=parseInt($("gp").value),w=parseInt($("gw").value),s=num($("gs").value),z=num($("gz").value);
+  if(k>=800&&k<=5000)S.g.k=k;if(w>=500&&w<=6000)S.g.ml=w;if(p>0&&p<400)S.g.pz=p;if(s>30&&s<300)S.g.s=s;if(z>30&&z<300)S.g.z=z;save();all();toast("Ziele gespeichert")};
 $("exp").onclick=()=>{const name="fitplan-sicherung-"+iso(new Date())+".json";
   const data=JSON.stringify({app:"FitPlan",version:1,exportiert:new Date().toISOString(),daten:S});
   const file=new File([data],name,{type:"application/json"});
@@ -442,7 +471,7 @@ $("impf").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileR
 $("reset").onclick=()=>{if(!confirm("Wirklich alle Daten auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen."))return;
   localStorage.removeItem(KEY);S=null;fix();save();all();toast("Daten gelöscht")};
 
-function all(){renderFood();renderSport();renderWeight();renderMore()}
+function all(){renderFood();renderWater();renderSport();renderWeight();renderMore()}
 load();all();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");

@@ -1,6 +1,6 @@
 // FitPlan Service Worker – macht die App offline verfügbar.
 // Bei jeder Änderung an der App VERSION hochzählen, damit Handys die neue Version laden.
-const VERSION = 'fitplan-v1';
+const VERSION = 'fitplan-v2';
 
 // Dateien, die beim ersten Öffnen sofort gespeichert werden.
 // Weitere Dateien (CSS, JS, Bilder) werden beim ersten Laden automatisch mitgespeichert.
