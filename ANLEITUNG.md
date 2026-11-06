@@ -87,6 +87,13 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Fortschritt → Wochenrückblick:** Das Balkendiagramm lässt sich umschalten auf
   **Kalorien**, **Mahlzeiten** oder **Nährstoffe**. Einen Tag antippen zeigt die genauen Werte.
 
+## Wochenplan
+
+- Ein geplantes Essen antippen: Du siehst Nährwerte, Zutaten und Zubereitung. Von dort kannst du
+  es für diesen Tag eintragen, ein anderes Rezept wählen oder es aus dem Plan nehmen.
+- Beim Auswählen öffnet das Antippen eines Rezepts erst die Vorschau, **＋** plant es direkt ein.
+- Bereits gegessene Mahlzeiten bekommen im Plan ein „✓ gegessen“.
+
 ## Lebensmittel suchen
 
 - **Essen → 🔍 Lebensmittel suchen**, z. B. „Apfel“ oder „Skyr“.

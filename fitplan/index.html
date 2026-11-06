@@ -592,17 +592,28 @@ $("cpy").onclick=()=>{const yk=addDays(dt.value,-1),fs=(S.d[yk]||{}).f||[];
     $("sheetIn").querySelectorAll("button[data-i]").forEach(b=>b.onclick=()=>{if(b.classList.contains("done"))return;cp(groups[+b.dataset.i].it);b.classList.add("done");b.textContent="✓";toast("Übernommen")});
     $("cpall").onclick=()=>{cp(fs);closeSheet();toast(fs.length+" Einträge übernommen")}})};
 
-function recipeDetail(id){const r=S.R.find(x=>x.id===id);if(!r)return;let q=1;
+// ctx: {k,c} = aus dem Wochenplan geöffnet, {k,c,pick:1} = Vorschau bei der Rezeptauswahl
+function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=1;const pk=ctx&&ctx.pick,pl=ctx&&!pk,when=ctx?wd(ctx.k)+" "+dd(ctx.k):"";
   openSheet(icOf(r)+" "+esc(r.n),
+  (pk?'<button id="rdBk" style="margin:0 0 10px;font-size:14px;padding:5px 12px">‹ Zurück zur Auswahl</button>':'')+
+  (ctx?'<p class="sm" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">📅 '+(pk?'Auswahl für ':'Geplant für ')+when+' · '+esc(ctx.c)+'</p>':'')+
   '<div class="g2"><div class="mc"><div class="sm">Kalorien</div><b>'+fmt(r.k)+' kcal</b></div><div class="mc"><div class="sm">Eiweiß</div><b>'+fmt(r.p)+' g</b></div></div>'+
   '<div class="g3" style="margin:8px 0 10px">'+MK.map(([c,l])=>'<div class="mc"><div class="sm">'+l+'</div><b>'+(r[c]==null?"–":fmt(r[c])+" g")+'</b></div>').join("")+'</div>'+
   '<p class="sm" style="margin:0 0 8px">'+esc(r.c)+(r.t?' · ⏱ '+esc(r.t):'')+'</p>'+
   (r.z&&r.z.length?'<p class="lb">Zutaten '+(r.pz>1?'(für '+r.pz+' Portionen – Nährwerte oben gelten für 1 Portion)':'(1 Portion)')+'</p><ul class="z">'+r.z.map(z=>'<li>'+esc(z)+'</li>').join("")+'</ul>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
   (r.s?'<p class="lb" style="margin-top:12px">Zubereitung</p><p style="margin:0;white-space:pre-line">'+esc(r.s)+'</p>':'')+
-  '<p class="lb" style="margin-top:16px">Portion</p><div class="chips" id="rdq"></div>'+mealSel("rdm",r.c)+
-  '<button class="full pri" id="rdAdd" style="margin-top:10px"></button><div class="g2" style="margin-top:8px"><button id="rdEd">Bearbeiten</button><button class="del" id="rdDel">Löschen</button></div>',
-  ()=>{const dr=()=>{qChips("rdq",q,v=>{q=v;dr()});$("rdAdd").textContent="＋ Eintragen · "+fmt(r.k*q)+" kcal"};dr();
-    $("rdAdd").onclick=()=>{addRecipe(r,q,$("rdm").value);closeSheet()};$("rdEd").onclick=()=>recipeForm(r.id);
+  (pk?'<button class="full pri" id="rdPl" style="margin-top:16px">📅 Für '+when+' · '+esc(ctx.c)+' einplanen</button>':
+  '<p class="lb" style="margin-top:16px">Portion</p><div class="chips" id="rdq"></div>'+(pl?'':mealSel("rdm",r.c))+
+  '<button class="full pri" id="rdAdd" style="margin-top:10px"></button>'+
+  (pl?'<div class="g2" style="margin-top:8px"><button id="rdCh">Anderes Rezept</button><button class="del" id="rdRm">Aus dem Plan</button></div><button class="full" id="rdEd" style="margin-top:8px">Rezept bearbeiten</button>'
+    :'<div class="g2" style="margin-top:8px"><button id="rdEd">Bearbeiten</button><button class="del" id="rdDel">Löschen</button></div>')),
+  ()=>{if(pk){$("rdBk").onclick=()=>pickRecipe(ctx.k,ctx.c);$("rdPl").onclick=()=>{planSet(ctx.k,ctx.c,r.id);closeSheet();toast("Eingeplant · "+when)};return}
+    const dr=()=>{qChips("rdq",q,v=>{q=v;dr()});$("rdAdd").textContent="＋ Eintragen"+(pl?" für "+when:"")+" · "+fmt(r.k*q)+" kcal"};dr();
+    $("rdEd").onclick=()=>recipeForm(r.id);
+    if(pl){$("rdAdd").onclick=()=>{const D=S.d[ctx.k]||(S.d[ctx.k]={f:[],s:[],x:{},h:[]});D.f.push(mkEntry(r.n,r.k,r.p,ctx.c,q,r));save();closeSheet();renderFood();renderPlan();toast("Eingetragen · "+ctx.c+", "+when)};
+      $("rdCh").onclick=()=>pickRecipe(ctx.k,ctx.c);
+      $("rdRm").onclick=()=>{planSet(ctx.k,ctx.c,null);closeSheet();toast("Aus dem Plan genommen",()=>{planSet(ctx.k,ctx.c,r.id)})};return}
+    $("rdAdd").onclick=()=>{addRecipe(r,q,$("rdm").value);closeSheet()};
     $("rdDel").onclick=()=>{if(confirm("Rezept „"+r.n+"“ löschen?")){S.R=S.R.filter(x=>x.id!==r.id);save();closeSheet();renderFood()}}})}
 
 function recipeForm(id){const r=id?S.R.find(x=>x.id===id):null;
@@ -891,18 +902,21 @@ function renderPlan(){const W=weekKeys(),G=S.g.k;
   const P=$("pdays");P.innerHTML="";
   W.forEach(k=>{const pl=S.pl[k]||{},rs=CATS.map(c=>rById(pl[c])).filter(Boolean),tot=rs.reduce((a,r)=>a+r.k,0),sm=c=>rs.reduce((a,r)=>a+(r[c]||0),0);
     const d=el("div","pd",'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="white-space:nowrap'+(k===dt.value?';color:var(--accent)':'')+'">'+wd(k)+' '+dd(k)+'</b><span class="sm" style="text-align:right'+(tot>G?';color:var(--warn)':'')+'">'+(tot?mline(tot,sm("p"),sm("kh"),sm("fe")):'')+'</span></div>');
-    const g=el("div","slots");CATS.forEach(c=>{const r=rById(pl[c]);const b=el("button",r?"":"e",'<div class="sm">'+c+'</div>'+(r?icOf(r)+" "+esc(r.n):"＋ wählen"));b.onclick=()=>pickRecipe(k,c);g.appendChild(b)});
+    const ate=(S.d[k]||{f:[]}).f;
+    const g=el("div","slots");CATS.forEach(c=>{const r=rById(pl[c]),ok=r&&ate.some(f=>f.n===r.n);const b=el("button",r?"":"e",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+(r?icOf(r)+" "+esc(r.n):"＋ wählen"));b.onclick=()=>r?recipeDetail(r.id,{k,c}):pickRecipe(k,c);g.appendChild(b)});
     d.appendChild(g);P.appendChild(d)});
   renderShop()}
 $("pwp").onclick=()=>shift(-7);$("pwn").onclick=()=>shift(7);
+function planSet(k,c,id){if(id)(S.pl[k]=S.pl[k]||{})[c]=id;else if(S.pl[k]){delete S.pl[k][c];if(!Object.keys(S.pl[k]).length)delete S.pl[k]}save();renderPlan();renderFood()}
 function pickRecipe(k,c){const cur=(S.pl[k]||{})[c];let allC=false;
-  openSheet(c+" · "+wd(k)+" "+dd(k),'<input id="pq" placeholder="Rezept suchen" style="margin-bottom:8px"><div class="chips" id="pcs"></div><div id="pli"></div>'+(cur?'<button class="full del" id="prm" style="margin-top:10px">Aus dem Plan entfernen</button>':''),
-  ()=>{const set=id=>{if(id)(S.pl[k]=S.pl[k]||{})[c]=id;else if(S.pl[k]){delete S.pl[k][c];if(!Object.keys(S.pl[k]).length)delete S.pl[k]}save();closeSheet();renderPlan()};
+  openSheet(c+" · "+wd(k)+" "+dd(k),'<p class="sm" style="margin:0 0 8px">Rezept antippen zum Ansehen, ＋ plant es direkt ein.</p><input id="pq" placeholder="Rezept suchen" style="margin-bottom:8px"><div class="chips" id="pcs"></div><div id="pli"></div>'+(cur?'<button class="full del" id="prm" style="margin-top:10px">Aus dem Plan entfernen</button>':''),
+  ()=>{const set=id=>{closeSheet();planSet(k,c,id)};
     const dr=()=>{const q=$("pq").value.trim().toLowerCase();
       $("pcs").innerHTML="";[[false,"Nur "+c],[true,"Alle Rezepte"]].forEach(([v,l])=>{const b=el("button",v===allC?"on":"",l);b.onclick=()=>{allC=v;dr()};$("pcs").appendChild(b)});
       const L=$("pli");L.innerHTML="";const it=S.R.filter(r=>(allC||r.c===c)&&(!q||r.n.toLowerCase().includes(q)));
       if(!it.length)L.innerHTML='<p class="sm">Keine Rezepte gefunden.</p>';
-      it.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t">'+esc(r.n)+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+'</div></div><button class="ic'+(r.id===cur?' done':'')+'">'+(r.id===cur?'✓':'＋')+'</button>');row.style.cursor="pointer";row.onclick=()=>set(r.id);L.appendChild(row)})};
+      it.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t">'+esc(r.n)+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+'</div></div><button class="ic'+(r.id===cur?' done':'')+'">'+(r.id===cur?'✓':'＋')+'</button>');row.style.cursor="pointer";row.onclick=()=>recipeDetail(r.id,{k,c,pick:1});
+        row.querySelector("button").onclick=e=>{e.stopPropagation();set(r.id)};L.appendChild(row)})};
     $("pq").oninput=dr;dr();if(cur)$("prm").onclick=()=>set(null)})}
 $("pcopy").onclick=()=>{const W=weekKeys(),has=W.some(k=>S.pl[k]),prev=W.map(k=>S.pl[addDays(k,-7)]);
   if(!prev.some(Boolean)){toast("In der Vorwoche ist nichts geplant");return}
