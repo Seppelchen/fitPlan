@@ -95,6 +95,22 @@ ul.z{margin:0;padding-left:20px}
 .ek:last-child{border-bottom:0}
 .ek input{width:22px;height:22px;flex:none;margin:0}
 .ek.ok .t{text-decoration:line-through;color:var(--muted)}
+/* Einkaufsmodus */
+.shopm{position:fixed;inset:0;background:var(--bg);z-index:25;display:none;flex-direction:column}
+.shopm.open{display:flex}
+.shopm .top{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--border);background:var(--card)}
+.shopm .top h2{margin:0;font-size:19px}
+.shopm .bar{height:6px;background:var(--chip);border-radius:3px;overflow:hidden;margin-top:6px}
+.shopm .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.shopm .lst{flex:1;overflow:auto;padding:0 16px 24px;-webkit-overflow-scrolling:touch;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.shopm .sec{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:18px 0 0}
+.shopm .it{display:flex;align-items:center;gap:14px;padding:13px 2px;border-bottom:1px solid var(--border);font-size:19px;line-height:1.3;cursor:pointer;-webkit-user-select:none;user-select:none}
+.shopm .it .bx{width:28px;height:28px;flex:none;box-sizing:border-box;border:2px solid var(--muted);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff}
+.shopm .it.ok .bx{background:var(--ok);border-color:var(--ok)}
+.shopm .it.ok .t{text-decoration:line-through;color:var(--muted)}
+.shopm .it .sm{font-size:13px}
+.shopm .fin{text-align:center;font-size:20px;padding:28px 0 6px}
+.shopm .add{display:flex;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--card)}
 .cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3}
 .cam video{width:100%;height:100%;object-fit:cover;display:block}
 .cam .fr{position:absolute;left:6%;right:6%;top:30%;bottom:30%;border:3px solid rgba(255,255,255,.9);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
@@ -169,6 +185,7 @@ ul.z{margin:0;padding-left:20px}
 </div>
 <div class="card">
 <div class="hd"><h2>Einkaufsliste</h2><button id="eksh">Exportieren</button></div>
+<button class="full pri" id="ekgo" style="margin-bottom:10px">🛒 Einkaufen – nur die Liste</button>
 <div class="chips" id="ekm"></div>
 <div id="ekl"></div>
 <div style="display:flex;gap:8px;margin-top:10px"><input id="eki" placeholder="Eigener Eintrag, z. B. Spülmittel"><button class="pri" id="eka" aria-label="Hinzufügen">＋</button></div>
@@ -302,6 +319,9 @@ ul.z{margin:0;padding-left:20px}
 </nav>
 <div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
 <div class="sheet" id="sheet2" style="z-index:30"><div class="in" id="sheet2In"></div></div>
+<div class="shopm" id="shopm"><div class="top"><div style="flex:1;min-width:0"><h2>🛒 Einkaufen</h2><div class="sm"><span id="smc"></span> <span id="smst" style="margin-left:6px"></span></div><div class="bar"><i id="smb"></i></div></div><button class="pri" id="smx">Fertig</button></div>
+<div class="lst" id="sml"></div>
+<div class="add"><input id="smi" placeholder="Noch etwas eintragen" enterkeyhint="done"><button class="pri" id="sma" aria-label="Hinzufügen">＋</button></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1096,7 +1116,8 @@ function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=100
 const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};E.sh=E.sh||{};return E};
 const hid=(M,o)=>o.key in M&&M[o.key]===(o.a??0);
 const visItems=E=>shopItems().filter(o=>!hid(E.hd,o)&&!hid(E.sh,o));
-function renderShop(){const wk=ekK(),E=ekOf(wk),sy=SY();
+function renderShop(){renderShopList();renderShopMode()}
+function renderShopList(){const wk=ekK(),E=ekOf(wk),sy=SY();
   const ch=$("ekm");ch.innerHTML="";[["w",prd().auto?"Ganze Woche":"Ganzer Zeitraum"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
   const its=visItems(E),nh=shopItems().filter(o=>hid(E.hd,o)&&!hid(E.sh,o)).length,L=$("ekl");L.innerHTML="";
   $("eksy").textContent=sy?"👥 Gemeinsame Liste verwalten":"👥 Mit anderem Handy teilen";
@@ -1192,9 +1213,9 @@ function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.
       save();closeSheet();show("plan");const c=$("ekl").closest(".card");c.scrollIntoView();window.scrollBy(0,-70);
       toast(r.items.length+" Artikel übernommen",()=>{S.fw=old;save();renderShop()})}})}
 $("ekfw").onclick=()=>fwSheet("");
-$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const sy=SY();
-  if(sy){syOp({id:"i"+syRnd(10),v:{n,c:false,b:sy.name,d:sy.me,t:Date.now()}});$("eki").value="";renderShop();return}
-  const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
+function ekAdd(n){const sy=SY();if(sy){syOp({id:"i"+syRnd(10),v:{n,c:false,b:sy.name,d:sy.me,t:Date.now()}});renderShop();return}
+  const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});save();renderShop()}
+$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;$("eki").value="";ekAdd(n)};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
 $("ekr").onclick=()=>{const wk=ekK(),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);const sy=SY();if(sy)Object.entries(sy.it).forEach(([id,x])=>{if(x.c)syOp({id,f:"c",v:false})});save();renderShop();toast("Haken zurückgesetzt")};
 $("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
@@ -1264,10 +1285,10 @@ async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;
     s.q.forEach(o=>syApply(it,o));  // während des Abrufs Geändertes nicht überschreiben
     const ch=JSON.stringify(it)!==JSON.stringify(s.it);s.it=it;s.at=Date.now();syErr="";save();if(ch)renderShop()}
   catch(e){syErr=syMsg(e)}finally{syBusy=false;syStat()}}
-function syStat(){const s=SY(),e=$("syst");if(!s||!e)return;const pend=s.q.length;
-  e.textContent=syErr?"⚠️ "+(/^Kein Internet/.test(syErr)?"offline":"Fehler"):pend?"wird übertragen …":s.at?"✓ "+(Date.now()-s.at<6e4?"aktuell":"Stand "+new Date(s.at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})):"";
-  e.title=syErr;e.style.color=syErr?"var(--warn)":"";const m=$("syerr");if(m)m.textContent=syErr}
-function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||sheetOpen());
+function syStat(){const s=SY();if(!s)return;const pend=s.q.length;
+  const t=syErr?"⚠️ "+(/^Kein Internet/.test(syErr)?"offline":"Fehler"):pend?"wird übertragen …":s.at?"✓ "+(Date.now()-s.at<6e4?"aktuell":"Stand "+new Date(s.at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})):"";
+  [$("syst"),$("smst")].forEach(e=>{if(e){e.textContent=e.id==="smst"&&t?"👥 "+t:t;e.title=syErr;e.style.color=syErr?"var(--warn)":""}});const m=$("syerr");if(m)m.textContent=syErr}
+function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||sheetOpen()||shopOn);
   if(act)sySync();syTimer=setTimeout(syLoop,act?5000:20000)}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syLoop();else if(SY()&&SY().q.length)sySync()});
 window.addEventListener("online",syLoop);
@@ -1337,6 +1358,50 @@ function sySheet(){const s=SY();
           if(mode==="neu"){sySheet();toast("Liste angelegt – jetzt die andere Person einladen")}else{closeSheet();toast("Verbunden mit der gemeinsamen Liste")}}
         catch(e){E.textContent=syMsg(e)}finally{if($("syok")===btn){btn.disabled=false;btn.textContent="Verbinden"}}}})}
 $("eksy").onclick=sySheet;
+
+/* ---------- Einkaufsmodus: nur die Liste im Vollbild, große Zeilen, Bildschirm bleibt an ----------
+   Alle Quellen (gemeinsame Liste, Plan, eigene Einträge, FamilyWall) in einer Ansicht. Offene Artikel
+   oben nach Abschnitten, Abgehaktes wandert nach unten in „Im Wagen“. */
+let shopOn=false,shopWL=null,shopDoneOpen=false;
+function shopModel(){const wk=ekK(),E=ekOf(wk),sy=SY(),secs=[],keep=()=>{S.ek[wk]=E;save()};
+  const sec=(t,items)=>{if(items.length)secs.push({t,items})};
+  const grp=(arr,gf)=>{const gs=[];arr.forEach(x=>{const g=gf(x);if(!gs.includes(g))gs.push(g)});return gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"))};
+  if(sy){const all=Object.entries(sy.it).map(([id,x])=>({id,...x})).sort((a,b)=>(a.t||0)-(b.t||0));
+    const it=x=>({n:x.n,sub:x.f||!x.b||x.d===sy.me?"":(x.p?"aus dem Plan von ":"von ")+x.b,c:!!x.c,set:v=>syOp({id:x.id,f:"c",v})});
+    sec("Gemeinsam",all.filter(x=>!x.f).map(it));
+    const fw=all.filter(x=>x.f);grp(fw,x=>x.g||"Sonstiges").forEach(g=>sec(g,fw.filter(x=>(x.g||"Sonstiges")===g).map(it)))}
+  const its=visItems(E),by=(a,b)=>a.n.localeCompare(b.n,"de");
+  const pi=o=>({n:o.a==null?o.n:shopLabel(o),sub:"",c:!!E.c[o.key],set:v=>{if(v)E.c[o.key]=1;else delete E.c[o.key];keep()}});
+  sec(sy?"Aus deinem Plan · nur hier":"Aus dem Plan",its.filter(o=>o.a!=null).sort(by).map(pi));
+  sec("Vorrat & Gewürze",its.filter(o=>o.a==null).sort(by).map(pi));
+  sec("Eigene Einträge",E.x.map(x=>({n:x.n,sub:"",c:!!x.c,set:v=>{x.c=v;keep()}})));
+  if(S.fw&&S.fw.items.length)grp(S.fw.items,x=>x.g).forEach(g=>sec(g,S.fw.items.filter(x=>x.g===g).map(x=>({n:x.n,sub:"",c:!!x.c,set:v=>{x.c=v;save()}}))));
+  return secs}
+function renderShopMode(){if(!shopOn)return;const L=$("sml"),st=L.scrollTop,secs=shopModel(),done=[];let tot=0,dn=0;
+  secs.forEach(s=>s.items.forEach(x=>{tot++;if(x.c)dn++}));
+  $("smc").textContent=tot?dn+" von "+tot+" erledigt":"";$("smb").style.width=(tot?dn/tot*100:0)+"%";
+  const row=(x,sec)=>{const sub=[x.sub,sec].filter(Boolean).join(" · ");
+    const r=el("div","it"+(x.c?" ok":""),'<span class="bx">'+(x.c?"✓":"")+'</span><div class="t" style="flex:1;min-width:0">'+esc(x.n)+(sub?'<div class="sm">'+esc(sub)+'</div>':'')+'</div>');
+    r.onclick=()=>{const was=x.c;x.set(!was);renderShop();if(!was)toast("„"+x.n+"“ im Wagen",()=>{x.set(false);renderShop()})};L.appendChild(r)};
+  L.innerHTML="";
+  secs.forEach(s=>{const open=s.items.filter(x=>!x.c);s.items.filter(x=>x.c).forEach(x=>done.push([x,s.t]));if(!open.length)return;
+    L.appendChild(el("div","sec",esc(s.t)));open.forEach(x=>row(x))});
+  if(!tot)L.appendChild(el("div","fin",'<div style="font-size:40px">🧺</div>Die Einkaufsliste ist leer.<div class="sm">Unten kannst du etwas eintragen.</div>'));
+  else if(dn===tot)L.appendChild(el("div","fin",'<div style="font-size:40px">🎉</div>Alles erledigt!'));
+  if(done.length){const b=el("button","full","✓ Im Wagen ("+done.length+") "+(shopDoneOpen?"▲":"▼"));b.style.marginTop="18px";b.onclick=()=>{shopDoneOpen=!shopDoneOpen;renderShopMode()};L.appendChild(b);
+    if(shopDoneOpen)done.forEach(([x,t])=>row(x,t))}
+  L.scrollTop=st;$("smst").textContent="";syStat()}
+async function shopWake(){try{if(shopOn&&!shopWL&&navigator.wakeLock&&document.visibilityState==="visible"){shopWL=await navigator.wakeLock.request("screen");shopWL.addEventListener("release",()=>{shopWL=null})}}catch(e){}}
+function shopOpen(){shopOn=true;shopDoneOpen=false;$("shopm").classList.add("open");document.body.style.overflow="hidden";$("sml").scrollTop=0;renderShopMode();shopWake();syLoop();
+  try{history.pushState({shop:1},"")}catch(e){}}
+function shopClose(fromPop){if(!shopOn)return;shopOn=false;$("shopm").classList.remove("open");document.body.style.overflow="";
+  try{if(shopWL)shopWL.release()}catch(e){}shopWL=null;if(!fromPop&&history.state&&history.state.shop)history.back();renderShop()}
+// Android-Zurück-Taste schließt den Einkaufsmodus statt die App
+window.addEventListener("popstate",()=>{if(shopOn)shopClose(true)});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")shopWake()});
+$("ekgo").onclick=shopOpen;$("smx").onclick=()=>shopClose();
+$("sma").onclick=()=>{const n=$("smi").value.trim();if(!n)return;$("smi").value="";ekAdd(n);toast("„"+n+"“ eingetragen")};
+$("smi").onkeydown=e=>{if(e.key==="Enter")$("sma").click()};
 
 /* ---------- Fortschritt ---------- */
 const wKeys=()=>Object.keys(S.w).sort();
@@ -1481,7 +1546,7 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 // Updates: beim Zurückholen der App nach neuer Version fragen und sie sofort laden
 if("serviceWorker" in navigator&&location.protocol==="https:"){const SW=navigator.serviceWorker,had=!!SW.controller;let rl=false;
   SW.register("sw.js").then(reg=>{document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")reg.update().catch(()=>{})})}).catch(()=>{});
-  SW.addEventListener("controllerchange",()=>{if(!had||rl)return;rl=true;const a=document.activeElement,busy=sheetOpen()||$("sheet2").classList.contains("open")||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.value);
+  SW.addEventListener("controllerchange",()=>{if(!had||rl)return;rl=true;const a=document.activeElement,busy=shopOn||sheetOpen()||$("sheet2").classList.contains("open")||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.value);
     if(!busy)location.reload();else{toast("Neue Version von FitPlan ist da",()=>location.reload(),"Jetzt laden");clearTimeout(toast.h)}})}
 </script>
 </body>

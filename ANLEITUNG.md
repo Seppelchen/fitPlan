@@ -145,6 +145,19 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Einmal gescannte Produkte merkt sich FitPlan – sie funktionieren danach auch ohne Internet.
 - Klappt die Kamera nicht, die Nummer unter dem Barcode einfach eintippen.
 
+## Einkaufsmodus
+
+- **Plan → Einkaufsliste → 🛒 Einkaufen – nur die Liste** öffnet die Liste im Vollbild, mit großen
+  Zeilen zum Abhaken mit einem Finger.
+- Alles steht in einer Ansicht: gemeinsame Liste, FamilyWall-Artikel nach Kategorien, Zutaten aus dem
+  Plan und eigene Einträge.
+- Abgehaktes wandert nach unten in **✓ Im Wagen**. Antippen klappt es auf, dort lässt sich ein Haken
+  wieder entfernen. Direkt nach dem Abhaken geht es auch über „Rückgängig“.
+- Oben zeigt ein Balken, wie viel schon erledigt ist. Unten kann man schnell noch etwas eintragen.
+- Der Bildschirm bleibt an, solange der Einkaufsmodus offen ist (wenn das Handy es unterstützt).
+- Bei gemeinsamer Liste sieht man die Haken der anderen Person nach wenigen Sekunden.
+- **Fertig** oder die Zurück-Taste (Android) schließt den Einkaufsmodus.
+
 ## Einkaufsliste aus FamilyWall übernehmen
 
 - **Android:** In FamilyWall die Einkaufsliste öffnen → **Teilen** → **FitPlan** wählen.
