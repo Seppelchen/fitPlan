@@ -598,7 +598,7 @@ $("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);$("today").onclic
 
 let view="essen";
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
-function show(v){view=v;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));window.scrollTo(0,0);
+function show(v){view=v;try{localStorage.setItem(KEY+".tab",v)}catch(e){}document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));window.scrollTo(0,0);
   if(v==="fort"){renderReview();renderWeight()}else if(v==="plan"){renderPlan();syLoop()}else if(v==="essen")renderFood()}
 
 // L2: zweite Ebene über einem offenen Sheet (Zutat fürs Rezept auswählen, Formular bleibt darunter erhalten)
@@ -1618,7 +1618,10 @@ $("reset").onclick=()=>{if(!confirm("Wirklich alle Daten auf diesem Gerät lösc
   localStorage.removeItem(KEY);S=null;fix();save();all();toast("Daten gelöscht")};
 
 function all(){renderFood();renderWater();renderSport();renderPlan();renderReview();renderWeight();renderMeasure();renderMore()}
-load();syMigrate();all();syLoop();
+load();syMigrate();all();
+// Beim Start den zuletzt geöffneten Tab wieder zeigen
+try{const v=localStorage.getItem(KEY+".tab");if(v&&v!=="essen"&&$("v-"+v))show(v)}catch(e){}
+syLoop();
 // Android: Liste wurde aus einer anderen App (z. B. FamilyWall) an FitPlan geteilt
 (()=>{const q=new URLSearchParams(location.search),tx=q.get("text")||"",ti=q.get("title")||"",t=((ti&&!tx.includes(ti)?ti+"\n":"")+tx+(q.get("url")&&!tx.includes(q.get("url"))?"\n"+q.get("url"):"")).trim();
   if(!t)return;history.replaceState(null,"",location.pathname);show("plan");fwSheet(t)})();

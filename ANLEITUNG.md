@@ -68,6 +68,9 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Hast du schon Daten in einer alten Version? Dort **Exportieren**, in der neuen App
   **Importieren**.
 
+- FitPlan merkt sich, welcher Tab (Essen, Plan, Sport, Fortschritt, Mehr) zuletzt offen war, und
+  öffnet beim nächsten Start wieder dort.
+
 ## Nährwerte
 
 - Bei jedem Eintrag, jeder Mahlzeit und jedem Rezept stehen Kalorien, **E**iweiß,
