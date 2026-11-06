@@ -79,6 +79,14 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Unter **Mehr → Ziele** kannst du Ziele für Kohlenhydrate, Fett und Ballaststoffe setzen
   (leer lassen = kein Ziel).
 
+## Grafische Übersicht
+
+- **Essen:** Ein Ring zeigt die Kalorien des Tages, aufgeteilt nach Frühstück, Mittag, Abend
+  und Snack. Daneben steht, wie viel noch übrig ist. Jedes Essen und jedes Rezept hat ein
+  passendes Bild, bei eigenen Rezepten im Formular unter **Bild** wählbar.
+- **Fortschritt → Wochenrückblick:** Das Balkendiagramm lässt sich umschalten auf
+  **Kalorien**, **Mahlzeiten** oder **Nährstoffe**. Einen Tag antippen zeigt die genauen Werte.
+
 ## Lebensmittel suchen
 
 - **Essen → 🔍 Lebensmittel suchen**, z. B. „Apfel“ oder „Skyr“.
