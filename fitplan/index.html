@@ -161,6 +161,7 @@ ul.z{margin:0;padding-left:20px}
 <div id="ekl"></div>
 <div style="display:flex;gap:8px;margin-top:10px"><input id="eki" placeholder="Eigener Eintrag, z. B. Spülmittel"><button class="pri" id="eka" aria-label="Hinzufügen">＋</button></div>
 <button class="full" id="ekfw" style="margin-top:8px">⬇ Aus FamilyWall einfügen</button>
+<div class="g2" style="margin-top:8px"><button id="ekdc">Abgehakte löschen</button><button class="del" id="ekclr">Liste leeren</button></div>
 <button class="full" id="ekr" style="margin-top:8px">Haken zurücksetzen</button>
 </div>
 </section>
@@ -724,12 +725,15 @@ function shopItems(){let W=weekKeys();if(ekMode==="r")W=W.filter(k=>k>=todayK())
   return Object.values(A)}
 function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=1000){a/=1000;u="kg"}if(u==="ml"&&a>=1000){a/=1000;u="l"}
   const n=o.n==="Ei"&&a>1?"Eier":o.n;return fq(Math.round(a*100)/100)+(u?" "+u:"")+" "+n}
-function renderShop(){const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
+// Gelöschte Plan-Zutaten bleiben ausgeblendet, bis sich ihre Menge im Plan ändert
+const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};return E};
+const visItems=E=>shopItems().filter(o=>!(o.key in E.hd&&E.hd[o.key]===(o.a??0)));
+function renderShop(){const wk=iso(weekStart()),E=ekOf(wk);
   const ch=$("ekm");ch.innerHTML="";[["w","Ganze Woche"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
-  const its=shopItems(),L=$("ekl");L.innerHTML="";
-  const FW=S.fw&&S.fw.items.length?S.fw:null;
-  if(!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.</p>';return}
-  const keep=()=>{S.ek[wk]=E;save()};
+  const its=visItems(E),nh=shopItems().length-its.length,L=$("ekl");L.innerHTML="";
+  const FW=S.fw&&S.fw.items.length?S.fw:null,keep=()=>{S.ek[wk]=E;save()};
+  const restore=()=>{if(!nh)return;const b=el("button","full","↺ "+nh+(nh===1?" gelöschte Zutat":" gelöschte Zutaten")+" aus dem Plan wieder anzeigen");b.style.cssText="margin-top:10px;font-size:13px";b.onclick=()=>{E.hd={};keep();renderShop()};L.appendChild(b)};
+  if(!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">'+(nh?'Die Liste ist leer.':'Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.')+'</p>';restore();return}
   const row=(label,sub,on,tog,del)=>{const r=el("div","ek"+(on?" ok":""),'<input type="checkbox"'+(on?' checked':'')+'><div class="t" style="flex:1;min-width:0">'+esc(label)+(sub?'<div class="sm">'+sub+'</div>':'')+'</div>');
     r.onclick=e=>{if(e.target.tagName==="BUTTON")return;tog();keep();renderShop()};
     if(del){const b=el("button","ic","✕");b.setAttribute("aria-label","Entfernen");b.onclick=()=>{del();keep();renderShop()};r.appendChild(b)}L.appendChild(r)};
@@ -742,7 +746,15 @@ function renderShop(){const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
     rb.onclick=()=>{const old=S.fw;S.fw=null;save();renderShop();toast("FamilyWall-Liste entfernt",()=>{S.fw=old;save();renderShop()})};h.appendChild(rb);h.style.marginTop="18px";h.style.alignItems="center";L.appendChild(h);
     const gs=[];FW.items.forEach(x=>{if(!gs.includes(x.g))gs.push(x.g)});gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"));
     gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";
-      FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}}
+      FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}
+  restore()}
+function shopBulk(all){const wk=iso(weekStart()),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
+  visItems(E).forEach(o=>{if(go(E.c[o.key])){E.hd[o.key]=o.a??0;delete E.c[o.key];n++}});
+  n+=E.x.filter(x=>go(x.c)).length;E.x=E.x.filter(x=>!go(x.c));
+  if(S.fw){n+=S.fw.items.filter(x=>go(x.c)).length;S.fw.items=S.fw.items.filter(x=>!go(x.c));if(!S.fw.items.length)S.fw=null}
+  if(!n){toast(all?"Die Liste ist schon leer":"Nichts abgehakt");return}
+  S.ek[wk]=E;save();renderShop();toast(all?"Liste geleert":n+(n===1?" Eintrag":" Einträge")+" gelöscht",()=>{const b=JSON.parse(bak);S.ek[wk]=b.E;S.fw=b.fw;save();renderShop()})}
+$("ekdc").onclick=()=>shopBulk(false);$("ekclr").onclick=()=>shopBulk(true);
 
 /* FamilyWall-Liste einlesen (Text aus „Teilen“ in FamilyWall) */
 function parseFW(t){const out=[];let g="Sonstiges",sep=false,title="";
@@ -778,8 +790,8 @@ $("ekfw").onclick=()=>fwSheet("");
 $("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const wk=iso(weekStart());const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
 $("ekr").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);save();renderShop();toast("Haken zurückgesetzt")};
-$("eksh").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
-  const lines=shopItems().filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
+$("eksh").onclick=()=>{const wk=iso(weekStart()),E=ekOf(wk);
+  const lines=visItems(E).filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
   if(!lines.length){toast("Nichts mehr offen");return}
   const boxed="Einkaufsliste KW "+kw(wk)+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
   const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};
