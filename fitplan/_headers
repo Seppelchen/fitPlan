@@ -1,0 +1,4 @@
+# Netlify: Service Worker nie zwischenspeichern, damit Updates sofort ankommen
+/sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /
