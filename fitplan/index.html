@@ -56,6 +56,7 @@ button.done{background:var(--okbg);color:var(--ok);border-color:var(--ok)}
 button.del{border-color:var(--danger);color:var(--danger)}
 input,select,textarea{font:inherit;font-size:16px;width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text)}
 textarea{resize:vertical}
+input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none}.g2>div{min-width:0}
 label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .chips button{font-size:13px;padding:5px 12px;border-radius:999px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -162,7 +163,7 @@ ul.z{margin:0;padding-left:20px}
 
 <section class="view" id="v-plan">
 <div class="card">
-<div class="hd"><button class="ic" id="pwp" aria-label="Vorherige Woche">‹</button><div style="text-align:center"><h2 id="pwt">Wochenplan</h2><div class="sm" id="pwr"></div></div><button class="ic" id="pwn" aria-label="Nächste Woche">›</button></div>
+<div class="hd"><button class="ic" id="pwp" aria-label="Vorheriger Zeitraum">‹</button><div style="text-align:center"><h2 id="pwt">Wochenplan</h2><div class="sm" id="pwr"></div><button id="pzr" style="margin-top:6px;font-size:13px;padding:4px 12px">📅 Zeitraum ändern</button></div><button class="ic" id="pwn" aria-label="Nächster Zeitraum">›</button></div>
 <div id="pdays"></div>
 <div class="g2" style="margin-top:10px"><button id="pcopy">Vorwoche übernehmen</button><button id="pclr">Woche leeren</button></div>
 </div>
@@ -1017,9 +1018,16 @@ function renderTread(){const all=[];Object.keys(S.d).sort().forEach(k=>S.d[k].s.
 
 /* ---------- Wochenplan & Einkaufsliste ---------- */
 function kw(k){const d=new Date(k+"T12:00");d.setDate(d.getDate()+3-((d.getDay()+6)%7));const y=new Date(d.getFullYear(),0,4,12);return 1+Math.round((dayDiff(iso(y),iso(d))-3+((y.getDay()+6)%7))/7)}
-const weekKeys=()=>{const m=iso(weekStart());return [0,1,2,3,4,5,6].map(i=>addDays(m,i))};
+// Planungszeitraum: Standard Mo–So der gewählten Woche, sonst frei gewählt (Start + Anzahl Tage)
+const prd=()=>S.pr&&S.pr.s&&S.pr.n>0?S.pr:{s:iso(weekStart()),n:7,auto:1};
+const weekKeys=()=>{const p=prd();return Array.from({length:p.n},(_,i)=>addDays(p.s,i))};
+const ekK=()=>prd().s;
+const wdL=k=>new Date(k+"T12:00").toLocaleDateString("de-DE",{weekday:"long"});
 function renderPlan(){const W=weekKeys(),G=S.g.k;
-  $("pwt").textContent="Wochenplan · KW "+kw(W[0]);$("pwr").textContent=dd(W[0])+" – "+dd(W[6]);
+  const p=prd(),e=W[W.length-1],past=!p.auto&&e<todayK();
+  $("pwt").textContent=p.auto?"Wochenplan · KW "+kw(W[0]):"Essensplan";
+  $("pwr").textContent=wd(W[0])+" "+dd(W[0])+" – "+wd(e)+" "+dd(e)+(p.auto?"":" · "+W.length+" Tage")+(past?" · vorbei":"");
+  $("pclr").textContent=p.auto?"Woche leeren":"Zeitraum leeren";
   const P=$("pdays");P.innerHTML="";
   W.forEach(k=>{const pl=S.pl[k]||{},rs=CATS.map(c=>rById(pl[c])).filter(Boolean),tot=rs.reduce((a,r)=>a+r.k,0),sm=c=>rs.reduce((a,r)=>a+(r[c]||0),0);
     const d=el("div","pd",'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="white-space:nowrap'+(k===dt.value?';color:var(--accent)':'')+'">'+wd(k)+' '+dd(k)+'</b><span class="sm" style="text-align:right'+(tot>G?';color:var(--warn)':'')+'">'+(tot?mline(tot,sm("p"),sm("kh"),sm("fe")):'')+'</span></div>');
@@ -1027,7 +1035,23 @@ function renderPlan(){const W=weekKeys(),G=S.g.k;
     const g=el("div","slots");CATS.forEach(c=>{const r=rById(pl[c]),ok=r&&ate.some(f=>f.n===r.n);const b=el("button",r?"":"e",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+(r?icOf(r)+" "+esc(r.n):"＋ wählen"));b.onclick=()=>r?recipeDetail(r.id,{k,c}):pickRecipe(k,c);g.appendChild(b)});
     d.appendChild(g);P.appendChild(d)});
   renderShop()}
-$("pwp").onclick=()=>shift(-7);$("pwn").onclick=()=>shift(7);
+const pnav=d=>{if(S.pr&&!prd().auto){S.pr.s=addDays(S.pr.s,d*S.pr.n);save();renderPlan()}else shift(d*7)};
+$("pwp").onclick=()=>pnav(-1);$("pwn").onclick=()=>pnav(1);
+$("pzr").onclick=()=>{const W=weekKeys(),t=todayK();
+  openSheet("Planungszeitraum",'<p class="sm" style="margin:0 0 4px">Plane z. B. von Einkauf zu Einkauf – etwa Donnerstag bis nächsten Freitag. Die Einkaufsliste gilt dann genau für diesen Zeitraum.</p>'+
+  '<div class="g2"><div><label class="f">Von</label><input type="date" id="pzs"></div><div><label class="f">Bis</label><input type="date" id="pze"></div></div>'+
+  '<p class="sm" id="pzi" style="margin:6px 0 0;color:var(--text)"></p><p class="err" id="pzerr"></p>'+
+  '<p class="lb" style="margin:12px 0 6px">Schnell wählen – ab heute ('+wdL(t)+')</p><div class="chips" id="pzq"></div>'+
+  '<button class="full pri" id="pzok">Übernehmen</button>'+(prd().auto?'':'<button class="full" id="pzw" style="margin-top:8px">Zurück zur normalen Woche (Mo–So)</button>'),
+  ()=>{const A=$("pzs"),B=$("pze");A.value=W[0];B.value=W[W.length-1];
+    const n=()=>A.value&&B.value?dayDiff(A.value,B.value)+1:0;
+    const info=()=>{const k=n();$("pzerr").textContent="";$("pzi").textContent=k>0?wdL(A.value)+", "+dd(A.value)+" bis "+wdL(B.value)+", "+dd(B.value)+" · "+k+" Tage":""};
+    A.onchange=()=>{if(B.value<A.value)B.value=addDays(A.value,6);info()};B.onchange=info;info();
+    [[7,"1 Woche"],[8,"bis nächsten "+wdL(t)],[9,"bis nächsten "+wdL(addDays(t,1))],[14,"2 Wochen"]].forEach(([k,l])=>{const b=el("button","",l+" · "+k+" Tage");b.onclick=()=>{A.value=t;B.value=addDays(t,k-1);info()};$("pzq").appendChild(b)});
+    $("pzok").onclick=()=>{const k=n();if(!A.value||!B.value||k<1){$("pzerr").textContent="Wähle Start und Ende.";return}
+      if(k>28){$("pzerr").textContent="Höchstens 4 Wochen (28 Tage).";return}
+      S.pr={s:A.value,n:k};save();closeSheet();renderPlan();toast("Zeitraum: "+k+" Tage")};
+    if($("pzw"))$("pzw").onclick=()=>{S.pr=null;save();closeSheet();renderPlan();toast("Wieder Montag bis Sonntag")}})};
 function planSet(k,c,id){if(id)(S.pl[k]=S.pl[k]||{})[c]=id;else if(S.pl[k]){delete S.pl[k][c];if(!Object.keys(S.pl[k]).length)delete S.pl[k]}save();renderPlan();renderFood()}
 function pickRecipe(k,c){const cur=(S.pl[k]||{})[c];let allC=false;
   openSheet(c+" · "+wd(k)+" "+dd(k),'<p class="sm" style="margin:0 0 8px">Rezept antippen zum Ansehen, ＋ plant es direkt ein.</p><input id="pq" placeholder="Rezept suchen" style="margin-bottom:8px"><div class="chips" id="pcs"></div><div id="pli"></div>'+(cur?'<button class="full del" id="prm" style="margin-top:10px">Aus dem Plan entfernen</button>':''),
@@ -1041,12 +1065,12 @@ function pickRecipe(k,c){const cur=(S.pl[k]||{})[c];let allC=false;
     $("pq").oninput=dr;dr();if(cur)$("prm").onclick=()=>set(null)})}
 $("pcopy").onclick=()=>{const W=weekKeys(),has=W.some(k=>S.pl[k]),prev=W.map(k=>S.pl[addDays(k,-7)]);
   if(!prev.some(Boolean)){toast("In der Vorwoche ist nichts geplant");return}
-  if(has&&!confirm("Der Plan dieser Woche wird durch die Vorwoche ersetzt. Fortfahren?"))return;
+  if(has&&!confirm("Der Plan "+(prd().auto?"dieser Woche":"dieses Zeitraums")+" wird durch die Tage eine Woche davor ersetzt. Fortfahren?"))return;
   const bak=W.map(k=>S.pl[k]);W.forEach((k,i)=>{if(prev[i])S.pl[k]={...prev[i]};else delete S.pl[k]});save();renderPlan();
   toast("Vorwoche übernommen",()=>{W.forEach((k,i)=>{if(bak[i])S.pl[k]=bak[i];else delete S.pl[k]});save();renderPlan()})};
-$("pclr").onclick=()=>{const W=weekKeys();if(!W.some(k=>S.pl[k])){toast("Diese Woche ist noch leer");return}
+$("pclr").onclick=()=>{const W=weekKeys(),a=prd().auto;if(!W.some(k=>S.pl[k])){toast(a?"Diese Woche ist noch leer":"Dieser Zeitraum ist noch leer");return}
   const bak=W.map(k=>S.pl[k]);W.forEach(k=>delete S.pl[k]);save();renderPlan();
-  toast("Woche geleert",()=>{W.forEach((k,i)=>{if(bak[i])S.pl[k]=bak[i]});save();renderPlan()})};
+  toast(a?"Woche geleert":"Zeitraum geleert",()=>{W.forEach((k,i)=>{if(bak[i])S.pl[k]=bak[i]});save();renderPlan()})};
 
 const UN={kg:["g",1e3],g:["g",1],l:["ml",1e3],liter:["ml",1e3],ml:["ml",1],el:["EL",1],tl:["TL",1],prise:["Prise",1],prisen:["Prise",1],scheibe:["Scheibe",1],scheiben:["Scheibe",1],"stück":["Stück",1],dose:["Dose",1],dosen:["Dose",1],bund:["Bund",1]};
 const NUM=/^(\d+(?:[.,]\d+)?|½|¼|¾)/;
@@ -1068,8 +1092,8 @@ function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=100
 // Gelöschte Plan-Zutaten bleiben ausgeblendet, bis sich ihre Menge im Plan ändert
 const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};return E};
 const visItems=E=>shopItems().filter(o=>!(o.key in E.hd&&E.hd[o.key]===(o.a??0)));
-function renderShop(){const wk=iso(weekStart()),E=ekOf(wk);
-  const ch=$("ekm");ch.innerHTML="";[["w","Ganze Woche"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
+function renderShop(){const wk=ekK(),E=ekOf(wk);
+  const ch=$("ekm");ch.innerHTML="";[["w",prd().auto?"Ganze Woche":"Ganzer Zeitraum"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
   const its=visItems(E),nh=shopItems().length-its.length,L=$("ekl");L.innerHTML="";
   const FW=S.fw&&S.fw.items.length?S.fw:null,keep=()=>{S.ek[wk]=E;save()};
   const restore=()=>{if(!nh)return;const b=el("button","full","↺ "+nh+(nh===1?" gelöschte Zutat":" gelöschte Zutaten")+" aus dem Plan wieder anzeigen");b.style.cssText="margin-top:10px;font-size:13px";b.onclick=()=>{E.hd={};keep();renderShop()};L.appendChild(b)};
@@ -1088,7 +1112,7 @@ function renderShop(){const wk=iso(weekStart()),E=ekOf(wk);
     gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";
       FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}
   restore()}
-function shopBulk(all){const wk=iso(weekStart()),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
+function shopBulk(all){const wk=ekK(),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
   visItems(E).forEach(o=>{if(go(E.c[o.key])){E.hd[o.key]=o.a??0;delete E.c[o.key];n++}});
   n+=E.x.filter(x=>go(x.c)).length;E.x=E.x.filter(x=>!go(x.c));
   if(S.fw){n+=S.fw.items.filter(x=>go(x.c)).length;S.fw.items=S.fw.items.filter(x=>!go(x.c));if(!S.fw.items.length)S.fw=null}
@@ -1127,13 +1151,13 @@ function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.
       save();closeSheet();show("plan");const c=$("ekl").closest(".card");c.scrollIntoView();window.scrollBy(0,-70);
       toast(r.items.length+" Artikel übernommen",()=>{S.fw=old;save();renderShop()})}})}
 $("ekfw").onclick=()=>fwSheet("");
-$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const wk=iso(weekStart());const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
+$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
-$("ekr").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);save();renderShop();toast("Haken zurückgesetzt")};
-$("eksh").onclick=()=>{const wk=iso(weekStart()),E=ekOf(wk);
+$("ekr").onclick=()=>{const wk=ekK(),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);save();renderShop();toast("Haken zurückgesetzt")};
+$("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
   const lines=visItems(E).filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
   if(!lines.length){toast("Nichts mehr offen");return}
-  const boxed="Einkaufsliste KW "+kw(wk)+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
+  const W=weekKeys(),boxed="Einkaufsliste "+(prd().auto?"KW "+kw(wk):dd(W[0])+" – "+dd(W[W.length-1]))+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
   const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,show);else show()};
   openSheet("Einkaufsliste exportieren",

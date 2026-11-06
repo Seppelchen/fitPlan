@@ -101,6 +101,12 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 ## Wochenplan
 
+- Standard ist Montag bis Sonntag. Über **📅 Zeitraum ändern** wählst du Von und Bis frei,
+  z. B. Donnerstag bis nächsten Freitag (bis 28 Tage). Für Zeiträume ab heute gibt es
+  Schnellknöpfe.
+- Die Einkaufsliste gilt immer für genau den gewählten Zeitraum. ‹ › blättert zum vorherigen
+  bzw. nächsten Zeitraum gleicher Länge.
+
 - Ein geplantes Essen antippen: Du siehst Nährwerte, Zutaten und Zubereitung. Von dort kannst du
   es für diesen Tag eintragen, ein anderes Rezept wählen oder es aus dem Plan nehmen.
 - Beim Auswählen öffnet das Antippen eines Rezepts erst die Vorschau, **＋** plant es direkt ein.
