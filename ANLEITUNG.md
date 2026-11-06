@@ -179,8 +179,8 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 Zwei Personen teilen sich eine Einkaufsliste: Was einer einträgt oder abhakt, sieht der andere
 nach wenigen Sekunden. Das läuft über **Firebase** (Google), kostenlos und ohne Kreditkarte.
-Nur die gemeinsame Liste (inklusive übernommener FamilyWall-Artikel) liegt dort, alle anderen
-FitPlan-Daten bleiben auf dem Handy.
+Nur die gemeinsame Liste (inklusive übernommener FamilyWall-Artikel) und – wenn eingeschaltet – der
+Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten bleiben auf dem Handy.
 
 ### Einmalig: Firebase einrichten (am PC, ca. 10 Minuten)
 
@@ -204,8 +204,9 @@ FitPlan-Daten bleiben auf dem Handy.
          allow get: if request.auth != null;
          allow create, update: if request.auth != null
            && code.size() == 20
-           && request.resource.data.keys().hasOnly(['v', 'items'])
-           && request.resource.data.get('items', {}).size() <= 500;
+           && request.resource.data.keys().hasOnly(['v', 'items', 'plans'])
+           && request.resource.data.get('items', {}).size() <= 500
+           && request.resource.data.get('plans', {}).size() <= 10;
        }
      }
    }
@@ -262,6 +263,14 @@ gemeinsame Liste.
   Einträge erhalten.
 - Wer die Einladung hat, kann die Liste sehen und ändern. Schick sie nur an die Person, mit der du
   die Liste teilen willst.
+- **Essensplan teilen:** Jedes Handy teilt automatisch seine geplanten Essen (ab gestern bis 4 Wochen
+  voraus) mit den kompletten Rezepten. Im Tab **Plan** erscheint dann die Karte **👥 Essensplan von …**.
+  Ein Essen antippen zeigt Zutaten und Zubereitung. Von dort geht **📅 Auch bei mir einplanen** (gleicher
+  Tag, gleiche Mahlzeit) oder **＋ In meine Rezepte übernehmen**. Abschalten lässt sich das unter
+  **👥 Gemeinsame Liste verwalten → Meinen Essensplan mit Rezepten teilen**.
+  Wer die Firebase-Regeln noch von vor dem 06.11.2026 hat, muss sie einmal durch die Regeln oben
+  ersetzen (Firestore Database → Regeln → einfügen → Veröffentlichen). Bis dahin zeigt FitPlan im
+  Plan-Tab einen roten Hinweis. Die Einkaufsliste funktioniert auch ohne das.
 - **FamilyWall:** Eine übernommene FamilyWall-Liste landet bei Verbindung ebenfalls in der gemeinsamen
   Liste (Abschnitt „📋 FamilyWall · gemeinsam“, nach Kategorien). Übernimmt das andere Handy dieselbe
   Liste, entstehen keine doppelten Artikel. Eine FamilyWall-Liste, die schon vor dem Verbinden auf

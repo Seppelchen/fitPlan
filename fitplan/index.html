@@ -183,6 +183,7 @@ ul.z{margin:0;padding-left:20px}
 <div id="pdays"></div>
 <div class="g2" style="margin-top:10px"><button id="pcopy">Vorwoche übernehmen</button><button id="pclr">Woche leeren</button></div>
 </div>
+<div class="card" id="pcard" style="display:none"></div>
 <div class="card">
 <div class="hd"><h2>Einkaufsliste</h2><button id="eksh">Exportieren</button></div>
 <button class="full pri" id="ekgo" style="margin-bottom:10px">🛒 Einkaufen – nur die Liste</button>
@@ -1056,7 +1057,7 @@ function renderPlan(){const W=weekKeys(),G=S.g.k;
     const ate=(S.d[k]||{f:[]}).f;
     const g=el("div","slots");CATS.forEach(c=>{const r=rById(pl[c]),ok=r&&ate.some(f=>f.n===r.n);const b=el("button",r?"":"e",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+(r?icOf(r)+" "+esc(r.n):"＋ wählen"));b.onclick=()=>r?recipeDetail(r.id,{k,c}):pickRecipe(k,c);g.appendChild(b)});
     d.appendChild(g);P.appendChild(d)});
-  renderShop()}
+  renderPartner();renderShop()}
 const pnav=d=>{if(S.pr&&!prd().auto){S.pr.s=addDays(S.pr.s,d*S.pr.n);save();renderPlan()}else shift(d*7)};
 $("pwp").onclick=()=>pnav(-1);$("pwn").onclick=()=>pnav(1);
 $("pzr").onclick=()=>{const W=weekKeys(),t=todayK();
@@ -1243,7 +1244,7 @@ $("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
    einer Warteschlange), abgeholt wird alle 5 s, solange der Plan-Tab offen ist. Nur die gemeinsame Liste
    verlässt das Handy – alles andere bleibt lokal. */
 const SY=()=>S.sy&&S.sy.code?S.sy:null;
-let syTok=null,syTokT=0,syBusy=false,syErr="",syTimer=null;
+let syTok=null,syTokT=0,syBusy=false,syErr="",syTimer=null,syPlT=0,syPlErr="",syPlErrT=0,pExp=false;
 const syRnd=n=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>a[x%32]).join("")};
 const syHash=t=>{let h=2166136261;for(const c of t){h^=c.codePointAt(0);h=Math.imul(h,16777619)>>>0}return h.toString(36)};
 const fsV=v=>typeof v==="boolean"?{booleanValue:v}:typeof v==="number"?{integerValue:String(Math.round(v))}:{stringValue:String(v)};
@@ -1279,11 +1280,14 @@ function syBody(ops){const W={};
   return{qs:"?"+L.map(o=>"updateMask.fieldPaths="+encodeURIComponent("items."+o.id+(o.f?"."+o.f:""))).join("&"),body:{fields:{items:{mapValue:{fields:F}}}}}}
 async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;
   try{while(s.q.length){const n=Math.min(s.q.length,80),b=syBody(s.q.slice(0,n));await syCall(s,"PATCH",b.qs,b.body);s.q.splice(0,n);if(SY()===s)save()}
-    const d=await syCall(s,"GET");if(SY()!==s)return;
+    await syPubPlan(s);
+    const d=await syCall(s,"GET","?mask.fieldPaths=items");if(SY()!==s)return;
     const f=d.fields&&d.fields.items&&d.fields.items.mapValue&&d.fields.items.mapValue.fields||{},it={};
     Object.entries(f).forEach(([id,v])=>{const x=fsGet(v.mapValue&&v.mapValue.fields);if(x.n)it[id]=x});
     s.q.forEach(o=>syApply(it,o));  // während des Abrufs Geändertes nicht überschreiben
-    const ch=JSON.stringify(it)!==JSON.stringify(s.it);s.it=it;s.at=Date.now();syErr="";save();if(ch)renderShop()}
+    const ch=JSON.stringify(it)!==JSON.stringify(s.it);s.it=it;s.at=Date.now();syErr="";save();if(ch)renderShop();
+    if(Date.now()-syPlT>6e4){syPlT=Date.now();const p=await syCall(s,"GET","?mask.fieldPaths=plans");if(SY()!==s)return;
+      const pls=syReadPlans(p,s.me);if(JSON.stringify(pls)!==JSON.stringify(s.pls||{})){s.pls=pls;save();renderPartner()}}}
   catch(e){syErr=syMsg(e)}finally{syBusy=false;syStat()}}
 function syStat(){const s=SY();if(!s)return;const pend=s.q.length;
   const t=syErr?"⚠️ "+(/^Kein Internet/.test(syErr)?"offline":"Fehler"):pend?"wird übertragen …":s.at?"✓ "+(Date.now()-s.at<6e4?"aktuell":"Stand "+new Date(s.at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})):"";
@@ -1309,6 +1313,55 @@ function syFW(items,rep){const s=SY(),old=Object.entries(s.it).filter(([,x])=>x.
 function syMigrate(){const s=SY();if(!s)return;const wk=ekK(),Ek=S.ek[wk];
   if(Ek&&Ek.x.length){Ek.x.forEach((x,i)=>syOp({id:"i"+syRnd(10),v:{n:x.n,c:!!x.c,b:s.name,d:s.me,t:Date.now()+i}}));Ek.x=[]}
   if(S.fw){syFW(S.fw.items,false);S.fw=null}save()}
+/* Essensplan teilen: jedes Handy legt seinen Plan (gestern bis 4 Wochen voraus) samt Rezepten als
+   JSON in plans.u<Gerät> ab. Geschrieben wird nur bei Änderungen, abgeholt etwa einmal pro Minute. */
+const syPlPath=s=>"?updateMask.fieldPaths="+encodeURIComponent("plans.u"+s.me);
+function syPlanJSON(){const t=todayK(),a=addDays(t,-1),b=addDays(t,27),days={},R={};
+  Object.keys(S.pl).filter(k=>k>=a&&k<=b).sort().forEach(k=>{const o={};CATS.forEach(c=>{const r=rById(S.pl[k][c]);if(!r)return;o[c]=r.id;
+    if(!R[r.id])R[r.id]={n:r.n,c:r.c,ic:icOf(r),k:r.k,p:r.p,kh:r.kh,fe:r.fe,bs:r.bs,t:r.t||"",z:r.z||[],s:r.s||"",pz:r.pz||1}});if(Object.keys(o).length)days[k]=o});
+  return JSON.stringify({days,R})}
+async function syPubPlan(s){if(syPlErr&&Date.now()-syPlErrT<6e4)return;  // nach Fehler nur jede Minute neu versuchen
+  try{if(s.sp===false){if(!s.ph)return;await syCall(s,"PATCH",syPlPath(s),{fields:{}});s.ph=null}
+    else{const j=syPlanJSON(),h=syHash((s.name||"")+"|"+j);if(h===s.ph)return;
+      await syCall(s,"PATCH",syPlPath(s),{fields:{plans:{mapValue:{fields:{["u"+s.me]:fsMap({b:s.name||"",t:Date.now(),j})}}}}});s.ph=h}
+    if(syPlErr){syPlErr="";renderPartner()}save()}
+  catch(e){if(e.off)throw e;syPlErrT=Date.now();
+    syPlErr=e.st===403?"Dein Essensplan wird noch nicht geteilt: In Firebase müssen die Firestore-Regeln aktualisiert werden (siehe Anleitung).":syMsg(e);renderPartner()}}
+function syReadPlans(d,me){const f=d.fields&&d.fields.plans&&d.fields.plans.mapValue&&d.fields.plans.mapValue.fields||{},out={},N=v=>v==null?null:+v||0;
+  Object.entries(f).forEach(([k,v])=>{if(k==="u"+me)return;const x=fsGet(v.mapValue&&v.mapValue.fields);
+    try{const j=JSON.parse(x.j||"{}"),R={},days={};
+      Object.entries(j.R||{}).forEach(([id,r])=>{if(r&&r.n)R[id]={n:String(r.n),c:String(r.c||""),ic:String(r.ic||"🍽️"),k:+r.k||0,p:+r.p||0,kh:N(r.kh),fe:N(r.fe),bs:N(r.bs),t:String(r.t||""),z:Array.isArray(r.z)?r.z.map(String):[],s:String(r.s||""),pz:+r.pz||1}});
+      Object.entries(j.days||{}).forEach(([dk,o])=>{if(/^\d{4}-\d\d-\d\d$/.test(dk)&&o&&typeof o==="object"){const m={};CATS.forEach(c=>{if(R[o[c]])m[c]=o[c]});if(Object.keys(m).length)days[dk]=m}});
+      out[k]={b:String(x.b||""),t:+x.t||0,days,R}}catch(e){}});
+  return out}
+function renderPartner(){const C=$("pcard"),s=SY(),P=s&&s.pls?Object.values(s.pls):[];C.innerHTML="";
+  const warn=s&&s.sp!==false&&syPlErr?syPlErr:"";
+  if(!P.length&&!warn){C.style.display="none";return}C.style.display="";
+  if(warn)C.appendChild(el("p","err",esc(warn))).style.margin="0 0 8px";
+  const t=todayK();
+  P.forEach((pl,i)=>{const who=pl.b||"der anderen Person",ks=Object.keys(pl.days).filter(k=>k>=t).sort();
+    const h=el("div","hd",'<h2>👥 Essensplan von '+esc(who)+'</h2>');if(i)h.style.marginTop="18px";C.appendChild(h);
+    if(!ks.length){C.appendChild(el("p","sm","Ab heute ist dort nichts geplant.")).style.margin="0";return}
+    const show=pExp?ks:ks.slice(0,3);
+    show.forEach(k=>{const d=el("div","pd",'<b style="white-space:nowrap'+(k===t?';color:var(--accent)':'')+'">'+(k===t?'Heute · ':'')+wd(k)+' '+dd(k)+'</b>');const g=el("div","slots");
+      CATS.forEach(c=>{const r=pl.R[pl.days[k][c]];if(!r)return;const b=el("button","",'<div class="sm">'+c+'</div>'+esc(r.ic)+" "+esc(r.n));b.onclick=()=>partnerRecipe(r,k,c,who);g.appendChild(b)});
+      d.appendChild(g);C.appendChild(d)});
+    if(ks.length>3){const b=el("button","full",pExp?"Weniger anzeigen":"Alle "+ks.length+" Tage anzeigen");b.style.marginTop="10px";b.onclick=()=>{pExp=!pExp;renderPartner()};C.appendChild(b)}
+    if(pl.t)C.appendChild(el("p","sm","Stand: "+new Date(pl.t).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})+" Uhr")).style.margin="8px 0 0"})}
+// Rezept aus dem Plan der anderen Person ansehen, bei sich einplanen oder übernehmen
+function partnerRecipe(r,k,c,who){const own=()=>S.R.find(x=>x.n.toLowerCase()===r.n.toLowerCase());const st=steps(r.s);
+  openSheet(esc(r.ic)+" "+esc(r.n),
+  '<p class="sm" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">👥 Bei '+esc(who)+' geplant: '+wd(k)+' '+dd(k)+' · '+esc(c)+'</p>'+
+  '<p class="sm" style="margin:0 0 10px">'+mline(r.k,r.p,r.kh,r.fe)+' pro Portion'+(r.t?' · ⏱ '+esc(r.t):'')+'</p>'+
+  (r.z.length?'<p class="lb">Zutaten'+(r.pz>1?' (für '+fq(r.pz)+' Portionen)':' (1 Portion)')+'</p><ul class="z">'+r.z.map(z=>'<li>'+esc(z)+'</li>').join("")+'</ul>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
+  '<p class="lb" style="margin-top:12px">Zubereitung</p>'+(st.length?'<ol class="st">'+st.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>':'<p class="sm">Keine Zubereitung hinterlegt.</p>')+
+  '<button class="full pri" id="prPl" style="margin-top:16px">📅 Auch bei mir einplanen · '+wd(k)+' '+dd(k)+'</button>'+
+  (own()?'<p class="sm" style="margin:8px 0 0">„'+esc(r.n)+'“ ist schon in deinen Rezepten.</p>':'<button class="full" id="prSv" style="margin-top:8px">＋ In meine Rezepte übernehmen</button>'),
+  ()=>{const take=()=>{let m=own();if(!m){m={id:uid(),c:CATS.includes(r.c)?r.c:c,n:r.n,k:r.k,p:r.p,kh:r.kh,fe:r.fe,bs:r.bs,ic:r.ic,t:r.t,z:r.z.slice(),s:r.s,tg:""};if(r.pz>1)m.pz=r.pz;S.R.push(m);save()}return m};
+    $("prPl").onclick=()=>{const cur=rById((S.pl[k]||{})[c]),m=own();if(cur&&(!m||cur.id!==m.id)&&!confirm("Bei dir ist dort schon „"+cur.n+"“ geplant. Ersetzen?"))return;
+      planSet(k,c,take().id);closeSheet();toast("Bei dir eingeplant · "+wd(k)+" "+dd(k)+" · "+c)};
+    if($("prSv"))$("prSv").onclick=()=>{take();closeSheet();renderFood();toast("„"+r.n+"“ ist jetzt in deinen Rezepten")}})}
+
 // Einladung = Firebase-Projekt + Listen-Code, als ein Textbaustein zum Weiterschicken
 const syInvite=s=>"FPL1-"+btoa(JSON.stringify({k:s.k,p:s.p,c:s.code})).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 function syParseInvite(t){const m=String(t).match(/FPL1-([A-Za-z0-9_-]+)/);if(!m)return null;
@@ -1319,21 +1372,26 @@ function syShare(s){const t="Lass uns die FitPlan-Einkaufsliste teilen:\n1. FitP
   if(navigator.share)navigator.share({title:"FitPlan-Einkaufsliste",text:t}).catch(e=>{if(e.name!=="AbortError")copy()});else copy()}
 function sySheet(){const s=SY();
   if(s){openSheet("Gemeinsame Einkaufsliste",
-    '<p class="sm" style="margin:0 0 10px">Verbunden. Neue Einträge und Haken erscheinen nach wenigen Sekunden auch auf dem anderen Handy. Nur diese Liste (mit der FamilyWall-Liste) wird über Firebase geteilt, alle anderen Daten bleiben auf dem Handy.</p>'+
+    '<p class="sm" style="margin:0 0 10px">Verbunden. Neue Einträge und Haken erscheinen nach wenigen Sekunden auch auf dem anderen Handy. Über Firebase geteilt werden nur diese Liste (mit der FamilyWall-Liste) und – wenn eingeschaltet – dein Essensplan mit den Rezepten. Alle anderen Daten bleiben auf dem Handy.</p>'+
     '<label class="f">Dein Name (sieht die andere Person bei deinen Einträgen)</label><div style="display:flex;gap:8px"><input id="syn" maxlength="30"><button id="synok">Speichern</button></div>'+
+    '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="sysp" style="width:auto"> Meinen Essensplan mit Rezepten teilen</label>'+
+    '<p class="sm" style="margin:2px 0 0">Die andere Person sieht deine geplanten Essen ab gestern bis 4 Wochen voraus – mit Zutaten und Zubereitung.</p>'+
+    '<p class="err" id="sype" style="margin-top:6px"></p>'+
     '<p class="err" id="syerr" style="margin-top:8px"></p>'+
     '<button class="full pri" id="syinv" style="margin-top:12px">📨 Andere Person einladen</button>'+
     '<p class="sm" style="margin:6px 0 0">Wer die Einladung hat, kann die Liste sehen und ändern. Schick sie nur an Personen, mit denen du die Liste teilen willst.</p>'+
     '<textarea id="syx" rows="5" style="display:none;margin-top:8px" readonly></textarea>'+
     '<button class="full" id="synow" style="margin-top:12px">↻ Jetzt abgleichen</button>'+
     '<button class="full del" id="syoff" style="margin-top:8px">Verbindung trennen</button>',
-    ()=>{$("syn").value=s.name||"";syStat();
+    ()=>{$("syn").value=s.name||"";syStat();$("sysp").checked=s.sp!==false;$("sype").textContent=syPlErr;
+      $("sysp").onchange=()=>{s.sp=$("sysp").checked;syPlErrT=0;save();sySync();toast(s.sp?"Essensplan wird geteilt":"Essensplan wird nicht mehr geteilt")};
       $("synok").onclick=()=>{s.name=$("syn").value.trim();save();toast("Name gespeichert")};
       $("syinv").onclick=()=>syShare(s);
-      $("synow").onclick=()=>{toast("Wird abgeglichen …");sySync().then(()=>{if(!syErr)toast("Liste ist aktuell")})};
+      $("synow").onclick=()=>{toast("Wird abgeglichen …");syPlT=0;syPlErrT=0;sySync().then(()=>{if(!syErr)toast("Liste ist aktuell")})};
       $("syoff").onclick=()=>{if(!confirm("Dieses Handy von der gemeinsamen Liste trennen? Offene Einträge bleiben hier als eigene Einträge erhalten. Auf dem anderen Handy ändert sich nichts."))return;
         const wk=ekK(),E=S.ek[wk]=ekOf(wk);Object.values(s.it).filter(x=>!x.c).forEach(x=>E.x.push({n:x.n,c:false}));
-        S.sy=null;syTok=null;syErr="";save();closeSheet();renderShop();toast("Verbindung getrennt")}});return}
+        if(s.ph)syCall(s,"PATCH",syPlPath(s),{fields:{}}).catch(()=>{});  // eigenen Essensplan dort entfernen
+        S.sy=null;syErr="";syPlErr="";save();closeSheet();renderPlan();toast("Verbindung getrennt")}});return}
   let mode="neu";
   openSheet("Gemeinsame Einkaufsliste",
     '<p class="sm" style="margin:0 0 10px">Zwei Handys teilen eine Einkaufsliste: Was einer einträgt oder abhakt, sieht der andere nach wenigen Sekunden. Dafür braucht es einmal ein kostenloses Firebase-Projekt – die Schritte stehen in der Anleitung. Nur diese Liste wird geteilt, alles andere bleibt auf dem Handy.</p>'+
