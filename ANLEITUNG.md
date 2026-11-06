@@ -250,10 +250,16 @@ gemeinsame Liste.
 
 - **👥 Gemeinsame Liste:** Alles, was hier steht, sehen beide. Neue Einträge über das Eingabefeld landen
   automatisch hier. Bei Einträgen der anderen Person steht „von …“.
-- **🗓️ Aus deinem Plan · nur hier:** Die Zutaten aus dem eigenen Essensplan bleiben zunächst nur auf
-  dem eigenen Handy. Mit **↑ teilen** kommen alle offenen Zutaten in die gemeinsame Liste. Ändert sich
-  später die Menge im Plan, erscheint die Zutat hier wieder. Erneutes Teilen aktualisiert dann den
-  Eintrag in der gemeinsamen Liste, statt ihn zu verdoppeln.
+- **🗓️ Aus dem Plan:** Die Zutaten der geplanten Essen stehen automatisch auf der gemeinsamen Liste –
+  bei beiden. Kommt ein Essen in den Plan, sind seine Zutaten gleich drauf. Fliegt es raus, verschwinden
+  sie wieder. Ändert sich die Menge, wird der Eintrag angepasst (und der Haken entfernt, damit man
+  nachkauft). Es gilt der Zeitraum, der im Tab **Plan** angezeigt wird. Blättern im Tab **Essen**
+  ändert die Liste nicht.
+- Eine Plan-Zutat, die man mit ✕ oder **Abgehakte löschen** entfernt (z. B. weil sie noch im Schrank
+  ist), bleibt weg, bis sich ihre Menge im Plan ändert.
+- Abschalten unter **👥 Gemeinsame Liste verwalten → „Zutaten aus meinem Plan automatisch auf die
+  Liste“**. Dann bleiben die Plan-Zutaten erst einmal auf dem eigenen Handy („nur hier“). Mit
+  **↑ teilen** kommen sie von Hand auf die gemeinsame Liste.
 - Abhaken, ✕, **Abgehakte löschen**, **Liste leeren** und **Haken zurücksetzen** wirken bei
   gemeinsamen Einträgen auf **beiden** Handys.
 - Abgeglichen wird, solange der Tab **Plan** offen ist, etwa alle 5 Sekunden. Oben rechts in der Liste
