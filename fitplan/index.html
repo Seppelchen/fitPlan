@@ -154,7 +154,7 @@ ul.z{margin:0;padding-left:20px}
 <div class="g2" style="margin-top:10px"><button id="pcopy">Vorwoche übernehmen</button><button id="pclr">Woche leeren</button></div>
 </div>
 <div class="card">
-<div class="hd"><h2>Einkaufsliste</h2><button id="eksh">Teilen</button></div>
+<div class="hd"><h2>Einkaufsliste</h2><button id="eksh">Exportieren</button></div>
 <div class="chips" id="ekm"></div>
 <div id="ekl"></div>
 <div style="display:flex;gap:8px;margin-top:10px"><input id="eki" placeholder="Eigener Eintrag, z. B. Spülmittel"><button class="pri" id="eka" aria-label="Hinzufügen">＋</button></div>
@@ -740,9 +740,21 @@ $("ekr").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk];if(E){E.c={};E.x.forE
 $("eksh").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
   const lines=shopItems().filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n));
   if(!lines.length){toast("Nichts mehr offen");return}
-  const text="Einkaufsliste KW "+kw(wk)+"\n"+lines.map(l=>"• "+l).join("\n");
-  if(navigator.share)navigator.share({title:"Einkaufsliste",text}).catch(()=>{});
-  else if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast("Liste kopiert"),()=>toast("Kopieren nicht möglich"));};
+  const boxed="Einkaufsliste KW "+kw(wk)+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
+  const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,show);else show()};
+  openSheet("Einkaufsliste exportieren",
+  '<p class="sm" style="margin:0 0 12px">'+lines.length+' offene '+(lines.length===1?'Zutat':'Zutaten')+'. Abgehakte Einträge werden nicht exportiert.</p>'+
+  '<p class="lb" style="margin:0 0 6px">Zum Abhaken in Notizen oder Erinnerungen</p>'+
+  '<button class="full pri" id="ekc1">Kopieren</button>'+
+  '<ul class="z sm" style="margin:8px 0 0"><li><b>Notizen:</b> neue Notiz → einfügen → alles markieren → Checklisten-Symbol (☑) tippen. Jede Zeile bekommt ein Kästchen zum Abhaken.</li>'+
+  '<li style="margin-top:4px"><b>Erinnerungen:</b> Liste öffnen → „Neue Erinnerung“ → einfügen. Jede Zeile wird ein eigener Punkt zum Abhaken.</li></ul>'+
+  '<p class="lb" style="margin:16px 0 6px">Zum Verschicken (WhatsApp, Nachrichten, Mail)</p>'+
+  '<button class="full" id="ekc2">☐ Mit Kästchen teilen</button>'+
+  '<p class="sm" style="margin:6px 0 0">Die Kästchen ☐ sind dort nur zum Ansehen, antippen lässt sich nichts.</p>'+
+  '<textarea id="ekx" rows="6" style="display:none;margin-top:12px" readonly></textarea>',
+  ()=>{$("ekc1").onclick=()=>copy(plain);
+    $("ekc2").onclick=()=>{if(navigator.share)navigator.share({title:"Einkaufsliste",text:boxed}).catch(e=>{if(e.name!=="AbortError")copy(boxed)});else copy(boxed)}})};
 
 /* ---------- Fortschritt ---------- */
 const wKeys=()=>Object.keys(S.w).sort();
