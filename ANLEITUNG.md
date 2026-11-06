@@ -76,6 +76,18 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Einmal gescannte Produkte merkt sich FitPlan – sie funktionieren danach auch ohne Internet.
 - Klappt die Kamera nicht, die Nummer unter dem Barcode einfach eintippen.
 
+## Einkaufsliste aus FamilyWall übernehmen
+
+- **Android:** In FamilyWall die Einkaufsliste öffnen → **Teilen** → **FitPlan** wählen.
+  FitPlan öffnet sich mit der erkannten Liste, dann **Übernehmen** tippen.
+  (FitPlan erscheint im Teilen-Menü erst, nachdem Chrome die installierte App aktualisiert
+  hat. Das kann bis zu einem Tag dauern. Sofort geht es, wenn du FitPlan neu installierst.
+  Vorher unbedingt **Mehr → Exportieren**, sonst sind die Daten weg.)
+- **iPhone (und Android ohne Teilen):** In FamilyWall Teilen → **Kopieren**, dann in FitPlan
+  **Plan → Einkaufsliste → Aus FamilyWall einfügen** → **Aus Zwischenablage einfügen** → **Übernehmen**.
+- Die Kategorien aus FamilyWall bleiben erhalten. Ein neuer Import ersetzt die vorherige
+  FamilyWall-Liste.
+
 ## App später ändern
 
 1. Datei im Ordner `fitplan` ändern.

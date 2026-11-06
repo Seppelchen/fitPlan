@@ -160,6 +160,7 @@ ul.z{margin:0;padding-left:20px}
 <div class="chips" id="ekm"></div>
 <div id="ekl"></div>
 <div style="display:flex;gap:8px;margin-top:10px"><input id="eki" placeholder="Eigener Eintrag, z. B. Spülmittel"><button class="pri" id="eka" aria-label="Hinzufügen">＋</button></div>
+<button class="full" id="ekfw" style="margin-top:8px">⬇ Aus FamilyWall einfügen</button>
 <button class="full" id="ekr" style="margin-top:8px">Haken zurücksetzen</button>
 </div>
 </section>
@@ -368,7 +369,7 @@ function fix(){
   if(!Array.isArray(S.E))S.E=DE.map(e=>({...e}));
   S.g=Object.assign({k:1650,pz:90,s:110,z:80,ml:2000},S.g||{});
   if(!Array.isArray(S.fav))S.fav=[];
-  S.m=S.m||{};S.pl=S.pl||{};S.ek=S.ek||{};S.bc=S.bc||{};
+  S.m=S.m||{};S.pl=S.pl||{};S.ek=S.ek||{};S.bc=S.bc||{};if(!S.fw||!Array.isArray(S.fw.items))S.fw=null;
   Object.values(S.d).forEach(D=>{D.f=D.f||[];D.x=D.x||{};D.h=D.h||[];D.s=D.s||(D.a||[]).map(a=>({n:a,m:0}));delete D.a;
     D.f.forEach(f=>{f.q=f.q||1;if(f.k1==null){f.k1=f.k/f.q;f.p1=(f.p||0)/f.q}})});
   const old=addDays(todayK(),-70);Object.keys(S.ek).forEach(k=>{if(k<old)delete S.ek[k]});
@@ -726,7 +727,8 @@ function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=100
 function renderShop(){const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
   const ch=$("ekm");ch.innerHTML="";[["w","Ganze Woche"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
   const its=shopItems(),L=$("ekl");L.innerHTML="";
-  if(!its.length&&!E.x.length){L.innerHTML='<p class="sm" style="margin:0">Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.</p>';return}
+  const FW=S.fw&&S.fw.items.length?S.fw:null;
+  if(!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.</p>';return}
   const keep=()=>{S.ek[wk]=E;save()};
   const row=(label,sub,on,tog,del)=>{const r=el("div","ek"+(on?" ok":""),'<input type="checkbox"'+(on?' checked':'')+'><div class="t" style="flex:1;min-width:0">'+esc(label)+(sub?'<div class="sm">'+sub+'</div>':'')+'</div>');
     r.onclick=e=>{if(e.target.tagName==="BUTTON")return;tog();keep();renderShop()};
@@ -735,12 +737,49 @@ function renderShop(){const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
   const wa=its.filter(o=>o.a!=null).sort(srt),wo=its.filter(o=>o.a==null).sort(srt);
   wa.forEach(o=>row(shopLabel(o),o.s.size>1?"für "+o.s.size+" Mahlzeiten":"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}));
   if(wo.length){L.appendChild(el("div","gh","<span>Vorrat & Gewürze</span><span></span>"));wo.forEach(o=>row(o.n,"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}))}
-  if(E.x.length){L.appendChild(el("div","gh","<span>Eigene Einträge</span><span></span>"));E.x.forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{E.x=E.x.filter(y=>y!==x)}))}}
+  if(E.x.length){L.appendChild(el("div","gh","<span>Eigene Einträge</span><span></span>"));E.x.forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{E.x=E.x.filter(y=>y!==x)}))}
+  if(FW){const h=el("div","gh",'<span>📋 FamilyWall-Liste vom '+dd(FW.at)+'</span>');const rb=el("button","","Entfernen");rb.style.cssText="font-size:12px;padding:2px 10px";
+    rb.onclick=()=>{const old=S.fw;S.fw=null;save();renderShop();toast("FamilyWall-Liste entfernt",()=>{S.fw=old;save();renderShop()})};h.appendChild(rb);h.style.marginTop="18px";h.style.alignItems="center";L.appendChild(h);
+    const gs=[];FW.items.forEach(x=>{if(!gs.includes(x.g))gs.push(x.g)});gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"));
+    gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";
+      FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}}
+
+/* FamilyWall-Liste einlesen (Text aus „Teilen“ in FamilyWall) */
+function parseFW(t){const out=[];let g="Sonstiges",sep=false,title="";
+  const tc=l=>l.toLowerCase().replace(/(^|[\s&\/-])(\p{L})/gu,(a,b,c)=>b+c.toUpperCase());
+  String(t||"").split(/\r?\n/).forEach(raw=>{const l=raw.replace(/\uFE0F/g,"").trim();if(!l)return;
+    if(/^[*=_~\-–—]{3,}$/.test(l)){sep=true;return}
+    if(/gesendet mit familywall|familywall\.com/i.test(l))return;
+    let m=l.match(/^[❏❑☐□▢◻⬜○◯•·*-]\s*(.+)$/u);if(m){out.push({n:m[1].trim(),g,c:false});return}
+    m=l.match(/^[☑☒✓✔✅■▣●]\s*(.+)$/u);if(m){out.push({n:m[1].trim(),g,c:true});return}
+    if(/\p{Lu}/u.test(l)&&l===l.toUpperCase()&&l.length<=40){g=/^unkategorisiert$/i.test(l)?"Sonstiges":tc(l);return}
+    if(!sep&&!out.length&&!title){title=l;return}
+    if(l===title)return;
+    out.push({n:l,g,c:false})});
+  return{title,items:out.filter(x=>x.n)}}
+function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.readText);
+  openSheet("Aus FamilyWall einfügen",'<p class="sm" style="margin:0 0 8px">In FamilyWall die Einkaufsliste öffnen → Teilen → Kopieren, dann hier einfügen. Auf Android geht es noch schneller: in FamilyWall Teilen → FitPlan wählen.</p>'+
+  (canRead?'<button class="full" id="fwp">📋 Aus Zwischenablage einfügen</button>':'')+
+  '<textarea id="fwt" rows="8" style="margin-top:8px" placeholder="Text aus FamilyWall hier einfügen"></textarea><p class="sm" id="fwi" style="margin:6px 0 0"></p>'+
+  (S.fw?'<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:15px"><input type="checkbox" id="fwr" checked style="width:auto"> Bisherige FamilyWall-Liste ersetzen</label>':'')+
+  '<button class="full pri" id="fwo" style="margin-top:12px">Übernehmen</button><p class="err" id="fwe"></p>',
+  ()=>{const t=$("fwt");if(pre)t.value=pre;
+    const up=()=>{$("fwe").textContent="";const r=parseFW(t.value),gs=new Set(r.items.map(x=>x.g)),ck=r.items.filter(x=>x.c).length;
+      $("fwi").textContent=r.items.length?r.items.length+" Artikel in "+gs.size+(gs.size===1?" Kategorie":" Kategorien")+" erkannt"+(ck?" ("+ck+" schon abgehakt)":""):""};
+    t.oninput=up;up();
+    if(canRead)$("fwp").onclick=()=>navigator.clipboard.readText().then(x=>{t.value=x;up()},()=>{$("fwe").textContent="Kein Zugriff auf die Zwischenablage. Tippe lange ins Feld und wähle „Einfügen“."});
+    $("fwo").onclick=()=>{const r=parseFW(t.value);if(!r.items.length){$("fwe").textContent="Keine Artikel erkannt. Füge den Text aus FamilyWall ein.";return}
+      const old=S.fw&&{...S.fw,items:S.fw.items.map(x=>({...x}))};
+      if(!S.fw||!$("fwr")||$("fwr").checked)S.fw={at:todayK(),t:r.title,items:r.items};
+      else{const have=new Set(S.fw.items.map(x=>x.n.toLowerCase()));r.items.forEach(x=>{if(!have.has(x.n.toLowerCase()))S.fw.items.push(x)});S.fw.at=todayK()}
+      save();closeSheet();show("plan");const c=$("ekl").closest(".card");c.scrollIntoView();window.scrollBy(0,-70);
+      toast(r.items.length+" Artikel übernommen",()=>{S.fw=old;save();renderShop()})}})}
+$("ekfw").onclick=()=>fwSheet("");
 $("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;const wk=iso(weekStart());const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});$("eki").value="";save();renderShop()};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
-$("ekr").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false);save()}renderShop();toast("Haken zurückgesetzt")};
+$("ekr").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);save();renderShop();toast("Haken zurückgesetzt")};
 $("eksh").onclick=()=>{const wk=iso(weekStart()),E=S.ek[wk]||{c:{},x:[]};
-  const lines=shopItems().filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n));
+  const lines=shopItems().filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
   if(!lines.length){toast("Nichts mehr offen");return}
   const boxed="Einkaufsliste KW "+kw(wk)+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
   const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};
@@ -864,6 +903,9 @@ $("reset").onclick=()=>{if(!confirm("Wirklich alle Daten auf diesem Gerät lösc
 
 function all(){renderFood();renderWater();renderSport();renderPlan();renderReview();renderWeight();renderMeasure();renderMore()}
 load();all();
+// Android: Liste wurde aus einer anderen App (z. B. FamilyWall) an FitPlan geteilt
+(()=>{const q=new URLSearchParams(location.search),tx=q.get("text")||"",ti=q.get("title")||"",t=((ti&&!tx.includes(ti)?ti+"\n":"")+tx+(q.get("url")&&!tx.includes(q.get("url"))?"\n"+q.get("url"):"")).trim();
+  if(!t)return;history.replaceState(null,"",location.pathname);show("plan");fwSheet(t)})();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");
 </script>
