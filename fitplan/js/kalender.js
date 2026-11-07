@@ -10,15 +10,16 @@ const calTimeV=()=>calV==="day"||calV==="3d"||calV==="week";
 function calDays(){const k=famSel;return calV==="day"?[k]:calV==="3d"?[k,addDays(k,1),addDays(k,2)]:Array.from({length:7},(_,i)=>addDays(wkStart(k),i))}
 function calSetView(v){calV=v;try{localStorage.setItem(KEY+".calv",v)}catch(e){}calWantScroll=true;renderCal()}
 function calGo(k,scroll){famSel=k;famMon=k.slice(0,7);calWantScroll=scroll!==false;renderCal()}
-function calStep(n){const k=famSel||todayK();
-  if(calV==="list"||calV==="month"){const m=monAdd(famMon||k.slice(0,7),n),t=todayK();calGo(t.slice(0,7)===m?t:m+"-01")}
-  else calGo(addDays(k,n*(calV==="day"?1:calV==="3d"?3:7)))}
+// scroll=false: beim Blättern in Stundenansichten die Uhrzeit-Position behalten
+function calStep(n,scroll){const k=famSel||todayK();
+  if(calV==="list"||calV==="month"){const m=monAdd(famMon||k.slice(0,7),n),t=todayK();calGo(t.slice(0,7)===m?t:m+"-01",scroll)}
+  else calGo(addDays(k,n*(calV==="day"?1:calV==="3d"?3:7)),scroll)}
 // Beim Öffnen des Tabs in Stundenansichten zur aktuellen Uhrzeit springen
 function calOnShow(){if(calTimeV())calWantScroll=true}
 function calTitle(){if(calV==="list"||calV==="month")return MONS[+famMon.slice(5)-1]+" "+famMon.slice(0,4);
   const D=calDays(),a=D[0],b=D[D.length-1],md=x=>+x.slice(8)+". "+MONS[+x.slice(5,7)-1].slice(0,3);
   if(calV==="day")return wd(a)+", "+md(a)+" "+a.slice(0,4);
-  const rg=a.slice(0,7)===b.slice(0,7)?+a.slice(8)+".–"+dd(b):dd(a)+"–"+dd(b);  // z. B. 16.–22.11.
+  const sd=k=>+k.slice(8)+"."+ +k.slice(5,7)+".",rg=a.slice(0,7)===b.slice(0,7)?+a.slice(8)+".–"+sd(b):sd(a)+"–"+sd(b);  // z. B. 2.–8.11. oder 26.10.–1.11.
   return(calV==="week"?"KW "+kw(a)+" · ":"")+rg}
 
 function renderCal(){const t=todayK();famSel=famSel||t;famMon=famSel.slice(0,7);
@@ -114,10 +115,27 @@ function renderTime(){const t=todayK(),D=calDays(),R=calRange(D[0],D[D.length-1]
     B.appendChild(col)});
   C.appendChild(B)}
 
-/* Bedienung: Pfeile, Heute, Neu, Wischen */
-$("cmp").onclick=()=>calStep(-1);$("cmn").onclick=()=>calStep(1);$("cmh").onclick=()=>calGo(todayK());
+/* Bedienung: Pfeile, Heute, Neu, Wischen.
+   Beim Wischen folgt der Kalender dem Finger; beim Loslassen gleitet er hinaus und der neue Zeitraum von der
+   anderen Seite herein (die Pfeile machen dieselbe Bewegung). Kurzes Wischen federt zurück. */
+const calSlideEls=()=>calV==="list"?[$("cgrid")]:calV==="month"?[$("cday")]:[$("cgrid"),$("cday")];
+const calNoAnim=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
+function calSetX(els,x,ms){els.forEach(e=>{e.style.transition=ms?"transform "+ms+"ms cubic-bezier(.25,.8,.3,1)":"none";e.style.transform=x?"translate3d("+x+"px,0,0)":""})}
+let calSliding=false;
+function calSlide(dir,from){const els=calSlideEls(),W=$("fm-cal").clientWidth||innerWidth,scroll=calV==="list";
+  if(calSliding)return;if(calNoAnim()){calSetX(els,0,0);calStep(dir,scroll);return}calSliding=true;
+  const out=Math.round(170*(1-Math.min(.7,Math.abs(from||0)/W)));  // je weiter schon gewischt, desto schneller raus
+  calSetX(els,-dir*W,out);
+  setTimeout(()=>{calStep(dir,scroll);const n=calSlideEls();calSetX(n,dir*W,0);void n[0].offsetWidth;calSetX(n,0,230);
+    setTimeout(()=>{calSliding=false;n.forEach(e=>{e.style.transition="";e.style.transform=""})},240)},out)}
+$("cmp").onclick=()=>calSlide(-1);$("cmn").onclick=()=>calSlide(1);$("cmh").onclick=()=>calGo(todayK());
 $("cadd").onclick=()=>calForm(null,famSel||todayK());$("cimp").onclick=()=>calImport("");
-["cgrid","cday"].forEach(id=>{let x0=null,y0=0;const G=$(id);
-  G.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
-  G.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;
-    if(calV!=="list"||id==="cgrid")if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)calStep(dx<0?1:-1)},{passive:true})});
+["cgrid","cday"].forEach(id=>{let x0=null,y0=0,dx=0,mode=0,els=[];const G=$(id);
+  G.addEventListener("touchstart",e=>{if(calSliding||e.touches.length!==1){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;mode=0;
+    els=calV==="list"&&id==="cday"?[]:calSlideEls()},{passive:true});
+  G.addEventListener("touchmove",e=>{if(x0==null||!els.length)return;const x=e.touches[0].clientX-x0,y=e.touches[0].clientY-y0;
+    if(!mode){if(Math.abs(x)<8&&Math.abs(y)<8)return;mode=Math.abs(x)>Math.abs(y)?1:2}  // erst entscheiden: waagerecht blättern oder senkrecht scrollen
+    if(mode!==1)return;if(e.cancelable)e.preventDefault();dx=x;calSetX(els,dx,0)},{passive:false});
+  const end=()=>{if(x0==null)return;x0=null;if(mode!==1||!els.length)return;
+    if(Math.abs(dx)>Math.min(80,(G.clientWidth||300)*.2))calSlide(dx<0?1:-1,dx);else calSetX(els,0,200)};
+  G.addEventListener("touchend",end,{passive:true});G.addEventListener("touchcancel",end,{passive:true})});

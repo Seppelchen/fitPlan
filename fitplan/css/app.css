@@ -111,6 +111,7 @@ ul.z{margin:0;padding-left:20px}
 .cal button.sel{border-color:var(--accent);background:var(--accbg)}
 .cal .dts{display:flex;gap:2px;justify-content:center;min-height:6px}.cal .dts i{width:6px;height:6px;border-radius:50%}
 /* Monat oben fest, darunter Terminliste mit mitlaufender Tagesüberschrift */
+#fm-cal{overflow-x:clip}
 .calt{position:sticky;top:env(safe-area-inset-top);z-index:3;background:var(--card);margin:0 -14px;padding:8px 14px 6px;border-bottom:1px solid var(--border);box-shadow:0 calc(-1 * env(safe-area-inset-top)) 0 var(--card)}
 .calh{display:flex;align-items:center;gap:6px;margin-bottom:4px}.calh h2{margin:0;font-size:16px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .calh button{font-size:13px;padding:5px 11px}.calh button.ic{font-size:15px;padding:4px 11px}
