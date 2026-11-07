@@ -1,7 +1,7 @@
 // FitPlan – Tab Essen: Tagesübersicht, Rezepte, freier Eintrag, Sicherungs-Erinnerung, Wasser
 /* ---------- Essen ---------- */
 function mkEntry(n,k1,p1,m,q,x){q=q||1;x=x||{};const e={n,k1,p1,q,m,k:Math.round(k1*q),p:Math.round(p1*q)};
-  MK.forEach(([c])=>{if(x[c]!=null&&isFinite(x[c]))e[c+"1"]=x[c]});if(x.ic)e.ic=x.ic;return e}
+  MK.forEach(([c])=>{if(x[c]!=null&&isFinite(x[c]))e[c+"1"]=x[c]});if(x.ic)e.ic=x.ic;if(x.id&&x.n===n)e.rid=x.id;return e}
 function logFood(e){day().f.push(e);save();renderFood();toast("Eingetragen · "+e.m)}
 function addRecipe(r,q,m){logFood(mkEntry(r.n,r.k,r.p,m||r.c,q,r))}
 const isFav=n=>S.fav.some(x=>x.n.toLowerCase()===String(n).toLowerCase());
@@ -15,8 +15,9 @@ function renderFood(){
   if(!D.f.length)L.innerHTML='<p class="sm" style="margin:0">Noch nichts eingetragen.</p>';
   [...CATS,""].forEach(c=>{const it=D.f.filter(f=>c?f.m===c:!CATS.includes(f.m));if(!it.length)return;
     const t=macSum(it),ci=CATS.indexOf(c);L.appendChild(el("div","gh",'<span><span class="dot" style="background:'+(ci<0?"var(--muted)":"var(--s"+(ci+1)+")")+'"></span>'+(c||"Sonstiges")+'</span><span>'+fmt(t.k)+' kcal'+(t.any?'<span class="m"> · E '+fmt(t.p)+' · KH '+fmt(t.kh)+' · F '+fmt(t.fe)+' g</span>':'')+'</span>'));
-    it.forEach(f=>{const r=el("div","row",'<span class="fi">'+icOf(f)+'</span><div class="t" style="cursor:pointer">'+(f.q!==1?fq(f.q)+' × ':'')+esc(f.n)+(isFav(f.n)?' ⭐':'')+'<div class="sm">'+mline(f.k,f.p,mv(f,"kh"),mv(f,"fe"))+'</div></div><button class="ic" aria-label="Löschen">✕</button>');
-      r.querySelector(".t").onclick=r.querySelector(".fi").onclick=()=>entrySheet(f);r.querySelector("button").onclick=()=>undoDel(D.f,D.f.indexOf(f),"Eintrag",renderFood);L.appendChild(r)})});
+    it.forEach(f=>{const r=el("div","row",'<span class="fi">'+icOf(f)+'</span><div class="t" style="cursor:pointer">'+(f.q!==1?fq(f.q)+' × ':'')+esc(f.n)+(isFav(f.n)?' ⭐':'')+'<div class="sm">'+mline(f.k,f.p,mv(f,"kh"),mv(f,"fe"))+'</div></div>'+(recipeOf(f)?'<button class="ic rzb" aria-label="Rezept ansehen">📖</button>':'')+'<button class="ic xd" aria-label="Löschen">✕</button>');
+      r.querySelector(".t").onclick=r.querySelector(".fi").onclick=()=>entrySheet(f);r.querySelector("button.xd").onclick=()=>undoDel(D.f,D.f.indexOf(f),"Eintrag",renderFood);
+      if(r.querySelector(".rzb"))r.querySelector(".rzb").onclick=()=>openRecipeOf(f);L.appendChild(r)})});
   renderPlanned();renderQuick();renderBackup();
   const rc=$("rcats");rc.innerHTML="";CATS.forEach(c=>{const b=el("button",c===rcat?"on":"",c);b.onclick=()=>{rcat=c;renderFood()};rc.appendChild(b)});
   const rs=$("rsub");rs.innerHTML="";rs.style.display=rcat==="Frühstück"?"flex":"none";
@@ -58,9 +59,14 @@ function renderMac(D){const t=macSum(D.f),G=S.g,M=$("mac");
     (t.miss&&t.k?(t.any?'<br>':'')+t.miss+(t.miss===1?" Eintrag":" Einträge")+" ohne Kohlenhydrate/Fett – antippen zum Ergänzen":"")}
 
 // Rezept zum Eintrag (gleicher Name): eigene Rezepte, sonst gemeinsame Rezepte der Familie
-function recipeOf(n){const l=String(n).toLowerCase(),r=S.R.find(x=>x.n.toLowerCase()===l);if(r)return{r,own:1};
-  const g=famList("rz").find(x=>String(x.r.n).toLowerCase()===l);return g?{r:rzSan(g.r)}:null}
-function entrySheet(f){const D=day();let q=f.q;const rc=recipeOf(f.n);
+const nrm=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
+function recipeOf(f){const n=typeof f==="string"?f:f.n;
+  if(f&&f.rid){const r=S.R.find(x=>x.id===f.rid);if(r)return{r,own:1}}
+  const l=nrm(n),alt=nrm(VEG[String(n).trim()]),r=S.R.find(x=>{const m=nrm(x.n);return m===l||!!alt&&m===alt});if(r)return{r,own:1};
+  const g=famList("rz").find(x=>nrm(x.r.n)===l);return g?{r:rzSan(g.r),gid:g.id}:null}
+// 📖 in der Gegessen-Liste: Rezept direkt öffnen (eigenes oder gemeinsames)
+function openRecipeOf(f){const rc=recipeOf(f);if(!rc)return;if(rc.own)recipeDetail(rc.r.id);else famRecipe(rc.gid)}
+function entrySheet(f){const D=day();let q=f.q;const rc=recipeOf(f);
   openSheet("Eintrag bearbeiten",
   '<div style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><span class="fi">'+icOf(f)+'</span><b>'+esc(f.n)+'</b></div>'+
   (rc?'<details class="rzx"><summary>📖 Zutaten & Zubereitung</summary><div id="erz"></div></details>':'')+

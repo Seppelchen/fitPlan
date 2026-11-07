@@ -122,8 +122,9 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Alle 100 mitgelieferten Rezepte sind vegetarisch, mit gebratenem Lachs als einziger Ausnahme (kein Räucherlachs), und
   ohne Pilze. Statt Parmesan steht „vegetarischer Hartkäse (Parmesan-Art)“ im Rezept.
 - Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
-- Auch bei schon gegessenen Einträgen (Tab **Essen → Gegessen** → Eintrag antippen) gibt es oben
-  **📖 Zutaten & Zubereitung** zum Aufklappen. Die Mengen passen sich der gewählten Portion an.
+- Bei schon gegessenen Einträgen aus einem Rezept steht unter **Essen → Gegessen** rechts ein **📖**: antippen
+  öffnet das Rezept mit Zubereitung. Im Eintrag selbst (antippen) gibt es oben **📖 Zutaten & Zubereitung**
+  zum Aufklappen – die Mengen passen sich der gewählten Portion an.
 - Eigene Rezepte: **Essen → Rezepte → ＋ Neu**. Unter „Zubereitung – ein Schritt pro Zeile“
   schreibst du jeden Schritt in eine eigene Zeile. Fehlt die Zubereitung, steht im Rezept
   „＋ Zubereitung hinzufügen“.
