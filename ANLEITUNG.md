@@ -225,19 +225,31 @@ Einträge heute anstehen.
 
 ### Kalender aus FamilyWall übernehmen
 
-**Familie → Kalender → ⬇ Kalender aus FamilyWall übernehmen.** Drei Wege:
+**Familie → Kalender → ⬇ Kalender aus FamilyWall übernehmen.**
 
-1. **iCal-Link:** In FamilyWall den Kalender öffnen → Kalender-Details → **„iCal-URL generieren“** → Link
-   kopieren, in FitPlan einfügen → **Laden**. Lässt FamilyWall das direkte Laden zu, kann FitPlan sich den
-   Link merken und die Termine danach regelmäßig (spätestens alle 3 Stunden beim Öffnen des Tabs) neu holen.
-   Blockiert FamilyWall das, zeigt FitPlan einen Hinweis – dann Weg 2.
-2. **Kalenderdatei (.ics):** Den iCal-Link am PC im Browser öffnen, die Datei speichern und aufs Handy
-   schicken (Mail, Dateien-App). Oder einen Kalender aus Google Kalender exportieren. In FitPlan
-   **📄 Kalenderdatei (.ics) wählen**.
-3. **Text:** Termine in FamilyWall teilen oder kopieren und einfügen. FitPlan erkennt Zeilen mit Datum
-   und Uhrzeit, z. B. „Mo., 10.11. 16:30 Fußball“ oder ein Datum als Überschrift mit Terminen darunter.
-   Auf dem Android-Handy geht auch FamilyWall → Teilen → **FitPlan**: Termine landen dann automatisch im
-   Kalender-Import, Einkaufslisten wie bisher bei der Einkaufsliste.
+**So geht es mit FamilyWall (Android):**
+1. In FamilyWall im Kalender das Menü öffnen, beim Kalender (z. B. „Kohlbach – Standardkalender“) auf **›**
+   tippen → **„iCal-URL generieren“** → **Kopieren**.
+2. In FitPlan den Link einfügen → **Laden**. FamilyWall erlaubt FitPlan nicht, den Link direkt zu laden.
+   Deshalb erscheint der Knopf **⬇ Kalenderdatei herunterladen** – antippen. Chrome speichert
+   „FamilyWall – Kohlbach.ics“ unter Downloads.
+3. **📄 Kalenderdatei (.ics) wählen** → im Auswahlfenster oben links **☰** → **Downloads** → Datei antippen.
+   FitPlan zeigt direkt unter dem Knopf, wie viele Termine drin sind, und scrollt zur Vorschau.
+   **Oder** in Chrome unter **Downloads** bei der Datei **⋮ → Teilen → FitPlan**. (FitPlan erscheint dort,
+   sobald Chrome die installierte App aktualisiert hat – das kann bis zu einem Tag dauern.)
+4. Für den **Geburtstagskalender** dasselbe mit dessen Link. FitPlan erkennt am Kalendernamen, dass es
+   Geburtstage sind, und legt sie in den Geburtstagskalender. Sonst gibt es in der Vorschau das Häkchen
+   **„Das sind Geburtstage“**.
+
+Neue Termine aus FamilyWall holst du später genauso – schon vorhandene werden nur aktualisiert, nicht verdoppelt.
+Den Link nicht weitergeben: Wer ihn hat, sieht alle Termine. In FamilyWall erzeugt **↻** einen neuen Link,
+dann gilt der alte nicht mehr.
+
+**Weitere Wege:** eine `.ics`-Datei aus einem anderen Kalender (z. B. Google Kalender) auswählen, oder
+**Text** einfügen: FitPlan erkennt Zeilen mit Datum und Uhrzeit, z. B. „Mo., 10.11. 16:30 Fußball“. Ein
+iCal-Link eines Anbieters, der das direkte Laden erlaubt, kann gemerkt und regelmäßig aktualisiert werden.
+Auf dem Android-Handy geht auch **Teilen → FitPlan**: Termine, Kalenderdateien und iCal-Links landen im
+Kalender-Import, Einkaufslisten wie bisher bei der Einkaufsliste.
 
 Vor dem Übernehmen zeigt FitPlan eine Vorschau. Einzelne Termine lassen sich mit ✕ weglassen, vergangene
 Termine werden auf Wunsch übersprungen. Wiederkehrende Termine (z. B. jeden Dienstag) bleiben Serien.
