@@ -4,7 +4,24 @@ Der Ordner `fitplan` ist fertig. Du musst nichts mehr daran ändern.
 
 ```
 fitplan/
-├── index.html      deine App
+├── index.html      Aufbau der Seite (welche Karten und Knöpfe es gibt)
+├── css/app.css     Aussehen (Farben, Abstände, hell/dunkel)
+├── js/             Programm, aufgeteilt nach Bereichen:
+│   ├── daten-rezepte.js       mitgelieferte Rezepte
+│   ├── daten-sport.js         Sportarten und Übungen
+│   ├── daten-lebensmittel.js  Grundnahrungsmittel für die Suche
+│   ├── kern.js                Grundlagen (Speichern, Tabs, Fenster)
+│   ├── essen.js               Tab Essen, Rezepte, Wasser
+│   ├── scanner-suche.js       Barcode-Scanner und Lebensmittelsuche
+│   ├── sport.js               Tab Sport
+│   ├── plan.js                Tab Plan und Einkaufsliste
+│   ├── sync.js                Teilen mit anderen Handys (Firebase)
+│   ├── einkaufsmodus.js       Einkaufsmodus im Vollbild
+│   ├── familie.js             Tab Familie: Kalender, Geburtstage, Rezepte
+│   ├── familie-import.js      Kalender aus FamilyWall übernehmen
+│   ├── fortschritt.js         Tab Fortschritt
+│   ├── mehr.js                Tab Mehr (Ziele, Sicherung)
+│   └── start.js               startet die App
 ├── manifest.json   App-Name, Farben, Icons
 ├── sw.js           macht die App offline-fähig
 ├── _headers        Netlify-Einstellung für Updates
@@ -353,7 +370,9 @@ gemeinsame Liste – ebenso Termine, Geburtstage und Rezepte aus dem Tab Familie
 
 ## App später ändern
 
-1. Datei im Ordner `fitplan` ändern.
+1. Datei im Ordner `fitplan` ändern – meist die Datei in `js/` für den betroffenen Tab (siehe Liste oben).
+   Kommt eine neue Datei in `js/` dazu, muss sie in `index.html` (Zeilen `<script src=…>`, Reihenfolge
+   beachten) und in `sw.js` (Liste `APP`, damit sie offline funktioniert) eingetragen werden.
 2. Änderung committen und mit `git push` zu GitHub hochladen. Nach etwa einer Minute ist sie online.
    Die Cache-Version in `sw.js` wird dabei automatisch neu gesetzt – nichts hochzählen nötig.
    (Nur bei Netlify per Drag-and-drop: in `sw.js` die Zeile `const VERSION = …` von Hand ändern.)

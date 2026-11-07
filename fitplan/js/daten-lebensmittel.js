@@ -1,0 +1,47 @@
+// FitPlan – Grundnahrungsmittel für die Suche (funktioniert offline)
+// Grundnahrungsmittel je 100 g bzw. ml (Durchschnittswerte): Name, kcal, Eiweiß, KH, Fett, Ballaststoffe, Portion, Portionsname, Einheit
+const FD=[
+["Apfel",54,.3,11.4,.2,2.3,150,"1 Stück"],["Banane",93,1.2,20,.2,2,120,"1 Stück"],["Birne",55,.5,12.4,.3,3.3,150,"1 Stück"],
+["Orange",45,1,8.3,.2,2.2,180,"1 Stück"],["Mandarine",47,.7,10.1,.3,1.7,70,"1 Stück"],["Kiwi",61,1,10.8,.6,3,75,"1 Stück"],
+["Erdbeeren",32,.8,5.5,.4,1.6,150,"1 Schale"],["Himbeeren",35,1.3,4.8,.3,4.7,125,"1 Schale"],["Heidelbeeren (Blaubeeren)",42,.6,7.4,.6,4.9,125,"1 Schale"],
+["Beeren gemischt (TK)",40,.9,6,.4,4.5,100,""],["Weintrauben",70,.7,15.6,.3,1.5,125,"1 Handvoll"],["Ananas",55,.5,12.4,.2,1,150,""],
+["Mango",62,.6,12.8,.5,1.7,150,""],["Wassermelone",30,.6,7,.2,.4,250,"1 Stück"],["Pfirsich / Nektarine",43,.8,9,.1,1.9,130,"1 Stück"],
+["Pflaumen",47,.6,10,.2,1.6,30,"1 Stück"],["Kirschen",62,.9,13.3,.3,1.3,100,""],["Apfelmus ohne Zucker",50,.2,11,.1,1.5,100,""],
+["Avocado",160,2,1.9,15,6.7,70,"½ Stück"],["Tomate",18,.9,2.6,.2,1.2,100,"1 Stück"],["Cherrytomaten",20,1,3,.2,1.3,100,"1 Handvoll"],
+["Gurke",12,.6,1.8,.2,.5,100,""],["Paprika",30,1,5,.3,2,150,"1 Stück"],["Karotte (Möhre)",28,.6,4.8,.2,3.6,80,"1 Stück"],
+["Brokkoli",34,3.8,2.7,.2,3,200,""],["Blumenkohl",25,2.5,2.3,.3,2.9,200,""],["Zucchini",19,1.6,2.1,.4,1.1,200,""],
+["Spinat",23,2.9,.6,.4,2.6,100,""],["Blattsalat / Eisberg",14,1,1.6,.2,1.3,80,"1 Schale"],
+["Zwiebel",28,1.2,4.9,.3,1.8,60,"1 Stück"],["Kohlrabi",25,2,3.7,.2,1.4,250,"1 Stück"],["Radieschen",15,1,2.1,.1,1.6,50,""],
+["Rotkohl",23,1.5,3.5,.2,2.5,150,""],["Erbsen (TK)",70,5.4,9,.4,5.2,100,""],["Mais (Dose)",82,2.9,15,1.2,2.8,70,""],
+["Kidneybohnen (Dose, abgetropft)",90,7,12,.5,6,120,""],["Kichererbsen (Dose, abgetropft)",120,7,16,2.5,5,120,""],
+["Kartoffeln, gekocht",72,2,15,.1,2,200,""],["Süßkartoffel",86,1.6,18,.1,3,200,""],["Pommes frites",290,3.4,36,15,3,150,"1 Portion"],
+["Haferflocken",372,13.5,58.7,7,10,40,"4 EL"],["Müsli ohne Zucker",360,10,58,7,9,50,""],["Cornflakes",375,7,83,.9,3,30,""],
+["Vollkornbrot",220,7,39,1.2,8,50,"1 Scheibe"],["Mischbrot",225,6.5,44,1.2,5,50,"1 Scheibe"],["Toastbrot",260,8,47,4,3,25,"1 Scheibe"],
+["Vollkorntoast",250,9,41,4,7,30,"1 Scheibe"],["Brötchen (Weizen)",270,9,53,1.5,3,60,"1 Stück"],["Vollkornbrötchen",240,9,42,2.5,6,70,"1 Stück"],
+["Laugenbrezel",280,8,56,2,2.5,80,"1 Stück"],["Croissant",400,8,45,21,2,60,"1 Stück"],["Knäckebrot (Vollkorn)",360,11,62,2,16,10,"1 Scheibe"],
+["Reiswaffel",385,8,80,3,3,8,"1 Stück"],["Reis, gekocht",130,2.7,28,.3,.4,150,""],["Reis, trocken",350,7,78,.6,1.4,60,""],
+["Nudeln, gekocht",150,5,30,.9,1.7,200,""],["Nudeln, trocken",355,12,71,1.5,3,80,""],["Vollkornnudeln, trocken",350,13,64,2.5,8,80,""],
+["Quinoa, trocken",360,14,62,6,7,60,""],["Couscous, trocken",350,12,69,1.5,5,60,""],["Rote Linsen, trocken",340,24,48,1.5,11,70,""],
+["Milch 1,5 %",47,3.4,4.8,1.5,0,200,"1 Glas","ml"],["Milch 3,5 %",64,3.3,4.8,3.5,0,200,"1 Glas","ml"],["Haferdrink",45,1,6.5,1.5,.8,200,"1 Glas","ml"],
+["Naturjoghurt 1,5 %",47,3.4,4.5,1.5,0,150,"1 Becher"],["Griechischer Joghurt 10 %",120,4,4,10,0,150,""],["Skyr natur",63,11,4,.2,0,150,""],
+["Magerquark",67,12,4,.2,0,250,"1 Becher"],["Hüttenkäse",98,12.5,2.6,4.3,0,200,"1 Becher"],["Frischkäse",240,5.5,3.5,23,0,30,"1 EL"],
+["Frischkäse leicht",145,8,4.5,10.5,0,30,"1 EL"],["Gouda",360,25,0,29,0,20,"1 Scheibe"],["Mozzarella",250,18,1,19,0,125,"1 Kugel"],
+["Feta",265,17,.5,21,0,50,""],["Vegetarischer Hartkäse (Parmesan-Art)",390,32,0,29,0,10,"1 EL"],["Butter",740,.7,.6,82,0,10,"für 1 Brot"],
+["Ei",137,12.9,.7,9.3,0,58,"1 Stück (M)"],
+["Lachsfilet, roh",200,20,0,13.4,0,125,""],
+
+
+
+["Tofu natur",125,13,1.5,7.5,1,100,""],["Räuchertofu",150,16,2,9,1,100,""],["Tempeh",190,19,9,11,5,100,""],["Halloumi",320,22,2,25,0,80,""],["Sojaschnetzel (trocken)",340,50,14,1.5,18,35,""],["Edamame (TK)",125,11,6,5,5,100,""],["Falafel",330,13,30,18,6,25,"1 Stück"],["Gemüsebratling",200,6,20,10,4,90,"1 Stück"],["Hummus",230,7,12,16,6,50,""],["Mandeln",600,24,5.7,52,11,20,"1 Handvoll"],
+["Walnüsse",680,15,11,65,6,20,"1 Handvoll"],["Erdnüsse",600,25,12,49,8,20,"1 Handvoll"],["Cashewkerne",580,18,30,44,3,20,"1 Handvoll"],
+["Erdnussmus",620,26,12,50,7,15,"1 EL"],["Chiasamen",450,21,7.7,31,34,15,"1 EL"],["Leinsamen, geschrotet",450,22,2,37,30,10,"1 EL"],
+["Olivenöl / Rapsöl",884,0,0,100,0,10,"1 EL"],["Mayonnaise",700,1,2,76,0,15,"1 EL"],["Ketchup",110,1.5,24,.2,.5,15,"1 EL"],
+["Honig",304,.4,76,0,0,10,"1 TL"],["Marmelade",250,.4,60,.1,1,20,"für 1 Brot"],["Nuss-Nougat-Creme",540,6,57,31,3.5,20,"für 1 Brot"],
+["Zucker",400,0,100,0,0,5,"1 TL"],["Passierte Tomaten",25,1.3,4,.2,1.2,200,""],["Kokosmilch light",80,.7,1.9,8,0,100,"","ml"],
+["Vollmilchschokolade",540,7,56,31,2,25,"1 Riegel"],["Zartbitterschokolade 70 %",570,9,33,42,11,20,"2 Stücke"],["Gummibärchen",340,7,77,.5,0,25,"1 Handvoll"],
+["Kartoffelchips",535,6,50,33,4,30,"1 Handvoll"],["Butterkeks",440,7,72,13,2.5,5,"1 Stück"],["Vanilleeis",200,3.5,24,10,0,70,"1 Kugel"],
+["Pizza Margherita",240,10,30,9,2,350,"1 Pizza"],
+["Orangensaft",45,.7,9,.2,.2,200,"1 Glas","ml"],["Apfelschorle",24,0,5.5,0,0,300,"1 Glas","ml"],["Cola",42,0,10.6,0,0,330,"1 Dose","ml"],
+["Cola zero / light",.3,0,0,0,0,330,"1 Dose","ml"],["Cappuccino (Milch 1,5 %)",31,2.2,3.2,1,0,150,"1 Tasse","ml"],
+["Latte macchiato (Milch 1,5 %)",35,2.5,3.5,1.1,0,300,"1 Glas","ml"],["Bier",43,.5,3,0,0,500,"1 Flasche","ml"],["Wein",83,.1,2.6,0,0,200,"1 Glas","ml"]
+].map(a=>({n:a[0],k:a[1],p:a[2],kh:a[3],fe:a[4],bs:a[5],zu:null,sq:a[6]||null,sl:a[7]||"",u:a[8]||"g"}));

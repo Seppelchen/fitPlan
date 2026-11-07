@@ -4,7 +4,9 @@ const VERSION = 'fitplan-v3';
 
 // Dateien, die beim ersten Öffnen sofort gespeichert werden.
 // Weitere Dateien (CSS, JS, Bilder) werden beim ersten Laden automatisch mitgespeichert.
-const PRECACHE = ['./', './index.html', './manifest.json', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './zxing.min.js'];
+// App-Code (css/, js/) – die Liste muss zu den <script>-Zeilen in index.html passen.
+const APP = ['./css/app.css', './js/daten-rezepte.js', './js/daten-sport.js', './js/daten-lebensmittel.js', './js/kern.js', './js/essen.js', './js/scanner-suche.js', './js/sport.js', './js/plan.js', './js/sync.js', './js/einkaufsmodus.js', './js/familie.js', './js/familie-import.js', './js/fortschritt.js', './js/mehr.js', './js/start.js'];
+const PRECACHE = ['./', './index.html', './manifest.json', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './zxing.min.js', ...APP];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -42,7 +44,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Alle anderen Dateien: sofort aus dem Speicher, im Hintergrund aktualisieren.
+  // App-Code (CSS/JS): wie die Seite erst online (passend zur neuen index.html), offline aus dem Speicher.
+  if (/\/(css|js)\/[^/]+\.(css|js)$/.test(new URL(req.url).pathname)) {
+    event.respondWith(
+      fetch(req, { cache: 'no-cache' })
+        .then((res) => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const copy = res.clone();
+          caches.open(VERSION).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || Response.error()))
+    );
+    return;
+  }
+
+  // Alle anderen Dateien (Icons, Barcode-Scanner): sofort aus dem Speicher, im Hintergrund aktualisieren.
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)
