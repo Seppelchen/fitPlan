@@ -1,4 +1,4 @@
-// FitPlan – Kalender aus FamilyWall übernehmen (iCal-Link, .ics-Datei, Text)
+// FitPlan – Kalender übernehmen (FamilyWall: iCal-Link, .ics-Datei, Text) und als .ics-Datei exportieren
 /* ---------- Kalender aus FamilyWall übernehmen: iCal-Link, Kalenderdatei (.ics) oder kopierter Text ---------- */
 const icsUn=v=>String(v||"").replace(/\\n/gi,"\n").replace(/\\([,;:\\])/g,"$1").trim();
 function icsDt(x){if(!x)return null;const m=String(x.v).match(/^(\d{4})(\d\d)(\d\d)(?:T(\d\d)(\d\d)(?:\d\d)?(Z)?)?/);if(!m)return null;
@@ -27,17 +27,18 @@ function icsParse(txt){const V=[];let cur=null,dep=0,cal="";
   V.forEach(e=>{const st=icsDt(e.DTSTART);if(!st)return;const uid=e.UID?e.UID.v:"",rid=e["RECURRENCE-ID"]?icsDt(e["RECURRENCE-ID"]):null;
     if(rid&&uid)(xs[uid]=xs[uid]||[]).push(rid.d);  // geänderter Einzeltermin einer Serie: in der Serie auslassen
     if(e.STATUS&&/CANCELLED/i.test(e.STATUS.v))return;
+    const own=(/^([cg][0-9A-Za-z]{1,12})@fitplan$/.exec(uid)||[])[1]||"";  // aus FitPlan exportiert
     const n=icsUn(e.SUMMARY&&e.SUMMARY.v).slice(0,120)||"(ohne Titel)",ev={n,d:st.d},en=icsDt(e.DTEND);
     if(st.all){if(en&&en.all){const l=addDays(en.d,-1);if(l>st.d)ev.e=l}}
     else{ev.s=st.s;if(en&&!en.all&&en.d>=st.d){if(en.s==="00:00"&&en.d>st.d){const l=addDays(en.d,-1);if(l>st.d)ev.e=l}else{if(en.d>st.d)ev.e=en.d;if(en.d>st.d||en.s>st.s)ev.z=en.s}}}
-    const o=icsUn(e.LOCATION&&e.LOCATION.v);if(o)ev.o=o.slice(0,120);const no=icsUn(e.DESCRIPTION&&e.DESCRIPTION.v);if(no)ev.no=no.slice(0,500);
+    const o=icsUn(e.LOCATION&&e.LOCATION.v);if(o)ev.o=o.slice(0,120);let no=icsUn(e.DESCRIPTION&&e.DESCRIPTION.v);if(own)no=no.replace(/(^|\n)Eingetragen von [^\n]*$/,"").trim();if(no)ev.no=no.slice(0,500);  // Zusatz aus dem FitPlan-Export nicht als Notiz
     if(e.RRULE&&!rid){const r=icsRule(e.RRULE.v,st.d);if(r)ev.r=r}
     if(e.EX&&ev.r){const x=e.EX.map(icsDt).filter(Boolean).map(x=>x.d);if(x.length)ev.x=[...new Set(x)].slice(0,200)}
     // Geburtstag: ganztägig, jährlich (oder als Geburtstag markiert) und so benannt
     const cat=e.CATEGORIES?e.CATEGORIES.v:"";
     if(st.all&&!rid&&(bdCal&&(!ev.r||ev.r.f==="y")||BDRX.test(n+" "+cat)&&(ev.r&&ev.r.f==="y"||/birthday|geburtstag/i.test(cat)))){const nm=bdName(n)||n.slice(0,60),y=+st.d.slice(0,4);
-      if(nm){bds.push({id:"g"+syHash(nm.toLowerCase()+"|"+st.d.slice(5)),v:{n:nm,d:st.d.slice(5),y:y>=1900&&y<=yr?y:undefined}});return}}
-    evs.push({id:"c"+syHash((uid||n+"|"+st.d+"|"+(st.s||""))+"|"+(rid?rid.d:"")),v:ev,u:uid})});
+      if(nm){bds.push({id:/^g[0-9A-Za-z]{1,12}$/.test(own)?own:"g"+syHash(nm.toLowerCase()+"|"+st.d.slice(5)),v:{n:nm,d:st.d.slice(5),y:y>=1900&&y<=yr?y:undefined}});return}}
+    evs.push({id:/^c[0-9A-Za-z]{1,12}$/.test(own)&&!rid?own:"c"+syHash((uid||n+"|"+st.d+"|"+(st.s||""))+"|"+(rid?rid.d:"")),v:ev,u:uid})});
   evs.forEach(o=>{if(o.v.r&&o.u&&xs[o.u])o.v.x=[...new Set([...(o.v.x||[]),...xs[o.u]])].slice(0,300);delete o.u});
   return{evs,bds,cal}}
 // Freier Text (aus FamilyWall geteilt oder kopiert): Zeilen mit Datum, Uhrzeit und Titel – auch Datum als Überschrift
@@ -76,8 +77,8 @@ function calApply(P,o){o=o||{};const t=todayK(),C=famMap("cal"),G=famMap("bd"),s
   const fresh=E.filter(x=>!C[x.id]),room=Math.max(0,FAM_MAX.cal-Object.keys(C).length);let cut=0;
   if(fresh.length>room){const key=x=>x.v.r?"9999":x.v.e||x.v.d,keep=new Set(fresh.sort((a,b)=>key(b).localeCompare(key(a))).slice(0,room).map(x=>x.id));cut=fresh.length-room;E=E.filter(x=>C[x.id]||keep.has(x.id))}
   const bak={cal:{},bd:{}},LE=[],LB=[],same=(a,b)=>JSON.stringify({...a,t:0})===JSON.stringify({...b,t:0});
-  E.forEach(x=>{const old=C[x.id],v={...x.v,src:src||undefined,dv:old?old.dv:undefined,b:old?old.b:undefined};if(old&&same(old,{...v,t:old.t}))return;bak.cal[x.id]=old||null;LE.push([x.id,JSON.parse(JSON.stringify(v))])});
-  if(src){const ids=new Set(E.map(x=>x.id));Object.entries(C).forEach(([id,x])=>{if(x.src===src&&famMine(x)&&!ids.has(id)){bak.cal[id]=x;LE.push([id,null])}})}  // im Link gelöschte Termine
+  E.forEach(x=>{const old=C[x.id],v={...x.v,src:old&&old.src!=="fw"&&src!=="fw"?old.src:src||undefined,dv:old?old.dv:undefined,b:old?old.b:undefined};if(old&&same(old,{...v,t:old.t}))return;bak.cal[x.id]=old||null;LE.push([x.id,JSON.parse(JSON.stringify(v))])});
+  if(src==="fw"){const ids=new Set(E.map(x=>x.id));Object.entries(C).forEach(([id,x])=>{if(x.src===src&&famMine(x)&&!ids.has(id)){bak.cal[id]=x;LE.push([id,null])}})}  // im Link gelöschte Termine
   if(o.bd!==false){const have=new Set(Object.values(G).filter(bdOk).map(x=>x.n.toLowerCase()+"|"+x.d));
     P.bds.forEach(x=>{if(G[x.id]||have.has(x.v.n.toLowerCase()+"|"+x.v.d)||Object.keys(G).length+LB.length>=FAM_MAX.bd)return;have.add(x.v.n.toLowerCase()+"|"+x.v.d);bak.bd[x.id]=null;LB.push([x.id,JSON.parse(JSON.stringify(x.v))])})}
   famSetN("cal",LE);famSetN("bd",LB);
@@ -124,7 +125,7 @@ function calImport(pre,file){const canRead=!!(navigator.clipboard&&navigator.cli
       $("ciok").onclick=()=>{if($("cibx")&&$("cibx").checked){const ids=new Set(yb.map(x=>x.id));const yr=new Date().getFullYear();
           P={...P,evs:P.evs.filter(x=>!ids.has(x.id)),bds:yb.map(x=>{const y=+x.v.d.slice(0,4),nm=bdName(x.v.n)||x.v.n.slice(0,60);return{id:"g"+syHash(nm.toLowerCase()+"|"+x.v.d.slice(5)),v:{n:nm,d:x.v.d.slice(5),y:y>=1900&&y<yr?y:undefined}}})}}
         const drop=!!($("ciold")&&$("ciold").checked),bd=!$("cibd")||$("cibd").checked,sub=src==="url"&&$("cisub")&&$("cisub").checked;
-        const res=calApply(P,{src:sub?"fw":"",drop,bd});if(sub)S.icu={u:url,at:Date.now(),old:drop,bd};save();
+        const res=calApply(P,{src:sub?"fw":"imp",drop,bd});if(sub)S.icu={u:url,at:Date.now(),old:drop,bd};save();
         closeSheet();famTab="cal";const f=P.evs.filter(x=>!(drop&&!x.v.r&&(x.v.e||x.v.d)<t)).map(x=>x.v.d).sort().find(k=>k>=t);famSel=f||t;famMon=famSel.slice(0,7);calWantScroll=true;show("fam");
         toast(res.n||res.b?(res.n?res.n+(res.n===1?" Termin":" Termine"):"")+(res.n&&res.b?", ":"")+(res.b?res.b+(res.b===1?" Geburtstag":" Geburtstage"):"")+" übernommen"+(res.cut?" ("+res.cut+" ältere passten nicht mehr)":""):"Alles schon im Kalender",res.n||res.b?res.undo:null)}};
     const setP=(x,s)=>{P=x;src=s;$("cih").innerHTML="";$("cie").textContent=!x.evs.length&&!x.bds.length&&s?(s==="text"?"Keine Termine erkannt. Am besten klappt es mit Datum (und Uhrzeit) in jeder Zeile, z. B. „Mo., 10.11. 16:30 Fußball“.":"Darin stehen keine Termine."):"";draw()};
@@ -151,3 +152,51 @@ function calImport(pre,file){const canRead=!!(navigator.clipboard&&navigator.cli
       rd.onload=()=>{$("ciff").value="";fromFile(f.name,String(rd.result||""))};rd.onerror=()=>{$("cifs").textContent="";$("cie").textContent="Die Datei ließ sich nicht lesen."};rd.readAsText(f)};
     if(file)fromFile(file.name||"Kalenderdatei",String(file.text||""));
     else if(pre)T.value=pre,fromText(pre)})}
+
+/* ---------- Kalender exportieren (.ics) – für FamilyWall, Google Kalender, Outlook oder als Sicherung ---------- */
+const ICW=["MO","TU","WE","TH","FR","SA","SU"];
+const icsEsc=s=>String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+// Zeilen länger als 75 Byte umbrechen (Kalender-Standard), ohne Zeichen zu zerteilen
+function icsFold(l){const enc=new TextEncoder();if(enc.encode(l).length<=75)return l;const out=[];let cur="",n=0;
+  for(const ch of l){const b=enc.encode(ch).length;if(n+b>(out.length?74:75)){out.push(cur);cur="";n=0}cur+=ch;n+=b}out.push(cur);return out.join("\r\n ")}
+const icsD=k=>k.replace(/-/g,""),icsDT=(k,t)=>icsD(k)+"T"+t.replace(":","")+"00";
+// Übernommen = aus FamilyWall/Datei/Text (ältere Importe erkennt man an der kleingeschriebenen ID)
+const calImported=x=>x.src==="fw"||x.src==="imp"||/^c[0-9a-z]{1,9}$/.test(x.id);
+function icsBuild(o){const t=todayK(),now=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",
+    L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//FitPlan//Familienkalender//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:FitPlan Familie"];let n=0,nb=0;
+  famList("cal").forEach(e=>{const end=e.e&&e.e>e.d?e.e:e.d,r=e.r&&["d","w","m","y"].includes(e.r.f)?e.r:null;
+    if(o.future&&(r?isK(r.u)&&r.u<t:end<t))return;if(!o.imp&&calImported(e))return;
+    const all=!e.s,E=["BEGIN:VEVENT","UID:"+e.id+"@fitplan","DTSTAMP:"+now,"SUMMARY:"+icsEsc(e.n)];
+    if(all)E.push("DTSTART;VALUE=DATE:"+icsD(e.d),"DTEND;VALUE=DATE:"+icsD(addDays(end,1)));
+    else{let z=e.z;if(!z){if(end>e.d)z="23:59";else{const m=Math.min(1439,tMin(e.s)+60);z=p2(Math.floor(m/60))+":"+p2(m%60)}}
+      E.push("DTSTART:"+icsDT(e.d,e.s),"DTEND:"+icsDT(end,z))}
+    if(r){let R="FREQ="+{d:"DAILY",w:"WEEKLY",m:"MONTHLY",y:"YEARLY"}[r.f];if(+r.i>1)R+=";INTERVAL="+(+r.i);
+      if(Array.isArray(r.nth))R+=";BYDAY="+(+r.nth[0])+ICW[r.nth[1]];else if(r.f==="w"&&Array.isArray(r.wd)&&r.wd.length)R+=";BYDAY="+r.wd.map(x=>ICW[x]).join(",");
+      if(isK(r.u))R+=";UNTIL="+(all?icsD(r.u):icsD(r.u)+"T235959");else if(+r.c)R+=";COUNT="+(+r.c);E.push("RRULE:"+R);
+      (Array.isArray(e.x)?e.x:[]).filter(isK).forEach(x=>E.push(all?"EXDATE;VALUE=DATE:"+icsD(x):"EXDATE:"+icsDT(x,e.s)))}
+    if(e.o)E.push("LOCATION:"+icsEsc(e.o));
+    const desc=[e.no||"",!famMine(e)&&e.b?"Eingetragen von "+e.b:""].filter(Boolean).join("\n");if(desc)E.push("DESCRIPTION:"+icsEsc(desc));
+    E.push("END:VEVENT");L.push(...E);n++});
+  if(o.bd)famList("bd").forEach(x=>{let st=(x.y||t.slice(0,4))+"-"+x.d;if(!isK(st)||!ymd(+st.slice(0,4),+st.slice(5,7),+st.slice(8)))st="2000-"+x.d;
+    L.push("BEGIN:VEVENT","UID:"+x.id+"@fitplan","DTSTAMP:"+now,"SUMMARY:"+icsEsc("🎂 "+x.n),"DTSTART;VALUE=DATE:"+icsD(st),"DTEND;VALUE=DATE:"+icsD(addDays(st,1)),
+      "RRULE:FREQ=YEARLY","CATEGORIES:Geburtstag","TRANSP:TRANSPARENT","END:VEVENT");nb++});
+  L.push("END:VCALENDAR");return{text:L.map(icsFold).join("\r\n")+"\r\n",n,nb}}
+function calExport(){const name="FitPlan-Kalender-"+todayK()+".ics",canShare=f=>{try{return!!(navigator.canShare&&navigator.canShare({files:[f]}))}catch(e){return false}};
+  const probe=new File(["BEGIN:VCALENDAR"],name,{type:"text/calendar"}),sh=canShare(probe);
+  openSheet("Kalender exportieren",
+  '<p class="sm" style="margin:0 0 6px">Erstellt eine Kalenderdatei (.ics) mit euren Terminen. Die lässt sich z. B. in FamilyWall (Kalender-Menü → „Ereignisse aus ICS importieren“), Google Kalender oder Outlook einlesen – oder als Sicherung aufheben.</p>'+
+  '<label class="ck"><input type="checkbox" id="cxf" checked> Nur Termine ab heute (Serien immer)</label>'+
+  '<label class="ck"><input type="checkbox" id="cxb" checked> Geburtstage mitnehmen</label>'+
+  '<label class="ck"><input type="checkbox" id="cxi" checked> Übernommene Termine mitnehmen (z. B. aus FamilyWall)</label>'+
+  '<p class="sm" style="margin:2px 0 0 30px">Ausschalten, wenn du die Datei in FamilyWall einliest – sonst stehen diese Termine dort doppelt.</p>'+
+  '<p class="sm" id="cxn" style="margin:12px 0 0;color:var(--text)"></p>'+
+  (sh?'<button class="full pri" id="cxs" style="margin-top:10px">⬆ Teilen (Mail, Drive, WhatsApp …)</button>':'')+
+  '<button class="full'+(sh?'':' pri')+'" id="cxd" style="margin-top:8px">💾 In Downloads speichern</button>',
+  ()=>{const opt=()=>({future:$("cxf").checked,bd:$("cxb").checked,imp:$("cxi").checked});
+    const up=()=>{const r=icsBuild(opt()),none=!r.n&&!r.nb;$("cxn").textContent=none?"Keine Termine für die Datei.":r.n+(r.n===1?" Termin":" Termine")+(r.nb?" und "+r.nb+(r.nb===1?" Geburtstag":" Geburtstage"):"")+" kommen in die Datei.";
+      ["cxs","cxd"].forEach(i=>{if($(i))$(i).disabled=none})};
+    ["cxf","cxb","cxi"].forEach(i=>$(i).onchange=up);up();
+    const file=()=>new File([icsBuild(opt()).text],name,{type:"text/calendar"});
+    $("cxd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(file());a.download=name;document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);closeSheet();toast("„"+name+"“ gespeichert (Downloads)")};
+    if(sh)$("cxs").onclick=()=>navigator.share({files:[file()],title:"FitPlan-Kalender"}).then(()=>{closeSheet();toast("Kalender exportiert")}).catch(e=>{if(e.name!=="AbortError")$("cxd").click()})})}

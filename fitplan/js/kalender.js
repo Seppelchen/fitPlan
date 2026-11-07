@@ -129,7 +129,7 @@ function calSlide(dir,from){const els=calSlideEls(),W=$("fm-cal").clientWidth||i
   setTimeout(()=>{calStep(dir,scroll);const n=calSlideEls();calSetX(n,dir*W,0);void n[0].offsetWidth;calSetX(n,0,230);
     setTimeout(()=>{calSliding=false;n.forEach(e=>{e.style.transition="";e.style.transform=""})},240)},out)}
 $("cmp").onclick=()=>calSlide(-1);$("cmn").onclick=()=>calSlide(1);$("cmh").onclick=()=>calGo(todayK());
-$("cadd").onclick=()=>calForm(null,famSel||todayK());$("cimp").onclick=()=>calImport("");
+$("cadd").onclick=()=>calForm(null,famSel||todayK());$("cimp").onclick=()=>calImport("");$("cexp").onclick=()=>calExport();
 ["cgrid","cday"].forEach(id=>{let x0=null,y0=0,dx=0,mode=0,els=[];const G=$(id);
   G.addEventListener("touchstart",e=>{if(calSliding||e.touches.length!==1){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;mode=0;
     els=calV==="list"&&id==="cday"?[]:calSlideEls()},{passive:true});
