@@ -8,6 +8,9 @@ const VERSION = 'fitplan-v3';
 const APP = ['./css/app.css', './js/design.js', './js/daten-rezepte.js', './js/daten-sport.js', './js/daten-lebensmittel.js', './js/kern.js', './js/essen.js', './js/scanner-suche.js', './js/sport.js', './js/plan.js', './js/sync.js', './js/einkaufsmodus.js', './js/familie.js', './js/familie-import.js', './js/fortschritt.js', './js/mehr.js', './js/start.js'];
 const PRECACHE = ['./', './index.html', './manifest.json', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './zxing.min.js', ...APP];
 
+// Ablage für Inhalte, die aus anderen Apps an FitPlan geteilt werden (Text, Links, Kalenderdateien)
+const SHARE = 'fitplan-share';
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(VERSION)
@@ -19,13 +22,30 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== SHARE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+
+  // Teilen aus anderen Apps (Android): Inhalt merken, dann FitPlan mit ?shared öffnen (start.js holt ihn ab)
+  if (req.method === 'POST' && new URL(req.url).searchParams.has('share-target')) {
+    event.respondWith((async () => {
+      const out = { title: '', text: '', url: '', files: [] };
+      try {
+        const fd = await req.formData();
+        out.title = String(fd.get('title') || ''); out.text = String(fd.get('text') || ''); out.url = String(fd.get('url') || '');
+        for (const f of fd.getAll('files')) if (f && typeof f.text === 'function' && f.size < 5e6) out.files.push({ name: f.name || '', text: await f.text() });
+      } catch (e) {}
+      const c = await caches.open(SHARE);
+      await c.put(new URL('share-inbox', self.registration.scope).href, new Response(JSON.stringify(out), { headers: { 'Content-Type': 'application/json' } }));
+      return Response.redirect(new URL('./?shared=1', self.registration.scope).href, 303);
+    })());
+    return;
+  }
+
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
   // Seitenaufrufe: erst online versuchen (neueste Version), offline aus dem Speicher.
