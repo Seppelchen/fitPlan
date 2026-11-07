@@ -57,14 +57,26 @@ function renderMac(D){const t=macSum(D.f),G=S.g,M=$("mac");
   $("mlg").innerHTML=(t.any&&tot?"Kalorien aus: "+e.map(x=>'<span style="white-space:nowrap"><span class="dot" style="background:var(--'+x[0]+')"></span>'+x[1]+' '+Math.round(x[2]/tot*100)+' %</span>').join(" &nbsp;"):"")+
     (t.miss&&t.k?(t.any?'<br>':'')+t.miss+(t.miss===1?" Eintrag":" Einträge")+" ohne Kohlenhydrate/Fett – antippen zum Ergänzen":"")}
 
-function entrySheet(f){const D=day();let q=f.q;
+// Rezept zum Eintrag (gleicher Name): eigene Rezepte, sonst gemeinsame Rezepte der Familie
+function recipeOf(n){const l=String(n).toLowerCase(),r=S.R.find(x=>x.n.toLowerCase()===l);if(r)return{r,own:1};
+  const g=famList("rz").find(x=>String(x.r.n).toLowerCase()===l);return g?{r:rzSan(g.r)}:null}
+function entrySheet(f){const D=day();let q=f.q;const rc=recipeOf(f.n);
   openSheet("Eintrag bearbeiten",
-  '<div style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><span class="fi">'+icOf(f)+'</span><b>'+esc(f.n)+'</b></div><p class="lb">Portion</p><div class="chips" id="eq"></div>'+
+  '<div style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><span class="fi">'+icOf(f)+'</span><b>'+esc(f.n)+'</b></div>'+
+  (rc?'<details class="rzx"><summary>📖 Zutaten & Zubereitung</summary><div id="erz"></div></details>':'')+
+  '<p class="lb">Portion</p><div class="chips" id="eq"></div>'+
   '<div class="g2"><div class="mc"><div class="sm">Kalorien</div><b id="ekc"></b></div><div class="mc"><div class="sm">Eiweiß</div><b id="epr"></b></div></div>'+mt3("em_")+
   (f.kh1==null?'<details style="margin-top:10px"><summary class="sm" style="cursor:pointer">Kohlenhydrate, Fett, Ballaststoffe ergänzen</summary><p class="sm" style="margin:6px 0 0">Werte für 1 Portion</p><div class="g3"><input id="ekh" inputmode="decimal" placeholder="KH g"><input id="efe" inputmode="decimal" placeholder="Fett g"><input id="ebs" inputmode="decimal" placeholder="Bst. g"></div></details>':'')+
   '<label class="f">Mahlzeit</label>'+mealSel("em",CATS.includes(f.m)?f.m:guessMeal())+
   '<button class="full" id="efav" style="margin-top:12px"></button><button class="full pri" id="esv" style="margin-top:8px">Speichern</button><button class="full del" id="edl" style="margin-top:8px">Löschen</button>',
-  ()=>{const dr=()=>{qChips("eq",q,v=>{q=v;dr()});$("ekc").textContent=fmt(f.k1*q)+" kcal";$("epr").textContent=fmt(f.p1*q)+" g";mt3set("em_",c=>{const i=$("e"+c),x=i?nn(i.value):null;return f[c+"1"]!=null?f[c+"1"]*q:x!=null?x*q:null})};dr();
+  ()=>{const rz=()=>{if(!rc)return;const r=rc.r,st=steps(r.s),pz=r.pz>1,z=r.z||[];
+      $("erz").innerHTML=(r.t?'<p class="sm" style="margin:8px 0 0">⏱ '+esc(r.t)+'</p>':'')+
+        '<p class="lb" style="margin:10px 0 4px">Zutaten '+(pz?'(für alle '+fq(r.pz)+' Portionen)':'('+fq(q)+(q<=1?' Portion':' Portionen')+')')+'</p>'+
+        (z.length?'<ul class="z">'+z.map(x=>'<li>'+esc(pz?x:scaleZ(x,q))+'</li>').join("")+'</ul>':'<p class="sm" style="margin:0">Keine Zutatenliste hinterlegt.</p>')+
+        '<p class="lb" style="margin:12px 0 4px">Zubereitung</p>'+(st.length?'<ol class="st">'+st.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>':'<p class="sm" style="margin:0">Keine Zubereitung hinterlegt.</p>')+
+        (rc.own?'<button class="full" id="erzo" style="margin-top:8px;font-size:14px">Rezept öffnen</button>':'');
+      if(rc.own)$("erzo").onclick=()=>recipeDetail(rc.r.id)};
+    const dr=()=>{qChips("eq",q,v=>{q=v;dr()});rz();$("ekc").textContent=fmt(f.k1*q)+" kcal";$("epr").textContent=fmt(f.p1*q)+" g";mt3set("em_",c=>{const i=$("e"+c),x=i?nn(i.value):null;return f[c+"1"]!=null?f[c+"1"]*q:x!=null?x*q:null})};dr();
     if(f.kh1==null)["ekh","efe","ebs"].forEach(i=>$(i).oninput=dr);
     const fb=()=>{$("efav").textContent=isFav(f.n)?"★ Aus Favoriten entfernen":"☆ Als Favorit merken"};fb();
     const addM=()=>{if(f.kh1==null)MK.forEach(([c])=>{const x=nn($("e"+c).value);if(x!=null)f[c+"1"]=x})};
