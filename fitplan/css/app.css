@@ -105,11 +105,40 @@ ul.z{margin:0;padding-left:20px}
 /* Familienkalender */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;touch-action:pan-y}
 .cal .wh{font-size:11px;color:var(--muted);text-align:center;padding:2px 0 4px}
-.cal button{border:1px solid transparent;background:none;border-radius:10px;padding:5px 0 4px;min-height:48px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px;line-height:1.2;font-variant-numeric:tabular-nums}
+.cal button{border:1px solid transparent;background:none;border-radius:10px;padding:4px 0 3px;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px;line-height:1.2;font-variant-numeric:tabular-nums}
 .cal button.o{opacity:.4}
 .cal button.td span:first-child{background:var(--accent);color:#fff;border-radius:999px;min-width:26px;font-weight:600}
 .cal button.sel{border-color:var(--accent);background:var(--accbg)}
 .cal .dts{display:flex;gap:2px;justify-content:center;min-height:6px}.cal .dts i{width:6px;height:6px;border-radius:50%}
+/* Monat oben fest, darunter Terminliste mit mitlaufender Tagesüberschrift */
+.calt{position:sticky;top:env(safe-area-inset-top);z-index:3;background:var(--card);margin:0 -14px;padding:8px 14px 6px;border-bottom:1px solid var(--border);box-shadow:0 calc(-1 * env(safe-area-inset-top)) 0 var(--card)}
+.calh{display:flex;align-items:center;gap:6px;margin-bottom:4px}.calh h2{margin:0;font-size:16px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.calh button{font-size:13px;padding:5px 11px}.calh button.ic{font-size:15px;padding:4px 11px}
+.agm{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 0}
+.agd{position:sticky;top:calc(env(safe-area-inset-top) + var(--calh,0px));z-index:2;background:var(--card);font-size:14px;font-weight:600;padding:9px 0 6px;border-bottom:1px solid var(--border)}
+.agd.td{color:var(--accent)}.aga{height:0}
+.seg5{display:flex;gap:4px;margin:0 0 6px}.seg5 button{flex:1;min-width:0;font-size:12px;padding:4px 2px;white-space:nowrap;border-radius:999px}
+/* Monatsansicht */
+.mgh{display:grid;grid-template-columns:24px repeat(7,minmax(0,1fr));font-size:11px;color:var(--muted);text-align:center}
+.mg{display:grid;grid-template-columns:24px repeat(7,minmax(0,1fr));margin:0 -8px;border-top:1px solid var(--border)}
+.mkw{font-size:10px;color:var(--muted);text-align:center;padding-top:5px;border-bottom:1px solid var(--border)}
+.mc2{min-width:0;min-height:88px;padding:2px 1px 3px;border-left:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;cursor:pointer}
+.mc2 b{display:block;width:22px;margin:0 auto 1px;text-align:center;font-size:13px;font-weight:500;border-radius:999px}
+.mc2.td b{background:var(--accent);color:#fff}.mc2.o{opacity:.45}.mc2.sel{background:var(--accbg)}
+.mc2 i,.tgc i{display:block;font-style:normal;font-size:10px;line-height:14px;color:#fff;border-radius:3px;padding:0 2px;margin-top:1px;white-space:nowrap;overflow:hidden;cursor:pointer}
+.mc2 em{display:block;font-style:normal;font-size:10px;color:var(--muted);text-align:center}
+/* Tag, 3 Tage, Woche (Stundenraster: 44px pro Stunde, siehe HH in kalender.js) */
+.tgh{display:grid;align-items:start}
+.tgd{border:0;background:none;padding:2px 0;display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--muted);border-radius:8px}
+.tgd b{font-size:16px;font-weight:500;color:var(--text);min-width:28px;border-radius:999px}.tgd.td b{background:var(--accent);color:#fff}.tgd.sel{background:var(--accbg)}
+.tga{font-size:10px;color:var(--muted);text-align:center;padding-top:3px}
+.tgc{min-width:0;min-height:18px;max-height:66px;overflow:auto;padding:1px;border-left:1px solid var(--border)}.tgc i{font-size:11px;line-height:16px}
+.tgb{display:grid;position:relative;margin-top:6px}
+.tgg{position:relative}.tgg span{position:absolute;right:5px;font-size:10px;color:var(--muted);transform:translateY(-7px)}
+.tgcol{position:relative;border-left:1px solid var(--border);background:repeating-linear-gradient(to bottom,var(--border) 0 1px,transparent 1px 44px);cursor:pointer}
+.tge{position:absolute;box-sizing:border-box;border-radius:5px;border:1px solid var(--card);color:#fff;font-size:11px;line-height:1.25;padding:1px 3px;overflow:hidden;cursor:pointer}
+.tge b{font-weight:600}
+.tgn{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:1;pointer-events:none}
 .row .cbar{width:4px;align-self:stretch;border-radius:2px;flex:none}
 label.ck{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:15px}label.ck input{width:auto;margin:0}
 .cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3}

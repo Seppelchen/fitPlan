@@ -20,6 +20,7 @@ fitplan/
 │   ├── einkaufsmodus.js       Einkaufsmodus im Vollbild
 │   ├── familie.js             Tab Familie: Kalender, Geburtstage, Rezepte
 │   ├── familie-import.js      Kalender aus FamilyWall übernehmen
+│   ├── kalender.js            Kalenderansichten (Liste, Tag, 3 Tage, Woche, Monat)
 │   ├── fortschritt.js         Tab Fortschritt
 │   ├── mehr.js                Tab Mehr (Ziele, Sicherung)
 │   └── start.js               startet die App
@@ -205,8 +206,9 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 ## Familie: Kalender, Geburtstage und Rezepte
 
-Der Tab **Familie** bündelt alles, was ihr gemeinsam nutzt – wie in FamilyWall. Oben steht immer
-**„Heute & nächste 7 Tage“** mit allen Terminen und Geburtstagen. Darunter wählst du zwischen
+Der Tab **Familie** bündelt alles, was ihr gemeinsam nutzt – wie in FamilyWall. Bei Geburtstagen und
+Rezepten steht oben **„Heute & nächste 7 Tage“** mit allen Terminen und Geburtstagen (im Kalender zeigt der
+Kalender das selbst). Darunter wählst du zwischen
 **📅 Kalender**, **🎂 Geburtstage** und **📖 Rezepte**. Die Zahl am Tab-Symbol zeigt, wie viele
 Einträge heute anstehen.
 
@@ -217,8 +219,14 @@ Einträge heute anstehen.
 
 ### 📅 Kalender
 
-- Monatsansicht: Tag antippen zeigt seine Termine. ‹ › oder Wischen blättert den Monat, **Heute** springt zurück.
-  Punkte unter dem Datum = Termine (lila = Geburtstag).
+- Oben wählst du die Ansicht – FitPlan merkt sie sich:
+  - **Liste:** Der Monat steht oben fest, darunter alle Termine Tag für Tag. Beim Scrollen bleibt der Tag, bei
+    dem du gerade bist, als Überschrift stehen und wird im Monat markiert. Der Monat blättert mit. Einen Tag
+    im Monat antippen springt in der Liste dorthin. Punkte unter dem Datum = Termine (lila = Geburtstag).
+  - **Tag, 3 Tage, Woche:** Stundenraster mit den Terminen zu ihrer Uhrzeit, Ganztägiges und Geburtstage oben.
+    Eine freie Stelle antippen legt einen Termin zu dieser Uhrzeit an. Ein Tageskopf antippen öffnet den Tag.
+  - **Monat:** Großes Raster mit Kalenderwochen und den Termintiteln. Einen Tag antippen öffnet ihn als Tag.
+- ‹ › oder Wischen blättert (Monat, Tag, 3 Tage oder Woche), **Heute** springt zurück, **＋** legt einen Termin an.
 - **＋ Termin:** Titel, Datum, ganztägig oder mit Uhrzeit, mehrtägig („Bis“), Wiederholung (täglich,
   wöchentlich, alle 2 Wochen, monatlich, jährlich, optional „bis“), Ort und Notiz.
 - Termin antippen → **Bearbeiten** oder **Löschen**. Bei Serien geht auch **„Nur am … löschen“**.

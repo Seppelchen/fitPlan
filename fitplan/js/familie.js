@@ -92,40 +92,24 @@ function renderFam(){famBadge();if(view!=="fam")return;renderFamTop();
     b.onclick=()=>{famTab=v;try{localStorage.setItem(KEY+".fam",v)}catch(e){}renderFam()};T.appendChild(b)});
   FAMC.forEach(c=>$("fm-"+c).style.display=c===famTab?"":"none");
   if(famTab==="cal")renderCal();else if(famTab==="bd")renderBd();else renderRz()}
-function renderFamTop(){const T=$("fmTop"),t=todayK(),R=calRange(t,addDays(t,6)),s=SY(),ks=Object.keys(R).sort();T.innerHTML="";
-  T.appendChild(el("h2","","Heute & nächste 7 Tage"));
-  if(!ks.length)T.appendChild(el("p","sm","Keine Termine und Geburtstage in den nächsten 7 Tagen.")).style.margin="0";
+function renderFamTop(){const T=$("fmTop"),t=todayK(),cal=famTab==="cal",R=cal?{}:calRange(t,addDays(t,6)),s=SY(),ks=Object.keys(R).sort();T.innerHTML="";
+  T.style.padding=cal?"10px 14px":"";
+  if(!cal)T.appendChild(el("h2","","Heute & nächste 7 Tage"));
+  if(!cal&&!ks.length)T.appendChild(el("p","sm","Keine Termine und Geburtstage in den nächsten 7 Tagen.")).style.margin="0";
   let n=0;const tot=ks.reduce((a,k)=>a+R[k].length,0);
   for(const k of ks){if(n>=10)break;const h=el("div","gh",'<span>'+(k===t?"Heute":k===addDays(t,1)?"Morgen":wdL(k))+', '+dd(k)+'</span><span></span>');if(!n)h.style.marginTop="0";T.appendChild(h);
     R[k].forEach(o=>{if(n++<10)T.appendChild(famRow(o))})}
   if(tot>10)T.appendChild(el("p","sm","… und "+(tot-10)+" weitere im Kalender")).style.margin="6px 0 0";
   if(s){const d=el("div","",'<span class="sm" style="flex:1">👥 Gemeinsam mit der Familie <span id="fmst"></span></span><button id="fmcon" style="font-size:13px;padding:4px 12px">Verwalten</button>');
-    d.style.cssText="display:flex;align-items:center;gap:8px;margin-top:12px";T.appendChild(d);syStat()}
-  else{T.appendChild(el("button","full","👥 Mit der Familie teilen")).id="fmcon";$("fmcon").style.marginTop="12px";
-    T.appendChild(el("p","sm","Dann sehen alle verbundenen Handys Kalender, Geburtstage, Rezepte und die Einkaufsliste.")).style.margin="6px 0 0"}
+    d.style.cssText="display:flex;align-items:center;gap:8px;margin-top:"+(cal?"0":"12px");T.appendChild(d);syStat()}
+  else{T.appendChild(el("button","full","👥 Mit der Familie teilen")).id="fmcon";$("fmcon").style.marginTop=cal?"0":"12px";
+    if(!cal)T.appendChild(el("p","sm","Dann sehen alle verbundenen Handys Kalender, Geburtstage, Rezepte und die Einkaufsliste.")).style.margin="6px 0 0"}
   $("fmcon").onclick=sySheet;
   if(s&&syFamErr)T.appendChild(el("p","err",esc(syFamErr)))}
 
-/* Kalender */
-function renderCal(){const t=todayK();famSel=famSel||t;famMon=famMon||famSel.slice(0,7);
-  const y=+famMon.slice(0,4),m=+famMon.slice(5,7),first=famMon+"-01",days=new Date(Date.UTC(y,m,0)).getUTCDate(),w0=wdi(first),wk=Math.ceil((w0+days)/7),a=addDays(first,-w0),b=addDays(a,wk*7-1),R=calRange(a,b);
-  $("cmt").textContent=MONS[m-1]+" "+y;
-  const G=$("cgrid");G.innerHTML=WDS.map(w=>'<span class="wh">'+w+'</span>').join("");
-  for(let i=0;i<wk*7;i++){const k=addDays(a,i),L=R[k]||[];
-    const bt=el("button",[k.slice(0,7)!==famMon?"o":"",k===t?"td":"",k===famSel?"sel":""].join(" ").trim(),'<span>'+(+k.slice(8))+'</span><span class="dts">'+L.slice(0,4).map(o=>'<i style="background:'+(o.bd?"var(--sweet)":famCol(o.ev))+'"></i>').join("")+'</span>');
-    bt.setAttribute("aria-label",ld(k)+(L.length?", "+L.length+(L.length===1?" Eintrag":" Einträge"):""));
-    bt.onclick=()=>{famSel=k;famMon=k.slice(0,7);renderCal()};G.appendChild(bt)}
-  $("cdt").textContent=(famSel===t?"Heute · ":"")+wdL(famSel)+", "+dd(famSel);
-  const D=$("cday"),SL=R[famSel]||[];D.innerHTML="";
-  if(!SL.length)D.appendChild(el("p","sm","Keine Termine.")).style.margin="0";SL.forEach(o=>D.appendChild(famRow(o)));
-  renderCalSub()}
-const famShift=n=>{const d=new Date(Date.UTC(+famMon.slice(0,4),+famMon.slice(5,7)-1+n,1)),t=todayK();famMon=d.getUTCFullYear()+"-"+p2(d.getUTCMonth()+1);famSel=t.slice(0,7)===famMon?t:famMon+"-01";renderCal()};
-$("cmp").onclick=()=>famShift(-1);$("cmn").onclick=()=>famShift(1);$("cmh").onclick=()=>{famSel=todayK();famMon=famSel.slice(0,7);renderCal()};
-// Wischen über den Monat blättert
-(()=>{let x0=null,y0=0;const G=$("cgrid");G.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
-  G.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)famShift(dx<0?1:-1)},{passive:true})})();
-$("cadd").onclick=()=>calForm(null,famSel||todayK());$("cimp").onclick=()=>calImport("");
-function calForm(id,k0){const old=id?famMap("cal")[id]:null;if(id&&!calOk(old))return;const e=old||{n:"",d:k0||todayK()},rv=rpKey(e.r);
+/* Kalender: Termine anlegen, ansehen, FamilyWall-Verknüpfung */
+// Die Kalenderansichten (Liste, Tag, 3 Tage, Woche, Monat) stehen in kalender.js
+function calForm(id,k0,t0){const old=id?famMap("cal")[id]:null;if(id&&!calOk(old))return;const e=old||{n:"",d:k0||todayK(),s:t0,z:t0?p2(Math.min(23,+t0.slice(0,2)+1))+":"+t0.slice(3):undefined},rv=rpKey(e.r);
   openSheet(id?"Termin bearbeiten":"Neuer Termin",
   '<label class="f">Was?</label><input id="ceN" maxlength="120" placeholder="z. B. Zahnarzt Laura">'+
   '<div class="g2"><div><label class="f">Datum</label><input type="date" id="ceD"></div><div><label class="f">Bis (mehrere Tage)</label><input type="date" id="ceE"></div></div>'+
@@ -149,7 +133,7 @@ function calForm(id,k0){const old=id?famMap("cal")[id]:null;if(id&&!calOk(old))r
       const v={...(old||{}),n,d,e:en&&en>d?en:undefined,s:all?undefined:st,z:all||!z?undefined:z,o:$("ceO").value.trim()||undefined,no:$("ceNo").value.trim()||undefined};
       if(!rk)v.r=undefined;else if(rk!=="x")v.r={f:rk[0],i:rk==="w2"?2:1};else v.r={...e.r};
       if(v.r){const u=$("ceU").value;if(u){v.r.u=u;delete v.r.c}else delete v.r.u}
-      famSet("cal",id||"c"+syRnd(10),v);closeSheet();famSel=d;famMon=d.slice(0,7);renderFam();toast(id?"Termin gespeichert":"Termin eingetragen")}})}
+      famSet("cal",id||"c"+syRnd(10),v);closeSheet();famSel=d;famMon=d.slice(0,7);calWantScroll=true;renderFam();toast(id?"Termin gespeichert":"Termin eingetragen")}})}
 function calDetail(id,k){const e=famMap("cal")[id];if(!calOk(e))return;k=k||e.d;const dur=e.e&&e.e>e.d?dayDiff(e.d,e.e):0,rp=rpTxt(e.r);
   openSheet(esc(e.n),
   '<div style="font-size:15px;line-height:1.75">📅 '+ld(k)+(dur?'<br>&nbsp; &nbsp; &nbsp;bis '+ld(addDays(k,dur)):'')+
