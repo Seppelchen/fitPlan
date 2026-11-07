@@ -5,7 +5,7 @@ const VERSION = 'fitplan-v3';
 // Dateien, die beim ersten Öffnen sofort gespeichert werden.
 // Weitere Dateien (CSS, JS, Bilder) werden beim ersten Laden automatisch mitgespeichert.
 // App-Code (css/, js/) – die Liste muss zu den <script>-Zeilen in index.html passen.
-const APP = ['./css/app.css', './js/design.js', './js/daten-rezepte.js', './js/daten-sport.js', './js/daten-lebensmittel.js', './js/kern.js', './js/essen.js', './js/scanner-suche.js', './js/sport.js', './js/plan.js', './js/sync.js', './js/einkaufsmodus.js', './js/familie.js', './js/familie-import.js', './js/fortschritt.js', './js/mehr.js', './js/start.js'];
+const APP = ['./css/app.css', './js/design.js', './js/daten-rezepte.js', './js/daten-sport.js', './js/daten-lebensmittel.js', './js/kern.js', './js/essen.js', './js/scanner-suche.js', './js/sport.js', './js/plan.js', './js/sync.js', './js/einkaufsmodus.js', './js/familie.js', './js/familie-import.js', './js/kalender.js', './js/fortschritt.js', './js/mehr.js', './js/start.js'];
 const PRECACHE = ['./', './index.html', './manifest.json', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './zxing.min.js', ...APP];
 
 // Ablage für Inhalte, die aus anderen Apps an FitPlan geteilt werden (Text, Links, Kalenderdateien)

@@ -125,7 +125,7 @@ function calImport(pre,file){const canRead=!!(navigator.clipboard&&navigator.cli
           P={...P,evs:P.evs.filter(x=>!ids.has(x.id)),bds:yb.map(x=>{const y=+x.v.d.slice(0,4),nm=bdName(x.v.n)||x.v.n.slice(0,60);return{id:"g"+syHash(nm.toLowerCase()+"|"+x.v.d.slice(5)),v:{n:nm,d:x.v.d.slice(5),y:y>=1900&&y<yr?y:undefined}}})}}
         const drop=!!($("ciold")&&$("ciold").checked),bd=!$("cibd")||$("cibd").checked,sub=src==="url"&&$("cisub")&&$("cisub").checked;
         const res=calApply(P,{src:sub?"fw":"",drop,bd});if(sub)S.icu={u:url,at:Date.now(),old:drop,bd};save();
-        closeSheet();famTab="cal";const f=P.evs.filter(x=>!(drop&&!x.v.r&&(x.v.e||x.v.d)<t)).map(x=>x.v.d).sort().find(k=>k>=t);famSel=f||t;famMon=famSel.slice(0,7);show("fam");
+        closeSheet();famTab="cal";const f=P.evs.filter(x=>!(drop&&!x.v.r&&(x.v.e||x.v.d)<t)).map(x=>x.v.d).sort().find(k=>k>=t);famSel=f||t;famMon=famSel.slice(0,7);calWantScroll=true;show("fam");
         toast(res.n||res.b?(res.n?res.n+(res.n===1?" Termin":" Termine"):"")+(res.n&&res.b?", ":"")+(res.b?res.b+(res.b===1?" Geburtstag":" Geburtstage"):"")+" übernommen"+(res.cut?" ("+res.cut+" ältere passten nicht mehr)":""):"Alles schon im Kalender",res.n||res.b?res.undo:null)}};
     const setP=(x,s)=>{P=x;src=s;$("cih").innerHTML="";$("cie").textContent=!x.evs.length&&!x.bds.length&&s?(s==="text"?"Keine Termine erkannt. Am besten klappt es mit Datum (und Uhrzeit) in jeder Zeile, z. B. „Mo., 10.11. 16:30 Fußball“.":"Darin stehen keine Termine."):"";draw()};
     const loadUrl=async()=>{const u=$("ciu").value.trim();if(!u)return;$("cie").textContent="";const b=$("ciul");b.disabled=true;b.textContent="Lädt …";

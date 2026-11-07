@@ -101,12 +101,14 @@
 <div class="card" id="fmTop"></div>
 <div class="seg" id="fmTabs"></div>
 <div class="card" id="fm-cal">
-<div class="hd"><button class="ic" id="cmp" aria-label="Vorheriger Monat">‹</button><div style="text-align:center"><h2 id="cmt"></h2><button id="cmh" style="margin-top:4px;font-size:13px;padding:3px 12px">Heute</button></div><button class="ic" id="cmn" aria-label="Nächster Monat">›</button></div>
-<div class="cal" id="cgrid"></div>
-<div class="hd" style="margin:14px 0 4px"><h2 id="cdt" style="font-size:15px"></h2><button class="pri" id="cadd">＋ Termin</button></div>
+<button class="full" id="cimp" style="margin-bottom:10px">⬇ Kalender aus FamilyWall übernehmen</button>
+<div id="cfw"></div>
+<div class="calt" id="calTop">
+<div class="calh"><button class="ic" id="cmp" aria-label="Vorheriger Monat">‹</button><h2 id="cmt"></h2><button class="ic" id="cmn" aria-label="Nächster Monat">›</button><span style="flex:1"></span><button id="cmh">Heute</button><button class="pri" id="cadd" aria-label="Neuer Termin">＋</button></div>
+<div class="seg5" id="calv"></div>
+<div id="cgrid"></div>
+</div>
 <div id="cday"></div>
-<div id="cfw" style="margin-top:12px"></div>
-<button class="full" id="cimp" style="margin-top:10px">⬇ Kalender aus FamilyWall übernehmen</button>
 </div>
 <div class="card" id="fm-bd">
 <div class="hd"><h2>🎂 Geburtstage</h2><button class="pri" id="badd">＋ Geburtstag</button></div>
@@ -268,6 +270,7 @@
 <script src="js/einkaufsmodus.js"></script>
 <script src="js/familie.js"></script>
 <script src="js/familie-import.js"></script>
+<script src="js/kalender.js"></script>
 <script src="js/fortschritt.js"></script>
 <script src="js/mehr.js"></script>
 <script src="js/start.js"></script>
