@@ -233,7 +233,7 @@ Einträge heute anstehen.
 
 ### Kalender aus FamilyWall übernehmen
 
-**Familie → Kalender → ⬇ Kalender aus FamilyWall übernehmen.**
+**Familie → Kalender → ⬇ Importieren.**
 
 **So geht es mit FamilyWall (Android):**
 1. In FamilyWall im Kalender das Menü öffnen, beim Kalender (z. B. „Kohlbach – Standardkalender“) auf **›**
@@ -263,6 +263,19 @@ Vor dem Übernehmen zeigt FitPlan eine Vorschau. Einzelne Termine lassen sich mi
 Termine werden auf Wunsch übersprungen. Wiederkehrende Termine (z. B. jeden Dienstag) bleiben Serien.
 **Geburtstage** (jährliche Termine mit „Geburtstag“ im Namen) landen im Geburtstagskalender. Ein erneuter
 Import verdoppelt nichts, gleiche Termine werden nur aktualisiert. Direkt danach geht **Rückgängig**.
+
+### Kalender exportieren (.ics)
+
+**Familie → Kalender → ⬆ Exportieren** erstellt eine Kalenderdatei mit euren Terminen – für FamilyWall
+(Kalender-Menü → „Ereignisse aus ICS importieren“), Google Kalender, Outlook oder als Sicherung.
+
+- **Nur Termine ab heute** (Serien sind immer dabei) – ausschalten, um auch Vergangenes mitzunehmen.
+- **Geburtstage mitnehmen** – als jährliche Termine „🎂 Name“.
+- **Übernommene Termine mitnehmen** – ausschalten, wenn die Datei in FamilyWall eingelesen wird. Sonst
+  stehen die Termine, die ursprünglich aus FamilyWall kamen, dort doppelt.
+- Mit dabei sind Uhrzeit, mehrere Tage, Wiederholungen, ausgelassene Tage, Ort, Notiz und „Eingetragen von …“.
+- **💾 In Downloads speichern** oder – falls das Handy es anbietet – **⬆ Teilen** (Mail, Drive, WhatsApp …).
+- Liest man die Datei wieder in FitPlan ein, wird nichts doppelt: FitPlan erkennt seine eigenen Termine.
 
 ### 🎂 Geburtstage
 
