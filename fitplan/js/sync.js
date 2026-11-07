@@ -57,12 +57,12 @@ async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;
     const fv=d.fields&&d.fields.fv&&d.fields.fv.stringValue||"";
     if(fv!==(s.fv||"")){const g=await syCall(s,"GET","?"+FAMC.map(c=>"mask.fieldPaths="+c).join("&"));if(SY()!==s)return;const c2=syReadFam(g,s);s.fv=fv;save();if(c2)renderFam()}
     if(Date.now()-syPlT>6e4){syPlT=Date.now();const p=await syCall(s,"GET","?mask.fieldPaths=plans");if(SY()!==s)return;
-      const pls=syReadPlans(p,s.me);if(JSON.stringify(pls)!==JSON.stringify(s.pls||{})){s.pls=pls;save();renderPartner()}}}
+      const pls=syReadPlans(p,s.me);if(JSON.stringify(pls)!==JSON.stringify(s.pls||{})){s.pls=pls;save();renderPartner();if(view==="plan")renderPlan();if(view==="essen")renderPlanned()}}}
   catch(e){syErr=syMsg(e)}finally{syBusy=false;syStat()}}
 function syStat(){const s=SY();if(!s)return;const pend=s.q.length;
   const t=syErr?"⚠️ "+(/^Kein Internet/.test(syErr)?"offline":"Fehler"):pend?"wird übertragen …":s.at?"✓ "+(Date.now()-s.at<6e4?"aktuell":"Stand "+new Date(s.at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})):"";
   [$("syst"),$("smst"),$("fmst")].forEach(e=>{if(e){e.textContent=e.id==="smst"&&t?"👥 "+t:e.id==="fmst"&&t?"· "+t:t;e.title=syErr;e.style.color=syErr?"var(--warn)":""}});const m=$("syerr");if(m)m.textContent=syErr}
-function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||view==="fam"||sheetOpen()||shopOn);
+function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||view==="fam"||sheetOpen()||shopOn||view==="essen"&&!!SY().pls&&Object.keys(SY().pls).length&&Date.now()-syPlT>6e4);  // im Tab Essen: Plan der anderen etwa minütlich
   if(act)sySync();syTimer=setTimeout(syLoop,act?5000:20000)}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syLoop();else if(SY()&&SY().q.length)sySync()});
 window.addEventListener("online",syLoop);
@@ -118,19 +118,26 @@ function syReadPlans(d,me){const f=d.fields&&d.fields.plans&&d.fields.plans.mapV
       Object.entries(j.days||{}).forEach(([dk,o])=>{if(/^\d{4}-\d\d-\d\d$/.test(dk)&&o&&typeof o==="object"){const m={};CATS.forEach(c=>{if(R[o[c]])m[c]=o[c]});if(Object.keys(m).length)days[dk]=m}});
       out[k]={b:String(x.b||""),t:+x.t||0,days,R}}catch(e){}});
   return out}
+// Was die anderen an Tag k geplant haben: [{who,c,r}]
+function partnerDay(k){const s=SY();if(!s||!s.pls)return[];const out=[];
+  Object.values(s.pls).forEach(pl=>{const d=pl.days[k];if(d)CATS.forEach(c=>{const r=pl.R[d[c]];if(r)out.push({who:pl.b||"der anderen Person",c,r})})});return out}
+function partnerChips(k,wrap){const L=partnerDay(k);if(!L.length)return null;const ch=el("div","chips");ch.style.margin="6px 0 0";
+  L.forEach(x=>{const b=el("button","",'👥 '+esc(x.who)+' · '+esc(x.c)+': '+esc(x.r.ic)+' '+esc(x.r.n));b.onclick=()=>partnerRecipe(x.r,k,x.c,x.who);ch.appendChild(b)});return ch}
 function renderPartner(){const C=$("pcard"),s=SY(),P=s&&s.pls?Object.values(s.pls):[];C.innerHTML="";
   const warn=s&&s.sp!==false&&syPlErr?syPlErr:"";
   if(!P.length&&!warn){C.style.display="none";return}C.style.display="";
   if(warn)C.appendChild(el("p","err",esc(warn))).style.margin="0 0 8px";
   const t=todayK();
-  P.forEach((pl,i)=>{const who=pl.b||"der anderen Person",ks=Object.keys(pl.days).filter(k=>k>=t).sort();
+  // Immer heute bis in 6 Tagen (auch leere Tage), auf Wunsch alle geplanten Tage
+  P.forEach((pl,i)=>{const who=pl.b||"der anderen Person",later=Object.keys(pl.days).filter(k=>k>addDays(t,6)).sort();
     const h=el("div","hd",'<h2>👥 Essensplan von '+esc(who)+'</h2>');if(i)h.style.marginTop="18px";C.appendChild(h);
-    if(!ks.length){C.appendChild(el("p","sm","Ab heute ist dort nichts geplant.")).style.margin="0";return}
-    const show=pExp?ks:ks.slice(0,3);
-    show.forEach(k=>{const d=el("div","pd",'<b style="white-space:nowrap'+(k===t?';color:var(--accent)':'')+'">'+(k===t?'Heute · ':'')+wd(k)+' '+dd(k)+'</b>');const g=el("div","slots");
-      CATS.forEach(c=>{const r=pl.R[pl.days[k][c]];if(!r)return;const b=el("button","",'<div class="sm">'+c+'</div>'+esc(r.ic)+" "+esc(r.n));b.onclick=()=>partnerRecipe(r,k,c,who);g.appendChild(b)});
+    const show=Array.from({length:7},(_,j)=>addDays(t,j)).concat(pExp?later:[]);
+    show.forEach(k=>{const day=pl.days[k]||{},d=el("div","pd",'<b style="white-space:nowrap'+(k===t?';color:var(--accent)':'')+'">'+(k===t?'Heute · ':k===addDays(t,1)?'Morgen · ':'')+wd(k)+' '+dd(k)+'</b>');
+      const cs=CATS.filter(c=>pl.R[day[c]]);
+      if(!cs.length){d.appendChild(el("span","sm"," – nichts geplant"));C.appendChild(d);return}
+      const g=el("div","slots");cs.forEach(c=>{const r=pl.R[day[c]],b=el("button","",'<div class="sm">'+c+'</div>'+esc(r.ic)+" "+esc(r.n));b.onclick=()=>partnerRecipe(r,k,c,who);g.appendChild(b)});
       d.appendChild(g);C.appendChild(d)});
-    if(ks.length>3){const b=el("button","full",pExp?"Weniger anzeigen":"Alle "+ks.length+" Tage anzeigen");b.style.marginTop="10px";b.onclick=()=>{pExp=!pExp;renderPartner()};C.appendChild(b)}
+    if(later.length){const b=el("button","full",pExp?"Weniger anzeigen":"＋ "+later.length+(later.length===1?" weiterer geplanter Tag":" weitere geplante Tage"));b.style.marginTop="10px";b.onclick=()=>{pExp=!pExp;renderPartner()};C.appendChild(b)}
     if(pl.t)C.appendChild(el("p","sm","Stand: "+new Date(pl.t).toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})+" Uhr")).style.margin="8px 0 0"})}
 // Fremdes Rezept (Plan der anderen Person, gemeinsame Rezepte) in die eigenen Rezepte – gleicher Name = schon da
 function takeRecipe(r,c){let m=S.R.find(x=>x.n.toLowerCase()===r.n.toLowerCase());

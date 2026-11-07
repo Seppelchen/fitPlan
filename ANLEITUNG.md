@@ -401,7 +401,9 @@ gemeinsame Liste – ebenso Termine, Geburtstage und Rezepte aus dem Tab Familie
   die Liste teilen willst.
 - **Essensplan teilen:** Jedes Handy teilt automatisch seine geplanten Essen (ab gestern bis 4 Wochen
   voraus) mit den kompletten Rezepten. Im Tab **Plan** erscheint dann die Karte **👥 Essensplan von …**.
-  Ein Essen antippen zeigt Zutaten und Zubereitung. Von dort geht **📅 Auch bei mir einplanen** (gleicher
+  Sie zeigt immer heute bis in 6 Tagen (auch Tage, an denen nichts geplant ist), weitere geplante Tage per Knopf.
+  Zusätzlich steht im eigenen Wochenplan bei jedem Tag und im Tab **Essen** (mit den Datums-Pfeilen auch für
+  morgen) „👥 Ben · Mittag: …“. Ein Essen antippen zeigt Zutaten und Zubereitung. Von dort geht **📅 Auch bei mir einplanen** (gleicher
   Tag, gleiche Mahlzeit) oder **＋ In meine Rezepte übernehmen**. Abschalten lässt sich das unter
   **👥 Gemeinsame Liste verwalten → Meinen Essensplan mit Rezepten teilen**.
   Wer die Firebase-Regeln noch von vor dem 06.11.2026 hat, muss sie einmal durch die Regeln oben
