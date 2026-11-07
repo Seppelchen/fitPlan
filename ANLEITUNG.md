@@ -7,6 +7,7 @@ fitplan/
 ├── index.html      Aufbau der Seite (welche Karten und Knöpfe es gibt)
 ├── css/app.css     Aussehen (Farben, Abstände, hell/dunkel)
 ├── js/             Programm, aufgeteilt nach Bereichen:
+│   ├── design.js              Hell/Dunkel (wird zuerst geladen)
 │   ├── daten-rezepte.js       mitgelieferte Rezepte
 │   ├── daten-sport.js         Sportarten und Übungen
 │   ├── daten-lebensmittel.js  Grundnahrungsmittel für die Suche
@@ -87,6 +88,13 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 - FitPlan merkt sich, welcher Tab (Essen, Plan, Familie, Sport, Fortschritt, Mehr) zuletzt offen war, und
   öffnet beim nächsten Start wieder dort.
+
+## Design: hell oder dunkel
+
+- Standard ist **System**: FitPlan ist hell oder dunkel, je nachdem wie das Handy eingestellt ist (auch
+  wenn es abends automatisch umschaltet).
+- Unter **Mehr → Design** lässt sich das fest auf **☀️ Hell** oder **🌙 Dunkel** stellen. Die Wahl gilt
+  sofort und bleibt gespeichert. **📱 System** stellt es zurück.
 
 ## Nährwerte
 

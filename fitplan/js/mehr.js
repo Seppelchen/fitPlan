@@ -22,3 +22,10 @@ $("impf").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileR
   rd.readAsText(f)};
 $("reset").onclick=()=>{if(!confirm("Wirklich alle Daten auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen."))return;
   localStorage.removeItem(KEY);S=null;fix();save();all();toast("Daten gelöscht")};
+// Design umschalten: Wie System / Hell / Dunkel
+function renderTheme(){const T=$("thm"),cur=themeGet();T.innerHTML="";
+  [["system","📱 System"],["light","☀️ Hell"],["dark","🌙 Dunkel"]].forEach(([v,l])=>{const b=el("button",v===cur?"on":"",l);b.setAttribute("aria-pressed",v===cur);
+    b.onclick=()=>{themeSet(v);renderTheme();if(view==="fort")drawChart();toast(v==="system"?"Design wie das System":v==="light"?"Helles Design":"Dunkles Design")};T.appendChild(b)})}
+renderTheme();
+// Stellt das Handy bei „Wie System“ um (z. B. abends automatisch dunkel), das Diagramm neu zeichnen
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(themeGet()==="system"&&view==="fort")drawChart()})}catch(e){}
