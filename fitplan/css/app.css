@@ -140,6 +140,9 @@ ul.z{margin:0;padding-left:20px}
 .tge{position:absolute;box-sizing:border-box;border-radius:5px;border:1px solid var(--card);color:#fff;font-size:11px;line-height:1.25;padding:1px 3px;overflow:hidden;cursor:pointer}
 .tge b{font-weight:600}
 .tgn{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:1;pointer-events:none}
+details.rzx{margin:0 0 12px;border:1px solid var(--border);border-radius:10px;padding:9px 12px}
+details.rzx summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}details.rzx summary::-webkit-details-marker{display:none}
+details.rzx summary::after{content:" ▾"}details.rzx[open] summary::after{content:" ▴"}
 .row .cbar{width:4px;align-self:stretch;border-radius:2px;flex:none}
 label.ck{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:15px}label.ck input{width:auto;margin:0}
 .cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3}
