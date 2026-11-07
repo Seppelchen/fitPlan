@@ -16,7 +16,7 @@ function renderPlan(){const W=weekKeys(),G=S.g.k;
     const d=el("div","pd",'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="white-space:nowrap'+(k===dt.value?';color:var(--accent)':'')+'">'+wd(k)+' '+dd(k)+'</b><span class="sm" style="text-align:right'+(tot>G?';color:var(--warn)':'')+'">'+(tot?mline(tot,sm("p"),sm("kh"),sm("fe")):'')+'</span></div>');
     const ate=(S.d[k]||{f:[]}).f;
     const g=el("div","slots");CATS.forEach(c=>{const r=rById(pl[c]),ok=r&&ate.some(f=>f.n===r.n);const b=el("button",r?"":"e",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+(r?icOf(r)+" "+esc(r.n):"＋ wählen"));b.onclick=()=>r?recipeDetail(r.id,{k,c}):pickRecipe(k,c);g.appendChild(b)});
-    d.appendChild(g);P.appendChild(d)});
+    d.appendChild(g);const pc=partnerChips(k);if(pc)d.appendChild(pc);P.appendChild(d)});
   renderPartner();syAutoPlan();renderShop()}
 const pnav=d=>{if(S.pr&&!prd().auto){S.pr.s=addDays(S.pr.s,d*S.pr.n);save();renderPlan()}else shift(d*7)};
 $("pwp").onclick=()=>pnav(-1);$("pwn").onclick=()=>pnav(1);

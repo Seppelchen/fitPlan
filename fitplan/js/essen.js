@@ -100,6 +100,8 @@ function renderQuick(){const R=$("rec");R.innerHTML="";const seen=new Set(),item
 
 function renderPlanned(){const P=$("fplan"),pl=S.pl[dt.value]||{},D=day();P.innerHTML="";
   const items=CATS.map(c=>({c,r:rById(pl[c])})).filter(x=>x.r&&!D.f.some(f=>f.n===x.r.n));
+  const pc=typeof partnerChips==="function"&&partnerChips(dt.value);
+  if(pc){P.appendChild(el("p","lb",(dt.value===todayK()?"Heute":dt.value===addDays(todayK(),1)?"Morgen":wd(dt.value)+" "+dd(dt.value))+" bei den anderen geplant")).style.margin="0 0 2px";pc.style.margin="0 0 10px";P.appendChild(pc)}
   if(!items.length)return;
   P.appendChild(el("p","lb","Geplant für diesen Tag – antippen zum Eintragen"));const ch=el("div","chips");
   items.forEach(x=>{const b=el("button","","＋ "+x.c+": "+esc(x.r.n));b.onclick=()=>addRecipe(x.r,1,x.c);ch.appendChild(b)});P.appendChild(ch)}
