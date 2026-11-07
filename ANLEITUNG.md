@@ -40,8 +40,8 @@ Weiter mit Schritt 3.
 ## Schritt 3: Auf dem iPhone installieren
 
 1. Öffne den Link in **Safari** (nicht in Chrome, nicht aus WhatsApp heraus).
-2. Warte, bis die App geladen ist, und tippe einmal durch alle fünf Tabs unten
-   (Essen, Plan, Sport, Fortschritt, Mehr).
+2. Warte, bis die App geladen ist, und tippe einmal durch alle sechs Tabs unten
+   (Essen, Plan, Familie, Sport, Fortschritt, Mehr).
 3. Tippe auf das **Teilen-Symbol** (Quadrat mit Pfeil nach oben).
 4. Scrolle nach unten und tippe auf **„Zum Home-Bildschirm“**.
 5. Falls angezeigt: **„Als Web-App öffnen“** eingeschaltet lassen.
@@ -62,13 +62,13 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Öffne FitPlan immer über das Icon auf dem Home-Bildschirm**, nicht über Safari.
   Dort bleiben deine Daten dauerhaft gespeichert. Die Daten in Safari und in der
   Home-Bildschirm-App sind getrennt.
-- Deine Daten liegen **nur auf deinem iPhone**, nicht bei Netlify. Einzige Ausnahme ist die
-  gemeinsame Einkaufsliste, wenn du sie einrichtest (siehe unten). Wenn du das Icon
+- Deine Daten liegen **nur auf deinem iPhone**, nicht bei Netlify. Einzige Ausnahme ist, was du mit
+  der Familie teilst (Einkaufsliste, Kalender, Geburtstage, Rezepte), wenn du das einrichtest (siehe unten). Wenn du das Icon
   löschst, sind die Daten weg. Nutze deshalb regelmäßig **Mehr → Exportieren**.
 - Hast du schon Daten in einer alten Version? Dort **Exportieren**, in der neuen App
   **Importieren**.
 
-- FitPlan merkt sich, welcher Tab (Essen, Plan, Sport, Fortschritt, Mehr) zuletzt offen war, und
+- FitPlan merkt sich, welcher Tab (Essen, Plan, Familie, Sport, Fortschritt, Mehr) zuletzt offen war, und
   öffnet beim nächsten Start wieder dort.
 
 ## Nährwerte
@@ -178,12 +178,69 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Die Kategorien aus FamilyWall bleiben erhalten. Ein neuer Import ersetzt die vorherige
   FamilyWall-Liste.
 
+## Familie: Kalender, Geburtstage und Rezepte
+
+Der Tab **Familie** bündelt alles, was ihr gemeinsam nutzt – wie in FamilyWall. Oben steht immer
+**„Heute & nächste 7 Tage“** mit allen Terminen und Geburtstagen. Darunter wählst du zwischen
+**📅 Kalender**, **🎂 Geburtstage** und **📖 Rezepte**. Die Zahl am Tab-Symbol zeigt, wie viele
+Einträge heute anstehen.
+
+- Ohne Verbindung funktioniert alles auf dem eigenen Handy. Mit **👥 Mit der Familie teilen** (oben im Tab,
+  dieselbe Verbindung wie bei der Einkaufsliste) sehen alle verbundenen Handys dasselbe – nach wenigen
+  Sekunden. Was vorher schon auf dem Handy stand, kommt beim Verbinden automatisch mit.
+- Einträge der anderen Personen haben eine andere Farbe und „von …“ dabei.
+
+### 📅 Kalender
+
+- Monatsansicht: Tag antippen zeigt seine Termine. ‹ › oder Wischen blättert den Monat, **Heute** springt zurück.
+  Punkte unter dem Datum = Termine (lila = Geburtstag).
+- **＋ Termin:** Titel, Datum, ganztägig oder mit Uhrzeit, mehrtägig („Bis“), Wiederholung (täglich,
+  wöchentlich, alle 2 Wochen, monatlich, jährlich, optional „bis“), Ort und Notiz.
+- Termin antippen → **Bearbeiten** oder **Löschen**. Bei Serien geht auch **„Nur am … löschen“**.
+
+### Kalender aus FamilyWall übernehmen
+
+**Familie → Kalender → ⬇ Kalender aus FamilyWall übernehmen.** Drei Wege:
+
+1. **iCal-Link:** In FamilyWall den Kalender öffnen → Kalender-Details → **„iCal-URL generieren“** → Link
+   kopieren, in FitPlan einfügen → **Laden**. Lässt FamilyWall das direkte Laden zu, kann FitPlan sich den
+   Link merken und die Termine danach regelmäßig (spätestens alle 3 Stunden beim Öffnen des Tabs) neu holen.
+   Blockiert FamilyWall das, zeigt FitPlan einen Hinweis – dann Weg 2.
+2. **Kalenderdatei (.ics):** Den iCal-Link am PC im Browser öffnen, die Datei speichern und aufs Handy
+   schicken (Mail, Dateien-App). Oder einen Kalender aus Google Kalender exportieren. In FitPlan
+   **📄 Kalenderdatei (.ics) wählen**.
+3. **Text:** Termine in FamilyWall teilen oder kopieren und einfügen. FitPlan erkennt Zeilen mit Datum
+   und Uhrzeit, z. B. „Mo., 10.11. 16:30 Fußball“ oder ein Datum als Überschrift mit Terminen darunter.
+   Auf dem Android-Handy geht auch FamilyWall → Teilen → **FitPlan**: Termine landen dann automatisch im
+   Kalender-Import, Einkaufslisten wie bisher bei der Einkaufsliste.
+
+Vor dem Übernehmen zeigt FitPlan eine Vorschau. Einzelne Termine lassen sich mit ✕ weglassen, vergangene
+Termine werden auf Wunsch übersprungen. Wiederkehrende Termine (z. B. jeden Dienstag) bleiben Serien.
+**Geburtstage** (jährliche Termine mit „Geburtstag“ im Namen) landen im Geburtstagskalender. Ein erneuter
+Import verdoppelt nichts, gleiche Termine werden nur aktualisiert. Direkt danach geht **Rückgängig**.
+
+### 🎂 Geburtstage
+
+- Liste nach dem nächsten Geburtstag sortiert, mit „in 5 Tagen“ und – wenn das Geburtsjahr eingetragen
+  ist – „wird 34“. Geburtstage stehen auch im Kalender und oben bei „Heute & nächste 7 Tage“.
+- **＋ Geburtstag:** Name, Tag, Monat, Jahr (optional). Antippen zum Ändern oder Löschen.
+
+### 📖 Gemeinsame Rezepte
+
+- **＋ Teilen** wählt eins deiner Rezepte aus (eigene stehen oben). Oder direkt im Rezept (Tab Essen →
+  Rezept antippen) auf **👥 Mit der Familie teilen** tippen. Änderst du das Rezept später, ändert sich die
+  geteilte Fassung mit.
+- **＋ Neues Rezept anlegen und teilen** legt ein Rezept bei dir an und teilt es gleich.
+- Gemeinsames Rezept antippen: Zutaten und Zubereitung, **📅 Einplanen** (Tag und Mahlzeit wählen),
+  **🛒 Zutaten auf die Einkaufsliste**, **＋ In meine Rezepte übernehmen** oder entfernen.
+
 ## Gemeinsame Einkaufsliste für zwei Handys (Firebase)
 
-Zwei Personen teilen sich eine Einkaufsliste: Was einer einträgt oder abhakt, sieht der andere
-nach wenigen Sekunden. Das läuft über **Firebase** (Google), kostenlos und ohne Kreditkarte.
-Nur die gemeinsame Liste (inklusive übernommener FamilyWall-Artikel) und – wenn eingeschaltet – der
-Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten bleiben auf dem Handy.
+Zwei oder mehr Personen teilen sich Einkaufsliste, Kalender, Geburtstage und Rezepte: Was einer einträgt
+oder abhakt, sehen die anderen nach wenigen Sekunden. Das läuft über **Firebase** (Google), kostenlos und
+ohne Kreditkarte. Nur diese Dinge (inklusive übernommener FamilyWall-Artikel und -Termine) und – wenn
+eingeschaltet – der Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten (Essen,
+Gewicht, Sport) bleiben auf dem Handy. Einrichten geht im Tab **Familie** oder im Tab **Plan**.
 
 ### Einmalig: Firebase einrichten (am PC, ca. 10 Minuten)
 
@@ -207,9 +264,12 @@ Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten bl
          allow get: if request.auth != null;
          allow create, update: if request.auth != null
            && code.size() == 20
-           && request.resource.data.keys().hasOnly(['v', 'items', 'plans'])
+           && request.resource.data.keys().hasOnly(['v', 'items', 'plans', 'cal', 'bd', 'rz', 'fv'])
            && request.resource.data.get('items', {}).size() <= 500
-           && request.resource.data.get('plans', {}).size() <= 10;
+           && request.resource.data.get('plans', {}).size() <= 10
+           && request.resource.data.get('cal', {}).size() <= 1500
+           && request.resource.data.get('bd', {}).size() <= 300
+           && request.resource.data.get('rz', {}).size() <= 200;
        }
      }
    }
@@ -217,6 +277,11 @@ Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten bl
 
    Damit kann nur lesen und schreiben, wer den 20-stelligen Listen-Code aus der Einladung kennt.
    Listen durchsuchen oder löschen kann niemand.
+
+   **Schon eingerichtet?** Wer die Regeln von vor dem 07.11.2026 hat, ersetzt sie einmal durch diese
+   (Firestore Database → Regeln → einfügen → Veröffentlichen). Sonst werden Kalender, Geburtstage und
+   Rezepte nicht geteilt – FitPlan zeigt dann im Tab Familie einen roten Hinweis. Die Einkaufsliste
+   funktioniert auch ohne das, und auf dem Handy geht nichts verloren.
 6. **Web-App anlegen:** Oben links auf **⚙️ → Projekteinstellungen** → ganz unten bei „Meine Apps“
    auf das Symbol **`</>`** (Web) → Name z. B. `FitPlan` → „Firebase Hosting“ **nicht** ankreuzen →
    **App registrieren**. Es erscheint ein Block, der so beginnt:
@@ -236,17 +301,18 @@ Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten bl
 
 ### Erstes Handy: Liste anlegen
 
-1. FitPlan → **Plan** → unten bei der Einkaufsliste **👥 Mit anderem Handy teilen**.
+1. FitPlan → **Familie** → **👥 Mit der Familie teilen** (oder **Plan** → unten bei der Einkaufsliste
+   **👥 Mit anderem Handy teilen** – das ist dieselbe Verbindung).
 2. **Neue Liste anlegen** → deinen Namen eintragen → den `firebaseConfig`-Block einfügen → **Verbinden**.
 3. **📨 Andere Person einladen** → die Einladung z. B. per WhatsApp schicken.
 
 Eigene Einträge und die FamilyWall-Liste, die schon auf der Liste standen, wandern dabei in die
-gemeinsame Liste.
+gemeinsame Liste – ebenso Termine, Geburtstage und Rezepte aus dem Tab Familie.
 
 ### Zweites Handy: Einladung annehmen
 
 1. FitPlan installieren (siehe oben) und öffnen.
-2. **Plan** → **👥 Mit anderem Handy teilen** → **Einladung annehmen**.
+2. **Familie** → **👥 Mit der Familie teilen** → **Einladung annehmen**.
 3. Namen eintragen, die **ganze Nachricht** mit der Einladung einfügen → **Verbinden**.
 
 ### So funktioniert die gemeinsame Liste
@@ -269,7 +335,7 @@ gemeinsame Liste.
   steht „✓ aktuell“. **Ohne Internet** kann man weiter abhaken und eintragen. FitPlan schickt die
   Änderungen, sobald wieder Netz da ist.
 - **Verbindung trennen** (im selben Menü): Offene Einträge bleiben auf diesem Handy als eigene
-  Einträge erhalten.
+  Einträge erhalten, Kalender, Geburtstage und Rezepte ebenfalls.
 - Wer die Einladung hat, kann die Liste sehen und ändern. Schick sie nur an die Person, mit der du
   die Liste teilen willst.
 - **Essensplan teilen:** Jedes Handy teilt automatisch seine geplanten Essen (ab gestern bis 4 Wochen
