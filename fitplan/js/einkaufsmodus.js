@@ -9,12 +9,15 @@ function shopModel(){const wk=ekK(),E=ekOf(wk),sy=SY(),secs=[],keep=()=>{S.ek[wk
   if(sy){const all=syVis(sy).sort((a,b)=>(a.t||0)-(b.t||0)),pl=all.filter(x=>x.p).sort((a,b)=>a.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,"").localeCompare(b.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,""),"de"));
     const it=x=>({n:x.n,sub:x.f||!x.b||x.d===sy.me?"":(x.p?"aus dem Plan von ":"von ")+x.b,c:!!x.c,set:v=>syOp({id:x.id,f:"c",v})});
     sec("Gemeinsam",all.filter(x=>!x.f&&!x.p).map(it));
-    sec("Aus dem Plan",pl.filter(x=>!x.w).map(it));sec("Vorrat & Gewürze",pl.filter(x=>x.w).map(it));
+    // Gleiche Zutaten aus mehreren Plänen als eine Zeile
+    const gi=g=>({n:g.label,sub:g.xs.every(x=>x.d===sy.me)?"":"aus dem Plan von "+[...new Set(g.xs.filter(x=>x.d!==sy.me).map(x=>x.b||"der anderen Person"))].join(", "),c:g.c,set:v=>g.xs.forEach(x=>syOp({id:x.id,f:"c",v}))});
+    sec("Aus dem Plan",syGroup(pl.filter(x=>!x.w)).map(gi));sec("Gewürze & Vorrat",syGroup(pl.filter(x=>x.w)).map(gi));
     const fw=all.filter(x=>x.f);grp(fw,x=>x.g||"Sonstiges").forEach(g=>sec(g,fw.filter(x=>(x.g||"Sonstiges")===g).map(it)))}
-  const its=syAuto()?[]:visItems(E),by=(a,b)=>a.n.localeCompare(b.n,"de");
-  const pi=o=>({n:o.a==null?o.n:shopLabel(o),sub:"",c:!!E.c[o.key],set:v=>{if(v)E.c[o.key]=1;else delete E.c[o.key];keep()}});
-  sec(sy?"Aus deinem Plan · nur hier":"Aus dem Plan",its.filter(o=>o.a!=null).sort(by).map(pi));
-  sec("Vorrat & Gewürze",its.filter(o=>o.a==null).sort(by).map(pi));
+  // Gewürze & Vorrat nur, wenn sie von Hand auf die Liste gesetzt wurden
+  const its=syAuto()?[]:listItems(E),by=(a,b)=>a.n.localeCompare(b.n,"de");
+  const pi=o=>({n:shopLabel(o),sub:"",c:!!E.c[o.key],set:v=>{if(v)E.c[o.key]=1;else delete E.c[o.key];keep()}});
+  sec(sy?"Aus deinem Plan · nur hier":"Aus dem Plan",its.filter(o=>!o.w).sort(by).map(pi));
+  sec("Gewürze & Vorrat",its.filter(o=>o.w).sort(by).map(pi));
   sec("Eigene Einträge",E.x.map(x=>({n:x.n,sub:"",c:!!x.c,set:v=>{x.c=v;keep()}})));
   if(S.fw&&S.fw.items.length)grp(S.fw.items,x=>x.g).forEach(g=>sec(g,S.fw.items.filter(x=>x.g===g).map(x=>({n:x.n,sub:"",c:!!x.c,set:v=>{x.c=v;save()}}))));
   return secs}

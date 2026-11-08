@@ -139,6 +139,14 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   Schnellknöpfe.
 - Die Einkaufsliste gilt immer für genau den gewählten Zeitraum. ‹ › blättert zum vorherigen
   bzw. nächsten Zeitraum gleicher Länge.
+- Gleiche Zutaten werden zusammengefasst: 200 g Paprika am Montag und 100 g am Mittwoch stehen als
+  „300 g Paprika · für 2 Mahlzeiten“ auf der Liste. Trägst du etwas ein, das schon offen auf der Liste
+  steht (z. B. „100 g Paprika“), werden die Mengen addiert statt einer zweiten Zeile.
+- **Gewürze & Vorrat** (Salz, Pfeffer, Öl, Gewürze, Kräuter, Brühe, Honig … und alles, was nur in TL/EL
+  angegeben ist) kommen nicht automatisch auf die Liste. Sie stehen darunter unter **➕ Gewürze & Vorrat ·
+  bei Bedarf** – mit **＋** kommt ein Artikel auf die Liste, **Alle ＋** nimmt alle. Mit **✕** wandert er
+  wieder zurück nach unten.
+- Bei gemeinsamer Liste werden gleiche Zutaten aus mehreren Plänen in einer Zeile zusammengerechnet.
 
 - Ein geplantes Essen antippen: Du siehst Nährwerte, Zutaten und Zubereitung. Von dort kannst du
   es für diesen Tag eintragen, ein anderes Rezept wählen oder es aus dem Plan nehmen.
@@ -294,6 +302,8 @@ Import verdoppelt nichts, gleiche Termine werden nur aktualisiert. Direkt danach
 - **＋ Neues Rezept anlegen und teilen** legt ein Rezept bei dir an und teilt es gleich.
 - Gemeinsames Rezept antippen: Zutaten und Zubereitung, **📅 Einplanen** (Tag und Mahlzeit wählen),
   **🛒 Zutaten auf die Einkaufsliste**, **＋ In meine Rezepte übernehmen** oder entfernen.
+  Beim Übernehmen auf die Einkaufsliste werden gleiche Zutaten zusammengefasst (auch mit dem, was schon
+  auf der Liste steht). Gewürze & Vorrat erscheinen darunter und lassen sich einzeln mit **＋** hinzufügen.
 
 ## Gemeinsame Einkaufsliste für zwei Handys (Firebase)
 

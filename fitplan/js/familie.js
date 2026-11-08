@@ -217,13 +217,24 @@ function famRecipe(id){const x=famMap("rz")[id];if(!rzOk(x))return;const r=rzSan
   '<p class="lb" style="margin-top:12px">Zubereitung</p>'+(st.length?'<ol class="st">'+st.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol>':'<p class="sm">Keine Zubereitung hinterlegt.</p>')+
   '<p class="lb" style="margin-top:16px">Einplanen</p><div class="g2"><div><input type="date" id="frD"></div><div>'+mealSel("frM",CATS.includes(r.c)?r.c:"Mittag")+'</div></div>'+
   '<button class="full pri" id="frPl" style="margin-top:8px">📅 Einplanen</button>'+
-  (r.z.length?'<button class="full" id="frEk" style="margin-top:8px">🛒 Zutaten auf die Einkaufsliste</button>':'')+
+  (r.z.length?'<button class="full" id="frEk" style="margin-top:8px">🛒 Zutaten auf die Einkaufsliste</button><div id="frVr"></div>':'')+
   (own()?'<p class="sm" style="margin:8px 0 0">„'+esc(r.n)+'“ ist schon in deinen Rezepten.</p>':'<button class="full" id="frSv" style="margin-top:8px">＋ In meine Rezepte übernehmen</button>')+
   '<button class="full del" id="frRm" style="margin-top:8px">'+(mine?'Nicht mehr teilen':'Aus den gemeinsamen Rezepten entfernen')+'</button>',
   ()=>{$("frD").value=todayK();
     $("frPl").onclick=()=>{const k=$("frD").value,c=$("frM").value;if(!k)return;const cur=rById((S.pl[k]||{})[c]),m=own();
       if(cur&&(!m||cur.id!==m.id)&&!confirm("Am "+dd(k)+" ist bei "+c+" schon „"+cur.n+"“ geplant. Ersetzen?"))return;
       planSet(k,c,takeRecipe(r,c).id);closeSheet();toast("Eingeplant · "+wd(k)+" "+dd(k)+" · "+c)};
-    if($("frEk"))$("frEk").onclick=()=>{const L=r.z.filter(z=>!/^wie\s/i.test(z));L.forEach(ekAdd);toast(L.length+(L.length===1?" Zutat":" Zutaten")+" auf der Einkaufsliste")};
+    // Gleiche Zutaten werden zusammengefasst (auch mit dem, was schon auf der Liste steht).
+    // Gewürze & Vorrat kommen nicht automatisch drauf, sondern stehen darunter zum Hinzufügen per ＋.
+    if($("frEk"))$("frEk").onclick=()=>{const A=zDone(zMerge(r.z.filter(z=>!/^wie\s/i.test(z)))),main=A.filter(o=>!o.w),vor=A.filter(o=>o.w).sort((a,b)=>a.n.localeCompare(b.n,"de"));
+      let mg=0;main.forEach((o,i)=>{if(ekPut(o.n,o.m,null,i))mg++});save();renderShop();
+      const b=$("frEk");b.disabled=true;b.textContent=main.length?"✓ "+main.length+(main.length===1?" Zutat":" Zutaten")+" auf der Einkaufsliste":"✓ Keine weiteren Zutaten nötig";
+      toast(main.length?main.length+(main.length===1?" Zutat":" Zutaten")+" auf der Einkaufsliste"+(mg?" ("+mg+" zusammengefasst)":""):"Nur Gewürze & Vorrat – unten bei Bedarf hinzufügen");
+      const V=$("frVr");if(!vor.length)return;
+      V.appendChild(el("p","lb","🧂 Gewürze & Vorrat · bei Bedarf")).style.margin="14px 0 0";
+      V.appendChild(el("p","sm","Hat man meist zu Hause – tippe auf ＋, wenn etwas fehlt.")).style.margin="2px 0 2px";
+      vor.forEach(o=>{const sub=fmtAmt(o.m).join(" + "),row=el("div","ek",'<div class="t" style="flex:1;min-width:0">'+esc(o.n)+(sub?'<div class="sm">'+esc(sub)+'</div>':'')+'</div>'),bt=el("button","ic","＋");
+        bt.setAttribute("aria-label","„"+o.n+"“ auf die Liste");row.appendChild(bt);
+        row.onclick=()=>{if(bt.disabled)return;ekPut(o.n,{});save();renderShop();bt.disabled=true;bt.textContent="✓";bt.classList.add("done");row.style.cursor="default";toast("„"+o.n+"“ auf der Einkaufsliste")};V.appendChild(row)})};
     if($("frSv"))$("frSv").onclick=()=>{takeRecipe(r,r.c);closeSheet();renderFood();toast("„"+r.n+"“ ist jetzt in deinen Rezepten")};
     $("frRm").onclick=()=>{if(!mine&&!confirm("„"+r.n+"“ für alle aus den gemeinsamen Rezepten entfernen?"))return;famSet("rz",id,null);closeSheet();renderFam();toast("Rezept entfernt",()=>{famSet("rz",id,x);renderFam()})}})}

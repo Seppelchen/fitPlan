@@ -64,41 +64,90 @@ function parseZ(line){const segs=line.split(/,\s+/),lead=NUM.test(line.trim()),p
   return parts.map(s=>{const m=s.match(RXZ);let a=null,u="",n=s;
     if(m){a={"½":.5,"¼":.25,"¾":.75}[m[1]]??num(m[1]);n=m[3];if(m[2]){const x=UN[m[2].toLowerCase()];u=x[0];a*=x[1]}}
     n=n.replace(/\s*\([^)]*\)/g,"").trim();if(!u&&/^eier?$/i.test(n))n="Ei";return{a,u,n}}).filter(x=>x.n)}
+// Gleiche Zutaten zusammenfassen: Schlüssel ist der Name, Mengen werden je Einheit addiert („Stück“ = ohne Einheit)
+const zKey=n=>{n=n.toLowerCase().trim();return n==="eier"?"ei":n};
+const mAdd=(m,o)=>{const r={...m};Object.entries(o||{}).forEach(([u,a])=>{r[u]=(r[u]||0)+a});return r};
+const UO=["g","ml","","Scheibe","Dose","Bund","EL","TL","Prise"];
+function fmtAmt(m,mix){return Object.keys(m).sort((a,b)=>UO.indexOf(a)-UO.indexOf(b)).map(u=>{let a=m[u],v=u;
+  if(u==="g"&&a>=1000){a/=1000;v="kg"}if(u==="ml"&&a>=1000){a/=1000;v="l"}if((u==="g"||u==="ml")&&a>=10)a=Math.round(a);
+  return fq(Math.round(a*100)/100)+(v?" "+v:mix?" Stück":"")})}
+function fmtItem(n,m){const u=Object.keys(m||{});if(!u.length)return n;
+  if(u.length===1&&u[0]===""&&zKey(n)==="ei")n=m[""]>1?"Eier":"Ei";
+  return fmtAmt(m,u.length>1).join(" + ")+" "+n}
+// Listeneintrag zurücklesen, z. B. „300 g Paprika“ oder „100 g + 1 Stück Apfel“
+const AMT=/^(\d+(?:[.,]\d+)?|½|¼|¾)\s*(kg|g|ml|l|liter|EL|TL|Prisen?|Scheiben?|Stück|Dosen?|Bund)?\.?\s+/i;
+function zItem(t){let s=String(t||"").trim();const m={};
+  for(;;){const x=s.match(AMT);if(!x)break;let a={"½":.5,"¼":.25,"¾":.75}[x[1]]??num(x[1]),u="";
+    if(x[2]){const y=UN[x[2].toLowerCase()];u=y[0];a*=y[1]}if(u==="Stück")u="";m[u]=(m[u]||0)+a;s=s.slice(x[0].length);
+    const p=s.match(/^\+\s+/);if(!p)break;s=s.slice(p[0].length)}
+  const n=s.replace(/\s*\([^)]*\)/g,"").trim();return n?{n,m}:null}
+// Gewürze & Vorrat: hat man meist zu Hause – kommen nicht automatisch auf die Liste, sondern nur auf Wunsch
+const VORRAT=/^(?:\S*öl|\S*salz|pfeffer|zimt|curry|kurkuma|paprikapulver|kreuzkümmel|chili(?:flocken|pulver)?|oregano|rosmarin|thymian|majoran|muskat(?:nuss)?|vanille|backpulver|natron|essig|balsamico|senf|sojasauce|sojasoße|honig|zucker|süßstoff|\S*brühe|wasser|ingwer|knoblauch|kräuter|tk-kräuter|lorbeer\S*|nelken|kardamom)(?![a-zäöüß])/i;
+const isVorrat=(n,m)=>{const u=Object.keys(m||{});return!u.length||u.every(x=>/^(EL|TL|Prise)$/.test(x))||VORRAT.test(n.trim())};
+// Zutatenzeilen eines Rezepts → zusammengefasste Artikel {key,n,m,w}
+function zMerge(lines,f,A,slot){A=A||{};(lines||[]).forEach(line=>parseZ(line).forEach(it=>{const key=zKey(it.n),u=it.u==="Stück"?"":it.u;
+  const o=A[key]||(A[key]={key,n:it.n,m:{},s:new Set()});if(it.a!=null)o.m[u]=(o.m[u]||0)+it.a*(f??1);if(slot)o.s.add(slot)}));return A}
+const zDone=A=>Object.values(A).map(o=>(o.w=isVorrat(o.n,o.m),o));
 function shopItems(full){let W=weekKeys();if(ekMode==="r"&&!full)W=W.filter(k=>k>=todayK());const A={};
   const add=(r,slot,depth,f)=>{f/=(r.pz||1);(r.z||[]).forEach(line=>{
     if(/^wie\s/i.test(line)&&depth<2){const t=S.R.find(x=>x.n.toLowerCase()===line.slice(4).trim().toLowerCase());if(t){add(t,slot,depth+1,f);return}}
-    parseZ(line).forEach(it=>{const key=(it.a!=null?it.u:"-")+"|"+it.n.toLowerCase();const o=A[key]||(A[key]={key,n:it.n,u:it.u,a:it.a!=null?0:null,s:new Set()});if(it.a!=null)o.a+=it.a*f;o.s.add(slot)})})};
+    zMerge([line],f,A,slot)})};
   W.forEach(k=>{const pl=S.pl[k]||{};CATS.forEach(c=>{const r=rById(pl[c]);if(r)add(r,k+c,0,1)})});
-  return Object.values(A)}
-function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=1000){a/=1000;u="kg"}if(u==="ml"&&a>=1000){a/=1000;u="l"}
-  if((u==="g"||u==="ml")&&a>=10)a=Math.round(a);const n=o.n==="Ei"&&a>1?"Eier":o.n;return fq(Math.round(a*100)/100)+(u?" "+u:"")+" "+n}
+  return zDone(A)}
+// Auf der Liste: Gewürze & Vorrat nur, wenn von Hand hinzugefügt (E.ad)
+const shopLabel=o=>o.w?o.n:fmtItem(o.n,o.m);
+const vSub=o=>[fmtAmt(o.m).join(" + "),o.s&&o.s.size>1?"für "+o.s.size+" Mahlzeiten":""].filter(Boolean).join(" · ");
 // Gelöschte Plan-Zutaten bleiben ausgeblendet, bis sich ihre Menge im Plan ändert
 // In die gemeinsame Liste übernommene Plan-Zutaten (E.sh) ebenso, bis sich ihre Menge ändert
-const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};E.sh=E.sh||{};return E};
-const hid=(M,o)=>o.key in M&&M[o.key]===(o.a??0);
+const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};E.sh=E.sh||{};E.ad=E.ad||{};return E};
+const sig=o=>fmtItem(o.n,o.m),hid=(M,o)=>o.key in M&&M[o.key]===sig(o);
+const onL=(E,o)=>!o.w||!!E.ad[o.key];
 const visItems=E=>shopItems().filter(o=>!hid(E.hd,o)&&!hid(E.sh,o));
+const listItems=E=>visItems(E).filter(o=>onL(E,o));
+// Gleiche Plan-Zutaten mehrerer Handys (gemeinsame Liste) in einer Zeile: Mengen addiert, der Haken gilt für alle.
+// Schon Abgehaktes wird nicht mit noch Offenem zusammengerechnet.
+const zKeyOf=t=>{const q=zItem(t);return q?zKey(q.n):String(t).toLowerCase()};
+function syGroup(L){const G={},out=[];
+  L.forEach(x=>{const q=zItem(x.n),k=(x.c?"c|":"")+(x.w?"w|":"")+(q?zKey(q.n):x.n.toLowerCase());let g=G[k];if(!g){g=G[k]={n:q?q.n:x.n,m:{},xs:[],w:!!x.w};out.push(g)}if(q)g.m=mAdd(g.m,q.m);g.xs.push(x)});
+  return out.map(g=>(g.label=g.xs.length>1&&!g.w?fmtItem(g.n,g.m):g.xs.length>1?g.n:g.xs[0].n,g.c=g.xs.every(x=>x.c),g)).sort((a,b)=>(a.c-b.c)||a.n.localeCompare(b.n,"de"))}
 function renderShop(){renderShopList();renderShopMode()}
 function renderShopList(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto();
   const ch=$("ekm");ch.innerHTML="";ch.style.display=auto?"none":"";[["w",prd().auto?"Ganze Woche":"Ganzer Zeitraum"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
-  const its=auto?[]:visItems(E),nh=auto?0:shopItems().filter(o=>hid(E.hd,o)&&!hid(E.sh,o)).length,L=$("ekl");L.innerHTML="";
+  const vis=auto?[]:visItems(E),its=vis.filter(o=>onL(E,o)),nh=auto?0:shopItems().filter(o=>hid(E.hd,o)&&!hid(E.sh,o)).length,L=$("ekl");L.innerHTML="";
   $("eksy").textContent=sy?"👥 Gemeinsame Liste verwalten":"👥 Mit anderem Handy teilen";
   const FW=S.fw&&S.fw.items.length?S.fw:null,keep=()=>{S.ek[wk]=E;save()};
   const restore=()=>{if(!nh)return;const b=el("button","full","↺ "+nh+(nh===1?" gelöschte Zutat":" gelöschte Zutaten")+" aus dem Plan wieder anzeigen");b.style.cssText="margin-top:10px;font-size:13px";b.onclick=()=>{E.hd={};keep();renderShop()};L.appendChild(b)};
-  if(!sy&&!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">'+(nh?'Die Liste ist leer.':'Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.')+'</p>';restore();return}
+  // Gewürze & Vorrat aus dem Plan, die (noch) nicht auf der Liste stehen
+  // Bei gemeinsamer Liste: was dort schon steht (z. B. aus dem Plan der anderen), nicht nochmal vorschlagen
+  const onSy=new Set(sy?syVis(sy).map(x=>zKeyOf(x.n)):[]);
+  const sug=(auto?shopItems(true).filter(o=>!hid(E.hd,o)):vis).filter(o=>o.w&&!E.ad[o.key]&&!onSy.has(o.key)).sort((a,b)=>a.n.localeCompare(b.n,"de"));
+  const addV=os=>{os.forEach(o=>{E.ad[o.key]=1});keep();if(auto)syAutoPlan();renderShop();
+    toast((os.length===1?"„"+os[0].n+"“":os.length+" Artikel")+" auf der Liste",()=>{os.forEach(o=>{delete E.ad[o.key]});keep();if(auto)syAutoPlan();renderShop()})};
+  const sugList=()=>{if(!sug.length)return;const h=el("div","gh",'<span>➕ Gewürze & Vorrat · bei Bedarf</span>');h.style.cssText="margin-top:18px;align-items:center";
+    if(sug.length>1){const b=el("button","","Alle ＋");b.style.cssText="font-size:12px;padding:2px 10px";b.onclick=()=>addV(sug);h.appendChild(b)}L.appendChild(h);
+    L.appendChild(el("p","sm","Hat man meist zu Hause – tippe auf ＋, wenn etwas fehlt.")).style.margin="6px 0 2px";
+    sug.forEach(o=>{const sub=vSub(o),r=el("div","ek",'<div class="t" style="flex:1;min-width:0">'+esc(o.n)+(sub?'<div class="sm">'+esc(sub)+'</div>':'')+'</div>');
+      const b=el("button","ic","＋");b.setAttribute("aria-label","„"+o.n+"“ auf die Liste");r.appendChild(b);r.onclick=()=>addV([o]);L.appendChild(r)})};
+  if(!sy&&!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">'+(nh||sug.length?'Die Liste ist leer.':'Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.')+'</p>';sugList();restore();return}
   const row=(label,sub,on,tog,del)=>{const r=el("div","ek"+(on?" ok":""),'<input type="checkbox"'+(on?' checked':'')+'><div class="t" style="flex:1;min-width:0">'+esc(label)+(sub?'<div class="sm">'+sub+'</div>':'')+'</div>');
     r.onclick=e=>{if(e.target.tagName==="BUTTON")return;tog();keep();renderShop()};
     if(del){const b=el("button","ic","✕");b.setAttribute("aria-label","Entfernen");b.onclick=()=>{del();keep();renderShop()};r.appendChild(b)}L.appendChild(r)};
   const srt=(a,b)=>(!!E.c[a.key]-!!E.c[b.key])||a.n.localeCompare(b.n,"de");
-  const wa=its.filter(o=>o.a!=null).sort(srt),wo=its.filter(o=>o.a==null).sort(srt);
+  const wa=its.slice().sort(srt);
   if(sy){const h=el("div","gh",'<span>👥 Gemeinsame Liste</span><span class="sm" id="syst"></span>');h.style.marginTop="0";L.appendChild(h);
     const all=syVis(sy).sort((a,b)=>(!!a.c-!!b.c)||(a.t||0)-(b.t||0)),sh=all.filter(x=>!x.f&&!x.p),fw=all.filter(x=>x.f),pl=all.filter(x=>x.p).sort((a,b)=>(!!a.c-!!b.c)||a.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,"").localeCompare(b.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,""),"de"));
     if(!all.length)L.appendChild(el("p","sm",auto?"Noch leer. Plane oben Rezepte ein – die Zutaten landen automatisch hier, auch auf dem anderen Handy.":"Noch leer. Neue Einträge unten landen hier – auch auf dem anderen Handy.")).style.margin="6px 0 0";
     const srow=x=>{const mine=x.d===sy.me,who=x.b&&!mine?esc(x.b):"";
-      row(x.n,x.f?"":x.p?(mine?"aus deinem Plan":"aus dem Plan von "+(who||"der anderen Person")):who?"von "+who:"",!!x.c,()=>syOp({id:x.id,f:"c",v:!x.c}),()=>syDel(x))};
+      // Eigene, von Hand hinzugefügte Gewürze gehen mit ✕ zurück zu „bei Bedarf“
+      row(x.n,x.f?"":who?"von "+who:"",!!x.c,()=>syOp({id:x.id,f:"c",v:!x.c}),()=>syDel(x))};
+    const xdel=x=>{const adk=x.p&&x.w&&x.d===sy.me&&auto?Object.keys(E.ad).find(k=>"p"+syHash(sy.me+"|"+k)===x.id):null;
+      if(adk){delete E.ad[adk];S.ek[wk]=E;syAutoPlan()}else syDel(x)};
+    const grow=g=>{const ws=[...new Set(g.xs.map(x=>x.d===sy.me?"deinem Plan":"dem Plan von "+(x.b||"der anderen Person")))];
+      row(g.label,"aus "+esc(ws.join(" + ")),g.c,()=>g.xs.forEach(x=>syOp({id:x.id,f:"c",v:!g.c})),()=>g.xs.forEach(xdel))};
     sh.forEach(srow);
-    const pa=pl.filter(x=>!x.w),pw=pl.filter(x=>x.w);
-    if(pa.length){const h=el("div","gh","<span>🗓️ Aus dem Plan</span><span></span>");h.style.marginTop="18px";L.appendChild(h);pa.forEach(srow)}
-    if(pw.length){L.appendChild(el("div","gh","<span>Vorrat & Gewürze</span><span></span>"));pw.forEach(srow)}
+    const pa=syGroup(pl.filter(x=>!x.w)),pw=syGroup(pl.filter(x=>x.w));
+    if(pa.length){const h=el("div","gh","<span>🗓️ Aus dem Plan</span><span></span>");h.style.marginTop="18px";L.appendChild(h);pa.forEach(grow)}
+    if(pw.length){const h=el("div","gh","<span>🧂 Gewürze & Vorrat</span><span></span>");h.style.marginTop="18px";L.appendChild(h);pw.forEach(grow)}
     if(fw.length){const h=el("div","gh",'<span>📋 FamilyWall · gemeinsam</span>');const rb=el("button","","Entfernen");rb.style.cssText="font-size:12px;padding:2px 10px";
       rb.onclick=()=>{if(!confirm("FamilyWall-Artikel auf beiden Handys aus der Liste nehmen?"))return;const old=fw.map(x=>{const{id,...v}=x;return{id,v}});old.forEach(o=>syOp({id:o.id,v:null}));renderShop();
         toast("FamilyWall-Liste entfernt",()=>{if(SY()===sy){old.forEach(syOp);renderShop()}})};
@@ -109,18 +158,18 @@ function renderShopList(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto();
     const open=its.filter(o=>!E.c[o.key]).length;
     if(its.length){const h2=el("div","gh",'<span>🗓️ Aus deinem Plan · nur hier</span>');h2.style.cssText="margin-top:18px;align-items:center";
       if(open){const b=el("button","pri","↑ "+open+" teilen");b.style.cssText="font-size:12px;padding:4px 10px";b.onclick=()=>syPushPlan(E);h2.appendChild(b)}L.appendChild(h2)}}
-  wa.forEach(o=>row(shopLabel(o),o.s.size>1?"für "+o.s.size+" Mahlzeiten":"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}));
-  if(wo.length){L.appendChild(el("div","gh","<span>Vorrat & Gewürze</span><span></span>"));wo.forEach(o=>row(o.n,"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}))}
+  // Von Hand hinzugefügte Gewürze & Vorrat lassen sich mit ✕ wieder zurück nach unten schieben
+  wa.forEach(o=>row(shopLabel(o),o.w?vSub(o):o.s.size>1?"für "+o.s.size+" Mahlzeiten":"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1},o.w?()=>{delete E.ad[o.key];delete E.c[o.key]}:null));
   if(E.x.length){L.appendChild(el("div","gh","<span>Eigene Einträge</span><span></span>"));E.x.forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{E.x=E.x.filter(y=>y!==x)}))}
   if(FW){const h=el("div","gh",'<span>📋 FamilyWall-Liste vom '+dd(FW.at)+'</span>');const rb=el("button","","Entfernen");rb.style.cssText="font-size:12px;padding:2px 10px";
     rb.onclick=()=>{const old=S.fw;S.fw=null;save();renderShop();toast("FamilyWall-Liste entfernt",()=>{S.fw=old;save();renderShop()})};h.appendChild(rb);h.style.marginTop="18px";h.style.alignItems="center";L.appendChild(h);
     const gs=[];FW.items.forEach(x=>{if(!gs.includes(x.g))gs.push(x.g)});gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"));
     gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";
       FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}
-  restore()}
+  sugList();restore()}
 function shopBulk(all){const sy=SY(),auto=syAuto();if(all&&sy&&syVis(sy).length&&!confirm("Die gemeinsame Liste wird auch auf dem anderen Handy geleert. Fortfahren?"))return;
   const wk=ekK(),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
-  if(!auto)visItems(E).forEach(o=>{if(go(E.c[o.key])){E.hd[o.key]=o.a??0;delete E.c[o.key];n++}});
+  if(!auto)listItems(E).forEach(o=>{if(go(E.c[o.key])){E.hd[o.key]=sig(o);delete E.c[o.key];n++}});
   n+=E.x.filter(x=>go(x.c)).length;E.x=E.x.filter(x=>!go(x.c));
   if(S.fw){n+=S.fw.items.filter(x=>go(x.c)).length;S.fw.items=S.fw.items.filter(x=>!go(x.c));if(!S.fw.items.length)S.fw=null}
   const sd=sy?syVis(sy).filter(x=>go(x.c)).map(({id,...v})=>({id,v})):[];n+=sd.length;
@@ -180,13 +229,20 @@ function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.
       save();closeSheet();show("plan");const c=$("ekl").closest(".card");c.scrollIntoView();window.scrollBy(0,-70);
       toast(r.items.length+" Artikel übernommen",()=>{S.fw=old;save();renderShop()})}})}
 $("ekfw").onclick=()=>fwSheet("");
-function ekAdd(n){const sy=SY();if(sy){syOp({id:"i"+syRnd(10),v:{n,c:false,b:sy.name,d:sy.me,t:Date.now()}});renderShop();return}
-  const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});save();renderShop()}
-$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;$("eki").value="";ekAdd(n)};
+// Eintrag auf die Liste – steht derselbe Artikel schon offen drauf, werden die Mengen zusammengefasst
+// (z. B. „100 g Paprika“ + „200 g Paprika“ → „300 g Paprika“). Gibt true zurück, wenn zusammengefasst wurde.
+function ekPut(n,m,raw,i){const k=zKey(n),sy=SY(),same=x=>{if(x.c)return null;const q=zItem(x.n);return q&&zKey(q.n)===k?q:null};
+  if(sy){for(const x of syVis(sy)){if(x.p||x.f)continue;const q=same(x);if(q){const t=fmtItem(q.n,mAdd(q.m,m));if(t!==x.n)syOp({id:x.id,f:"n",v:t});return true}}
+    syOp({id:"i"+syRnd(10),v:{n:raw||fmtItem(n,m),c:false,b:sy.name,d:sy.me,t:Date.now()+(i||0)}});return false}
+  const wk=ekK(),E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};
+  for(const x of E.x){const q=same(x);if(q){x.n=fmtItem(q.n,mAdd(q.m,m));return true}}
+  E.x.push({n:raw||fmtItem(n,m),c:false});return false}
+function ekAdd(n){const q=zItem(n),r=q?ekPut(q.n,q.m,n):(ekPut(n,{},n),false);save();renderShop();return r}
+$("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;$("eki").value="";if(ekAdd(n))toast("Stand schon auf der Liste – zusammengefasst")};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
 $("ekr").onclick=()=>{const wk=ekK(),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);const sy=SY();if(sy)syVis(sy).forEach(x=>{if(x.c)syOp({id:x.id,f:"c",v:false})});save();renderShop();toast("Haken zurückgesetzt")};
 $("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
-  const lines=(syAuto()?[]:visItems(E)).filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(SY()?syVis(SY()).filter(x=>!x.c).sort((a,b)=>(a.t||0)-(b.t||0)).map(x=>x.n):[],E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
+  const lines=(syAuto()?[]:listItems(E)).filter(o=>!E.c[o.key]).sort((a,b)=>a.w-b.w||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(SY()?syVis(SY()).filter(x=>!x.c).sort((a,b)=>(a.t||0)-(b.t||0)).map(x=>x.n):[],E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
   if(!lines.length){toast("Nichts mehr offen");return}
   const W=weekKeys(),boxed="Einkaufsliste "+(prd().auto?"KW "+kw(wk):dd(W[0])+" – "+dd(W[W.length-1]))+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
   const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};
