@@ -4,7 +4,7 @@ const CATS=["Frühstück","Mittag","Abend","Snack"];
 const PQ=[.5,1,1.5,2];
 const MZ=[["b","Bauch"],["h","Hüfte"],["o","Oberschenkel"],["a","Oberarm"]];
 let rvMode="k",rvSel=null,rMan=false;
-let S,rcat="Frühstück",rsub="Süß",edA=false,edE=false,libCat="Oberkörper",wr=90,ekMode="w";
+let saveRev=0,S,rcat="Frühstück",rsub="Süß",edA=false,edE=false,libCat="Oberkörper",wr=90,ekMode="w";
 
 const $=id=>document.getElementById(id);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
@@ -72,7 +72,7 @@ function fix(){
   // Einmalig: Standardrezepte vegetarisch (nur gebratener Lachs erlaubt, kein Räucherlachs) und ohne Pilze – gleiche ID, damit der Wochenplan erhalten bleibt
   if((S.veg||0)<2&&Array.isArray(S.R)){S.R.forEach(r=>{const nn=VEG[r.n];const row=nn&&RB.find(x=>x[1]===nn);if(row&&!S.R.some(y=>y!==r&&y.n===nn)){const id=r.id;Object.assign(r,mkR(row),{id});delete r.ci;delete r.pz}});S.veg=2}
   // Neue mitgelieferte Rezepte je Version einmalig ergänzen (gelöschte kommen nicht zurück)
-  const RBV=[[2,RB2],[3,RB3]],top=RBV[RBV.length-1][0];
+  const RBV=[[2,RB2],[3,RB3],[4,RB4]],top=RBV[RBV.length-1][0];
   if(!Array.isArray(S.R)){S.R=defR();S.rbv=top;S.veg=2}
   if((S.rbv||1)<top){const have=new Set(S.R.map(r=>r.n.toLowerCase()));RBV.forEach(([v,L])=>{if(v>(S.rbv||1))L.forEach(r=>{if(!have.has(r[1].toLowerCase()))S.R.push(mkR(r))})});S.rbv=top}
   S.R.forEach(r=>{r.id=r.id||uid();if(!Array.isArray(r.z)){const d=RB.find(x=>x[1]===r.n);if(d){r.t=d[4];r.z=d[5].slice();r.s=d[6];r.tg=d[7]||""}else{r.z=[];r.s=r.s||"";r.t=r.t||"";r.tg=r.tg||""}}
@@ -97,7 +97,8 @@ function fix(){
   if(S.mv<3){const fixS=new Set(["Apfel + 15 g Mandeln","Magerquark mit Beeren","Gemüsesticks + Hummus","Buttermilch-Beeren-Shake"]);S.R.forEach(r=>{const d=RB.find(x=>x[1]===r.n);if(d&&d[6]&&(!r.s||fixS.has(r.n)&&r.s.length<45))r.s=d[6]});S.mv=3}
 }
 function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}fix()}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Speichern fehlgeschlagen")}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Speichern fehlgeschlagen")}
+  saveRev++;if(typeof syKick==="function")syKick()}  // geänderte Daten bald zu den eigenen Geräten (sync-ich.js)
 
 const dt=$("dt");dt.value=todayK();
 const day=()=>{const k=dt.value||todayK();if(!S.d[k])S.d[k]={f:[],s:[],x:{},h:[]};return S.d[k]};

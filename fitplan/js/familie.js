@@ -179,7 +179,7 @@ function bdForm(id){const old=id?famMap("bd")[id]:null;if(id&&!bdOk(old))return;
     if(id)$("bdDel").onclick=()=>{famSet("bd",id,null);closeSheet();renderFam();toast("Geburtstag gelöscht",()=>{famSet("bd",id,old);renderFam()})}})}
 
 /* Gemeinsame Rezepte */
-const STDN=new Set([...RB,...RB2,...RB3].map(x=>x[1].toLowerCase()));
+const STDN=new Set([...RB].map(x=>x[1].toLowerCase()));
 const rzId=r=>"r"+syHash(S.dev+"|"+r.id);
 const rzShared=r=>!!famMap("rz")[rzId(r)];
 const rzPack=r=>({n:r.n,c:r.c,ic:icOf(r),k:r.k,p:r.p,kh:r.kh??null,fe:r.fe??null,bs:r.bs??null,t:r.t||"",z:(r.z||[]).slice(),s:r.s||"",pz:r.pz||1,tg:r.tg||""});

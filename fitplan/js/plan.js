@@ -42,9 +42,13 @@ function pickRecipe(k,c){const cur=(S.pl[k]||{})[c];let allC=false;
     const dr=()=>{const q=$("pq").value.trim().toLowerCase();
       $("pcs").innerHTML="";[[false,"Nur "+c],[true,"Alle Rezepte"]].forEach(([v,l])=>{const b=el("button",v===allC?"on":"",l);b.onclick=()=>{allC=v;dr()};$("pcs").appendChild(b)});
       const L=$("pli");L.innerHTML="";const it=S.R.filter(r=>(allC||r.c===c)&&(!q||r.n.toLowerCase().includes(q)));
-      if(!it.length)L.innerHTML='<p class="sm">Keine Rezepte gefunden.</p>';
+      const ext=katRecipes().filter(o=>(allC||o.r.c===c)&&(!q||o.r.n.toLowerCase().includes(q)));
+      if(!it.length&&!ext.length)L.innerHTML='<p class="sm">Keine Rezepte gefunden.</p>';
       it.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t">'+esc(r.n)+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+'</div></div><button class="ic'+(r.id===cur?' done':'')+'">'+(r.id===cur?'✓':'＋')+'</button>');row.style.cursor="pointer";row.onclick=()=>recipeDetail(r.id,{k,c,pick:1});
-        row.querySelector("button").onclick=e=>{e.stopPropagation();set(r.id)};L.appendChild(row)})};
+        row.querySelector("button").onclick=e=>{e.stopPropagation();set(r.id)};L.appendChild(row)});
+      if(ext.length)L.appendChild(el("p","lb","👥 Von "+(ext.every(o=>!o.who)?"deinen anderen Geräten":"der Familie"))).style.margin="12px 0 0";
+      ext.forEach(o=>{const r=o.r,row=el("div","row",'<span class="fi">'+esc(r.ic)+'</span><div class="t">'+esc(r.n)+'<div class="sm">'+(o.who?'von '+esc(o.who)+' · ':'')+mline(r.k,r.p,r.kh,r.fe)+'</div></div><button class="ic">＋</button>');row.style.cursor="pointer";row.onclick=()=>extRecipe(o,{k,c});
+        row.querySelector("button").onclick=e=>{e.stopPropagation();set(takeRecipe(r,c).id)};L.appendChild(row)})};
     $("pq").oninput=dr;dr();if(cur)$("prm").onclick=()=>set(null)})}
 $("pcopy").onclick=()=>{const W=weekKeys(),has=W.some(k=>S.pl[k]),prev=W.map(k=>S.pl[addDays(k,-7)]);
   if(!prev.some(Boolean)){toast("In der Vorwoche ist nichts geplant");return}
@@ -93,7 +97,7 @@ function renderShopList(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto();
   if(sy){const h=el("div","gh",'<span>👥 Gemeinsame Liste</span><span class="sm" id="syst"></span>');h.style.marginTop="0";L.appendChild(h);
     const all=syVis(sy).sort((a,b)=>(!!a.c-!!b.c)||(a.t||0)-(b.t||0)),sh=all.filter(x=>!x.f&&!x.p),fw=all.filter(x=>x.f),pl=all.filter(x=>x.p).sort((a,b)=>(!!a.c-!!b.c)||a.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,"").localeCompare(b.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,""),"de"));
     if(!all.length)L.appendChild(el("p","sm",auto?"Noch leer. Plane oben Rezepte ein – die Zutaten landen automatisch hier, auch auf dem anderen Handy.":"Noch leer. Neue Einträge unten landen hier – auch auf dem anderen Handy.")).style.margin="6px 0 0";
-    const srow=x=>{const mine=x.d===sy.me,who=x.b&&!mine?esc(x.b):"";
+    const srow=x=>{const mine=syMe(sy,x.d),who=x.b&&!mine?esc(x.b):"";
       row(x.n,x.f?"":x.p?(mine?"aus deinem Plan":"aus dem Plan von "+(who||"der anderen Person")):who?"von "+who:"",!!x.c,()=>syOp({id:x.id,f:"c",v:!x.c}),()=>syDel(x))};
     sh.forEach(srow);
     const pa=pl.filter(x=>!x.w),pw=pl.filter(x=>x.w);
@@ -180,7 +184,7 @@ function fwSheet(pre){const canRead=!!(navigator.clipboard&&navigator.clipboard.
       save();closeSheet();show("plan");const c=$("ekl").closest(".card");c.scrollIntoView();window.scrollBy(0,-70);
       toast(r.items.length+" Artikel übernommen",()=>{S.fw=old;save();renderShop()})}})}
 $("ekfw").onclick=()=>fwSheet("");
-function ekAdd(n){const sy=SY();if(sy){syOp({id:"i"+syRnd(10),v:{n,c:false,b:sy.name,d:sy.me,t:Date.now()}});renderShop();return}
+function ekAdd(n){const sy=SY();if(sy){syOp({id:"i"+syRnd(10),v:{n,c:false,b:sy.name,d:syWho(sy),t:Date.now()}});renderShop();return}
   const wk=ekK();const E=S.ek[wk]=S.ek[wk]||{c:{},x:[]};E.x.push({n,c:false});save();renderShop()}
 $("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;$("eki").value="";ekAdd(n)};
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};

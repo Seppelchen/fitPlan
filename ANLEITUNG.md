@@ -19,6 +19,7 @@ fitplan/
 │   ├── sync.js                Teilen mit anderen Handys (Firebase)
 │   ├── einkaufsmodus.js       Einkaufsmodus im Vollbild
 │   ├── familie.js             Tab Familie: Kalender, Geburtstage, Rezepte
+│   ├── sync-ich.js            Eigene Geräte abgleichen (gleicher Name), Essen der Familie zur Auswahl
 │   ├── familie-import.js      Kalender aus FamilyWall übernehmen
 │   ├── kalender.js            Kalenderansichten (Liste, Tag, 3 Tage, Woche, Monat)
 │   ├── fortschritt.js         Tab Fortschritt
@@ -119,8 +120,11 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 ## Rezepte bearbeiten und löschen
 
-- Alle 100 mitgelieferten Rezepte sind vegetarisch, mit gebratenem Lachs als einziger Ausnahme (kein Räucherlachs), und
+- Die 100 Grundrezepte sind vegetarisch, mit gebratenem Lachs als einziger Ausnahme (kein Räucherlachs), und
   ohne Pilze. Statt Parmesan steht „vegetarischer Hartkäse (Parmesan-Art)“ im Rezept.
+- Dazu kommen 7 Familienrezepte (je 1 Portion): Jägerschnitzel mit Kartoffeln und Mischgemüse, Bratreis,
+  Kaiserschmarren, Currywurst mit Currysoße und Kartoffeln, Milchreis, Geflügel-Geschnetzeltes mit Reis
+  (alle unter Mittag) und Kartoffel-Feta-Hack-Auflauf (Abend). Sie erscheinen nach dem Update von selbst.
 - Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
 - Bei schon gegessenen Einträgen aus einem Rezept steht unter **Essen → Gegessen** rechts ein **📖**: antippen
   öffnet das Rezept mit Zubereitung. Im Eintrag selbst (antippen) gibt es oben **📖 Zutaten & Zubereitung**
@@ -300,8 +304,8 @@ Import verdoppelt nichts, gleiche Termine werden nur aktualisiert. Direkt danach
 Zwei oder mehr Personen teilen sich Einkaufsliste, Kalender, Geburtstage und Rezepte: Was einer einträgt
 oder abhakt, sehen die anderen nach wenigen Sekunden. Das läuft über **Firebase** (Google), kostenlos und
 ohne Kreditkarte. Nur diese Dinge (inklusive übernommener FamilyWall-Artikel und -Termine) und – wenn
-eingeschaltet – der Essensplan mit den geplanten Rezepten liegen dort. Alle anderen FitPlan-Daten (Essen,
-Gewicht, Sport) bleiben auf dem Handy. Einrichten geht im Tab **Familie** oder im Tab **Plan**.
+eingeschaltet – der Essensplan mit den geplanten Rezepten, deine Essen zur Auswahl für alle und deine
+Daten für deine eigenen Geräte liegen dort (siehe unten). Einrichten geht im Tab **Familie** oder im Tab **Plan**.
 
 ### Einmalig: Firebase einrichten (am PC, ca. 10 Minuten)
 
@@ -325,12 +329,19 @@ Gewicht, Sport) bleiben auf dem Handy. Einrichten geht im Tab **Familie** oder i
          allow get: if request.auth != null;
          allow create, update: if request.auth != null
            && code.size() == 20
-           && request.resource.data.keys().hasOnly(['v', 'items', 'plans', 'cal', 'bd', 'rz', 'fv'])
+           && request.resource.data.keys().hasOnly(['v', 'items', 'plans', 'cal', 'bd', 'rz', 'fv', 'pv'])
            && request.resource.data.get('items', {}).size() <= 500
            && request.resource.data.get('plans', {}).size() <= 10
            && request.resource.data.get('cal', {}).size() <= 1500
            && request.resource.data.get('bd', {}).size() <= 300
-           && request.resource.data.get('rz', {}).size() <= 200;
+           && request.resource.data.get('rz', {}).size() <= 200
+           && request.resource.data.get('pv', {}).size() <= 200;
+         // Eigene Daten je Person (für mehrere eigene Geräte) und Essen der Familie zur Auswahl
+         match /u/{doc} {
+           allow get, create, update: if request.auth != null
+             && code.size() == 20 && doc.size() <= 40
+             && request.resource.data.keys().hasOnly(['e']);
+         }
        }
      }
    }
@@ -339,10 +350,11 @@ Gewicht, Sport) bleiben auf dem Handy. Einrichten geht im Tab **Familie** oder i
    Damit kann nur lesen und schreiben, wer den 20-stelligen Listen-Code aus der Einladung kennt.
    Listen durchsuchen oder löschen kann niemand.
 
-   **Schon eingerichtet?** Wer die Regeln von vor dem 07.11.2026 hat, ersetzt sie einmal durch diese
-   (Firestore Database → Regeln → einfügen → Veröffentlichen). Sonst werden Kalender, Geburtstage und
-   Rezepte nicht geteilt – FitPlan zeigt dann im Tab Familie einen roten Hinweis. Die Einkaufsliste
-   funktioniert auch ohne das, und auf dem Handy geht nichts verloren.
+   **Schon eingerichtet?** Wer die Regeln von vor dem 13.11.2026 hat, ersetzt sie einmal durch diese
+   (Firestore Database → Regeln → einfügen → Veröffentlichen). Sonst gleichen deine eigenen Geräte nicht
+   ab und deine Essen stehen den anderen nicht zur Auswahl (bei Regeln von vor dem 07.11.2026 auch keine
+   Kalender, Geburtstage und Rezepte) – FitPlan zeigt dann unter **👥 Verwalten** einen roten Hinweis.
+   Die Einkaufsliste funktioniert auch ohne das, und auf dem Handy geht nichts verloren.
 6. **Web-App anlegen:** Oben links auf **⚙️ → Projekteinstellungen** → ganz unten bei „Meine Apps“
    auf das Symbol **`</>`** (Web) → Name z. B. `FitPlan` → „Firebase Hosting“ **nicht** ankreuzen →
    **App registrieren**. Es erscheint ein Block, der so beginnt:
@@ -413,6 +425,35 @@ gemeinsame Liste – ebenso Termine, Geburtstage und Rezepte aus dem Tab Familie
   Liste (Abschnitt „📋 FamilyWall · gemeinsam“, nach Kategorien). Übernimmt das andere Handy dieselbe
   Liste, entstehen keine doppelten Artikel. Eine FamilyWall-Liste, die schon vor dem Verbinden auf
   dem Handy war, wird automatisch mit übernommen.
+
+### Eigene Geräte abgleichen (gleicher Name)
+
+- Wer FitPlan auf mehreren eigenen Geräten nutzt (z. B. Handy und Tablet), verbindet jedes Gerät mit
+  derselben Einladung und trägt überall **denselben Namen** ein (Groß-/Kleinschreibung egal).
+- Dann sind auf allen diesen Geräten gleich: Essen (Gegessen-Liste), Wasser, Sport und Übungen, Gewicht,
+  Maße, Wochenplan, Rezepte, Favoriten, gescannte Produkte und Ziele. Was auf einem Gerät eingetragen,
+  geändert oder gelöscht wird, ist nach wenigen Sekunden auf den anderen.
+- Beim ersten Verbinden eines weiteren Geräts kommen die Daten vom schon verbundenen Gerät dazu. Tage, an
+  denen auf beiden Geräten etwas eingetragen war, werden zusammengeführt – es geht nichts verloren.
+- Ändern zwei Geräte gleichzeitig denselben Tag (z. B. ohne Internet), bleiben alle Einträge erhalten.
+- Gleiche Plan-Zutaten erscheinen auf der Einkaufsliste nur einmal, und der Essensplan der eigenen Geräte
+  erscheint nicht als „Essensplan von …“.
+- Ein-/ausschalten unter **👥 Verwalten → Meine Daten auf meinen Geräten abgleichen**. Name ändern
+  verbindet das Gerät mit den Geräten des neuen Namens.
+- Hinweis: Wer die Einladung hat, könnte diese Daten technisch auch lesen – schick sie nur an deine Familie.
+
+### Essen der Familie zur Auswahl
+
+- Eigene Rezepte, was in den letzten 4 Monaten gegessen wurde, Favoriten und gescannte Produkte stehen
+  allen Verbundenen zur Auswahl – egal auf welchem Gerät sie eingetragen wurden:
+  - Tab **Essen → Rezepte:** unten „👥 Von der Familie“ mit „von …“. ＋ trägt direkt ein, Antippen zeigt
+    Zutaten und Zubereitung, **📅 Einplanen** oder **＋ In meine Rezepte übernehmen**.
+  - **Lebensmittel suchen:** „Schon eingetragen“ und „👥 Produkte der Familie“.
+  - **Freier Eintrag:** Beim Tippen des Namens werden bekannte Essen vorgeschlagen, Kalorien und
+    Nährwerte füllen sich von selbst.
+  - **Wochenplan:** Bei der Rezeptauswahl stehen die Rezepte der Familie unten.
+- Falsches oder doppeltes Essen: antippen → **Für alle aus der Auswahl nehmen**.
+- Abschalten unter **👥 Verwalten → Was ich esse, steht allen zur Auswahl**.
 
 ## App später ändern
 

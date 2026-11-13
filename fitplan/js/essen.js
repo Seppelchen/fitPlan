@@ -26,8 +26,12 @@ function renderFood(){
   let items=S.R.filter(r=>r.c===rcat);
   if(rcat==="Frühstück"&&rsub!=="Alle")items=items.filter(r=>(r.tg||"h")===(rsub==="Süß"?"s":"h"));
   if(q)items=items.filter(r=>r.n.toLowerCase().includes(q)||(r.z||[]).join(" ").toLowerCase().includes(q));
+  // Rezepte der anderen (gemeinsame Auswahl), die hier noch nicht stehen
+  let ext=rMan?[]:katRecipes().filter(o=>o.r.c===rcat);
+  if(rcat==="Frühstück"&&rsub!=="Alle")ext=ext.filter(o=>o.r.tg===(rsub==="Süß"?"s":"h"));
+  if(q)ext=ext.filter(o=>(o.r.n+" "+o.r.z.join(" ")).toLowerCase().includes(q));
   const RL=$("rlist");RL.innerHTML="";
-  if(!items.length)RL.innerHTML='<p class="sm" style="margin:8px 0 0">Keine Rezepte gefunden.</p>';
+  if(!items.length&&!ext.length)RL.innerHTML='<p class="sm" style="margin:8px 0 0">Keine Rezepte gefunden.</p>';
   $("rman").textContent=rMan?"Fertig":"Verwalten";$("rman").className=rMan?"on":"";const MB=$("rmb");MB.style.display=rMan?"":"none";
   if(rMan){const miss=RB.filter(x=>!S.R.some(y=>y.n.toLowerCase()===x[1].toLowerCase()));
     MB.innerHTML='<p class="sm" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">Tippe 🗑 zum Löschen – auch bei den mitgelieferten Rezepten. Antippen öffnet das Rezept zum Bearbeiten.</p>'+
@@ -35,6 +39,9 @@ function renderFood(){
     if(miss.length)$("rres").onclick=()=>{miss.forEach(x=>S.R.push(mkR(x)));save();renderFood();toast(miss.length+(miss.length===1?" Rezept":" Rezepte")+" wiederhergestellt")}}
   items.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t" style="cursor:pointer">'+esc(r.n)+(r.tg==="s"?'<span class="bdg s">süß</span>':'')+(quick(r)?'<span class="bdg">schnell</span>':'')+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+(r.t?' · '+esc(r.t):'')+'</div></div>'+(rMan?'<button class="ic del" aria-label="Löschen">🗑</button>':'<button class="ic" aria-label="Eintragen">＋</button>'));
     row.querySelector(".t").onclick=row.querySelector(".fi").onclick=()=>rMan?recipeForm(r.id):recipeDetail(r.id);row.querySelector("button").onclick=()=>rMan?delRecipe(r):addRecipe(r,1);RL.appendChild(row)});
+  if(ext.length)RL.appendChild(el("p","lb","👥 Von "+(ext.every(o=>!o.who)?"deinen anderen Geräten":"der Familie"))).style.margin="12px 0 0";
+  ext.forEach(o=>{const r=o.r,row=el("div","row",'<span class="fi">'+esc(r.ic)+'</span><div class="t" style="cursor:pointer">'+esc(r.n)+(r.tg==="s"?'<span class="bdg s">süß</span>':'')+'<div class="sm">'+(o.who?'von '+esc(o.who)+' · ':'')+mline(r.k,r.p,r.kh,r.fe)+(r.t?' · '+esc(r.t):'')+'</div></div><button class="ic" aria-label="Eintragen">＋</button>');
+    row.querySelector(".t").onclick=row.querySelector(".fi").onclick=()=>extRecipe(o);row.querySelector("button").onclick=()=>logFood(mkEntry(r.n,r.k,r.p,r.c,1,r));RL.appendChild(row)});
 }
 $("rq").oninput=renderFood;
 // Tagessumme: Kohlenhydrate, Fett, Ballaststoffe und Verteilung der Kalorien
@@ -63,9 +70,10 @@ const nrm=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
 function recipeOf(f){const n=typeof f==="string"?f:f.n;
   if(f&&f.rid){const r=S.R.find(x=>x.id===f.rid);if(r)return{r,own:1}}
   const l=nrm(n),alt=nrm(VEG[String(n).trim()]),r=S.R.find(x=>{const m=nrm(x.n);return m===l||!!alt&&m===alt});if(r)return{r,own:1};
-  const g=famList("rz").find(x=>nrm(x.r.n)===l);return g?{r:rzSan(g.r),gid:g.id}:null}
+  const g=famList("rz").find(x=>nrm(x.r.n)===l);if(g)return{r:rzSan(g.r),gid:g.id};
+  const k=katRecipeBy(n);return k?{r:k.r,kat:k}:null}
 // 📖 in der Gegessen-Liste: Rezept direkt öffnen (eigenes oder gemeinsames)
-function openRecipeOf(f){const rc=recipeOf(f);if(!rc)return;if(rc.own)recipeDetail(rc.r.id);else famRecipe(rc.gid)}
+function openRecipeOf(f){const rc=recipeOf(f);if(!rc)return;if(rc.own)recipeDetail(rc.r.id);else if(rc.kat)extRecipe(rc.kat);else famRecipe(rc.gid)}
 function entrySheet(f){const D=day();let q=f.q;const rc=recipeOf(f);
   openSheet("Eintrag bearbeiten",
   '<div style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><span class="fi">'+icOf(f)+'</span><b>'+esc(f.n)+'</b></div>'+

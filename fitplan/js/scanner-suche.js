@@ -115,6 +115,9 @@ function foodSearch(q0){let tm=null,ctl=null,cur=q0||"";
       const mine=Object.entries(S.bc).filter(([c,o])=>!w.length||hit(o.n,w)).reverse().slice(0,8);
       sec(A,"Grundnahrungsmittel",fdFind(q).slice(0,12).map(o=>row(o,()=>amountSheet(o,{back}))));
       sec(A,q?"Deine Produkte":"Zuletzt gescannt oder gefunden",mine.map(([c,o])=>row(o,()=>amountSheet(o,{code:c,back}))));
+      if(w.length){const fr=(o,go)=>{const r=el("div","row",'<span class="fi">'+esc(o.ic||icOf(o))+'</span><div class="t">'+esc(o.n)+'<div class="sm">1 Portion: '+mline(o.k1,o.p1,o.kh1,o.fe1)+(o.who?' · von '+esc(o.who):'')+'</div></div><span class="sm" style="font-size:20px">›</span>');r.style.cursor="pointer";r.onclick=go;return r};
+        sec(A,"Schon eingetragen"+(SY()?" (du und die Familie)":""),knownFoods().filter(o=>hit(o.n,w)).slice(0,10).map(o=>fr(o,()=>foodSheet(o,back))));
+        sec(A,"👥 Produkte der Familie",katProducts().filter(o=>hit(o.o.n,w)).slice(0,8).map(p=>{const r=row(p.o,()=>{S.bc[p.c]={...p.o};save();amountSheet(S.bc[p.c],{code:p.c,back})});if(p.who)r.querySelector(".sm").textContent+=" · von "+p.who;return r}))}
       const on=$("fon");
       if(q.length<3){on.textContent=q?"":"Obst, Gemüse und andere Grundnahrungsmittel findest du auch ohne Internet. Markenprodukte sucht FitPlan online – oder du scannst den Barcode.";return}
       if(!navigator.onLine){on.textContent=(A.children.length?"":"Nichts gefunden. ")+"Offline – Markenprodukte gibt es nur mit Internet.";return}

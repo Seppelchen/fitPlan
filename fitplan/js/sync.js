@@ -5,7 +5,7 @@
    einer Warteschlange), abgeholt wird alle 5 s, solange der Plan-Tab offen ist. Nur die gemeinsame Liste
    verlässt das Handy – alles andere bleibt lokal. */
 const SY=()=>S.sy&&S.sy.code?S.sy:null;
-let syTok=null,syTokT=0,syBusy=false,syErr="",syTimer=null,syPlT=0,syPlErr="",syPlErrT=0,pExp=false;
+let syTok=null,syTokT=0,syBusy=false,syAt=0,syErr="",syTimer=null,syPlT=0,syPlErr="",syPlErrT=0,pExp=false;
 const syRnd=n=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>a[x%32]).join("")};
 const syHash=t=>{let h=2166136261;for(const c of t){h^=c.codePointAt(0);h=Math.imul(h,16777619)>>>0}return h.toString(36)};
 const fsV=v=>typeof v==="boolean"?{booleanValue:v}:typeof v==="number"?{integerValue:String(Math.round(v))}:{stringValue:String(v)};
@@ -20,7 +20,8 @@ async function syToken(s,force){if(!force&&syTok&&Date.now()<syTokT)return syTok
     catch(e){if(e.off||e.st>=500)throw e;s.rt=null}}  // abgelaufene Anmeldung → neu anmelden
   const r=await syFetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="+k,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({returnSecureToken:true})});
   syTok=r.idToken;s.rt=r.refreshToken;syTokT=Date.now()+((+r.expiresIn||3600)-300)*1e3;if(SY()===s)save();return syTok}
-async function syCall(s,method,qs,body){const url="https://firestore.googleapis.com/v1/projects/"+encodeURIComponent(s.p)+"/databases/(default)/documents/lists/"+s.code+(qs||"");
+// sub = Unterdokument, z. B. "/u/kat" (eigene Daten, Essen der Familie)
+async function syCall(s,method,qs,body,sub){const url="https://firestore.googleapis.com/v1/projects/"+encodeURIComponent(s.p)+"/databases/(default)/documents/lists/"+s.code+(sub||"")+(qs||"");
   for(let i=0;;i++){const tok=await syToken(s,i>0);
     try{return await syFetch(url,{method,headers:Object.assign({Authorization:"Bearer "+tok},body?{"Content-Type":"application/json"}:{}),body:body?JSON.stringify(body):undefined})}
     catch(e){if(e.st===401&&!i)continue;if(e.st===404&&method==="GET"&&!/does not exist/i.test(e.message))return{};throw e}}}
@@ -44,11 +45,11 @@ function syBody(ops){const W={};
   const paths=L.map(o=>(o.col||"items")+"."+o.id+(o.f?"."+o.f:""));
   if(L.some(o=>o.col)){fields.fv={stringValue:syRnd(8)};paths.push("fv")}  // Änderungsmarke: andere Handys laden Kalender & Co. dann neu
   return{qs:"?"+paths.map(x=>"updateMask.fieldPaths="+encodeURIComponent(x)).join("&"),body:{fields}}}
-async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;
+async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;syAt=Date.now();
   try{syAutoPlan();for(;;){const b=s.q.filter(o=>!o.col).slice(0,80);if(!b.length)break;const x=syBody(b);await syCall(s,"PATCH",x.qs,x.body);s.q=s.q.filter(o=>!b.includes(o));if(SY()===s)save()}
     await syPushFam(s);
     await syPubPlan(s);
-    const d=await syCall(s,"GET","?mask.fieldPaths=items&mask.fieldPaths=fv");if(SY()!==s)return;
+    const d=await syCall(s,"GET","?mask.fieldPaths=items&mask.fieldPaths=fv&mask.fieldPaths=pv");if(SY()!==s)return;
     const f=d.fields&&d.fields.items&&d.fields.items.mapValue&&d.fields.items.mapValue.fields||{},it={};
     Object.entries(f).forEach(([id,v])=>{const x=fsGet(v.mapValue&&v.mapValue.fields);if(x.n)it[id]=x});
     s.q.forEach(o=>{if(!o.col)syApply(it,o)});  // während des Abrufs Geändertes nicht überschreiben
@@ -56,31 +57,38 @@ async function sySync(){const s=SY();if(!s||syBusy)return;syBusy=true;
     // Kalender, Geburtstage, Rezepte nur neu laden, wenn sich die Änderungsmarke geändert hat
     const fv=d.fields&&d.fields.fv&&d.fields.fv.stringValue||"";
     if(fv!==(s.fv||"")){const g=await syCall(s,"GET","?"+FAMC.map(c=>"mask.fieldPaths="+c).join("&"));if(SY()!==s)return;const c2=syReadFam(g,s);s.fv=fv;save();if(c2)renderFam()}
+    // Eigene Daten auf meinen anderen Geräten (gleicher Name) und Essen der Familie
+    const pv=fsGet(d.fields&&d.fields.pv&&d.fields.pv.mapValue&&d.fields.pv.mapValue.fields);
+    await syMine(s,pv);await syKat(s,pv);if(SY()!==s)return;
     if(Date.now()-syPlT>6e4){syPlT=Date.now();const p=await syCall(s,"GET","?mask.fieldPaths=plans");if(SY()!==s)return;
-      const pls=syReadPlans(p,s.me);if(JSON.stringify(pls)!==JSON.stringify(s.pls||{})){s.pls=pls;save();renderPartner();if(view==="plan")renderPlan();if(view==="essen")renderPlanned()}}}
+      const pls=syReadPlans(p,s);if(JSON.stringify(pls)!==JSON.stringify(s.pls||{})){s.pls=pls;save();renderPartner();if(view==="plan")renderPlan();if(view==="essen")renderPlanned()}}}
   catch(e){syErr=syMsg(e)}finally{syBusy=false;syStat()}}
 function syStat(){const s=SY();if(!s)return;const pend=s.q.length;
   const t=syErr?"⚠️ "+(/^Kein Internet/.test(syErr)?"offline":"Fehler"):pend?"wird übertragen …":s.at?"✓ "+(Date.now()-s.at<6e4?"aktuell":"Stand "+new Date(s.at).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})):"";
   [$("syst"),$("smst"),$("fmst")].forEach(e=>{if(e){e.textContent=e.id==="smst"&&t?"👥 "+t:e.id==="fmst"&&t?"· "+t:t;e.title=syErr;e.style.color=syErr?"var(--warn)":""}});const m=$("syerr");if(m)m.textContent=syErr}
-function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||view==="fam"||sheetOpen()||shopOn||view==="essen"&&!!SY().pls&&Object.keys(SY().pls).length&&Date.now()-syPlT>6e4);  // im Tab Essen: Plan der anderen etwa minütlich
+// Plan- und Familie-Tab (und offene Fenster) alle 5 s, sonst etwa alle 15 s (eigene Geräte, Essen der Familie)
+function syLoop(){clearTimeout(syTimer);if(!SY())return;const act=document.visibilityState==="visible"&&(view==="plan"||view==="fam"||sheetOpen()||shopOn||Date.now()-syAt>14e3||view==="essen"&&!!SY().pls&&Object.keys(SY().pls).length&&Date.now()-syPlT>6e4);
   if(act)sySync();syTimer=setTimeout(syLoop,act?5000:20000)}
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syLoop();else if(SY()&&SY().q.length)sySync()});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syLoop();else if(SY()&&(SY().q.length||myDirty()||katDirty()))sySync()});
 window.addEventListener("online",syLoop);
 // Sichtbare Einträge (x = ausgeblendete Plan-Zutat) und Löschen: Plan-Zutaten werden nur ausgeblendet,
 // sonst kämen sie beim nächsten Abgleich gleich wieder. Sie erscheinen erst wieder, wenn sich ihre Menge ändert.
+// Wer bin ich in der gemeinsamen Liste: mit Abgleich meiner Geräte die Person (gleicher Name), sonst das Gerät
+const syWho=s=>(s.ps!==false&&myPid(s))||s.me;
+const syMe=(s,d)=>!!d&&(d===s.me||d===syWho(s));
 const syVis=s=>Object.entries(s.it).filter(([,x])=>!x.x).map(([id,x])=>({id,...x}));
 const syAuto=()=>{const s=SY();return!!s&&s.ap!==false};
 const syDel=x=>x.p?syOp({id:x.id,f:"x",v:true}):syOp({id:x.id,v:null});
 // Automatik: Zutaten des gewählten Zeitraums ↔ eigene Plan-Einträge der gemeinsamen Liste (nur bei Änderungen schreiben)
 // Nur bei sichtbarem Plan (bzw. Einkaufsmodus): es gilt der dort gezeigte Zeitraum
 function syAutoPlan(){const s=SY();if(!s||s.ap===false||view!=="plan"&&!shopOn)return;const want={},t=Date.now();let i=0;
-  shopItems(true).forEach(o=>{want["p"+syHash(s.me+"|"+o.key)]={n:o.a==null?o.n:shopLabel(o),w:o.a==null}});
+  const who=syWho(s);shopItems(true).forEach(o=>{want["p"+syHash(who+"|"+o.key)]={n:o.a==null?o.n:shopLabel(o),w:o.a==null}});
   Object.entries(want).forEach(([id,w])=>{const cur=s.it[id];if(cur&&cur.n===w.n)return;
-    const v={n:w.n,c:false,b:s.name||"",d:s.me,p:true,t:t+i++};if(w.w)v.w=true;syOp({id,v})});
-  Object.entries(s.it).forEach(([id,x])=>{if(x.p&&x.d===s.me&&!want[id])syOp({id,v:null})})}
+    const v={n:w.n,c:false,b:s.name||"",d:who,p:true,t:t+i++};if(w.w)v.w=true;syOp({id,v})});
+  Object.entries(s.it).forEach(([id,x])=>{if(x.p&&syMe(s,x.d)&&!want[id])syOp({id,v:null})})}
 // Offene Plan-Zutaten in die gemeinsame Liste – gleiche Zutat aus demselben Plan wird aktualisiert statt verdoppelt
 function syPushPlan(E){const s=SY(),wk=ekK(),its=visItems(E).filter(o=>!E.c[o.key]);if(!s||!its.length)return;const ids=[],t=Date.now();
-  its.forEach((o,i)=>{const id="p"+syHash(s.me+"|"+o.key);ids.push([id,o.key]);syOp({id,v:{n:shopLabel(o),c:false,b:s.name,d:s.me,p:true,t:t+i}});E.sh[o.key]=o.a??0});
+  its.forEach((o,i)=>{const id="p"+syHash(syWho(s)+"|"+o.key);ids.push([id,o.key]);syOp({id,v:{n:shopLabel(o),c:false,b:s.name,d:syWho(s),p:true,t:t+i}});E.sh[o.key]=o.a??0});
   S.ek[wk]=E;save();renderShop();
   toast(its.length+(its.length===1?" Zutat":" Zutaten")+" geteilt",()=>{if(SY()!==s)return;ids.forEach(([id,k])=>{syOp({id,v:null});delete E.sh[k]});save();renderShop()})}
 // FamilyWall-Artikel in die gemeinsame Liste: gleiche Artikel (Name) von beiden Handys ergeben einen Eintrag.
@@ -88,12 +96,12 @@ function syPushPlan(E){const s=SY(),wk=ekK(),its=visItems(E).filter(o=>!E.c[o.ke
 const syHasFW=()=>!!SY()&&Object.values(SY().it).some(x=>x.f);
 function syFW(items,rep){const s=SY(),old=Object.entries(s.it).filter(([,x])=>x.f).map(([id,x])=>({id,v:{...x}})),ids=new Set(),t=Date.now();
   items.forEach((x,i)=>{const id="f"+syHash(x.n.trim().toLowerCase());if(ids.has(id))return;ids.add(id);
-    if(!rep&&s.it[id])return;syOp({id,v:{n:x.n,c:!!x.c,g:x.g||"Sonstiges",f:true,b:s.name,d:s.me,t:t+i}})});
+    if(!rep&&s.it[id])return;syOp({id,v:{n:x.n,c:!!x.c,g:x.g||"Sonstiges",f:true,b:s.name,d:syWho(s),t:t+i}})});
   if(rep)old.forEach(o=>{if(!ids.has(o.id))syOp({id:o.id,v:null})});
   return()=>{if(SY()!==s)return;ids.forEach(id=>syOp({id,v:null}));old.forEach(syOp);renderShop()}}
 // Was vor dem Verbinden nur auf diesem Handy stand (eigene Einträge, FamilyWall-Liste), kommt in die gemeinsame Liste
 function syMigrate(){const s=SY();if(!s)return;const wk=ekK(),Ek=S.ek[wk];
-  if(Ek&&Ek.x.length){Ek.x.forEach((x,i)=>syOp({id:"i"+syRnd(10),v:{n:x.n,c:!!x.c,b:s.name,d:s.me,t:Date.now()+i}}));Ek.x=[]}
+  if(Ek&&Ek.x.length){Ek.x.forEach((x,i)=>syOp({id:"i"+syRnd(10),v:{n:x.n,c:!!x.c,b:s.name,d:syWho(s),t:Date.now()+i}}));Ek.x=[]}
   if(S.fw){syFW(S.fw.items,false);S.fw=null}
   // Kalender, Geburtstage und Rezepte von diesem Handy kommen mit in die gemeinsame Liste
   FAMC.forEach(c=>{const M=S.fam[c]||{},T=famTgt(s,c),L=[];Object.entries(M).forEach(([id,v])=>{if(T[id]&&JSON.stringify(T[id])===JSON.stringify(v))return;v={...v};if(v.dv===S.dev&&!v.b)v.b=s.name||"";L.push({col:c,id,v})});syOpN(L);S.fam[c]={}});save()}
@@ -111,12 +119,15 @@ async function syPubPlan(s){if(syPlErr&&Date.now()-syPlErrT<6e4)return;  // nach
     if(syPlErr){syPlErr="";renderPartner()}save()}
   catch(e){if(e.off)throw e;syPlErrT=Date.now();
     syPlErr=e.st===403?"Dein Essensplan wird noch nicht geteilt: In Firebase müssen die Firestore-Regeln aktualisiert werden (siehe Anleitung).":syMsg(e);renderPartner()}}
-function syReadPlans(d,me){const f=d.fields&&d.fields.plans&&d.fields.plans.mapValue&&d.fields.plans.mapValue.fields||{},out={},N=v=>v==null?null:+v||0;
-  Object.entries(f).forEach(([k,v])=>{if(k==="u"+me)return;const x=fsGet(v.mapValue&&v.mapValue.fields);
+function syReadPlans(d,s){const f=d.fields&&d.fields.plans&&d.fields.plans.mapValue&&d.fields.plans.mapValue.fields||{},out={},N=v=>v==null?null:+v||0,my=s.ps!==false&&nrm(s.name);
+  Object.entries(f).forEach(([k,v])=>{if(k==="u"+s.me)return;const x=fsGet(v.mapValue&&v.mapValue.fields);if(my&&nrm(x.b)===my)return;  // mein anderes Gerät
     try{const j=JSON.parse(x.j||"{}"),R={},days={};
       Object.entries(j.R||{}).forEach(([id,r])=>{if(r&&r.n)R[id]={n:String(r.n),c:String(r.c||""),ic:String(r.ic||"🍽️"),k:+r.k||0,p:+r.p||0,kh:N(r.kh),fe:N(r.fe),bs:N(r.bs),t:String(r.t||""),z:Array.isArray(r.z)?r.z.map(String):[],s:String(r.s||""),pz:+r.pz||1}});
       Object.entries(j.days||{}).forEach(([dk,o])=>{if(/^\d{4}-\d\d-\d\d$/.test(dk)&&o&&typeof o==="object"){const m={};CATS.forEach(c=>{if(R[o[c]])m[c]=o[c]});if(Object.keys(m).length)days[dk]=m}});
       out[k]={b:String(x.b||""),t:+x.t||0,days,R}}catch(e){}});
+  // Gleicher Name auf mehreren Geräten = eine Person: nur den neuesten Plan zeigen
+  const best={};Object.entries(out).forEach(([k,p])=>{const n=nrm(p.b)||k;if(!best[n]||out[best[n]].t<p.t)best[n]=k});
+  Object.keys(out).forEach(k=>{if(best[nrm(out[k].b)||k]!==k)delete out[k]});
   return out}
 // Was die anderen an Tag k geplant haben: [{who,c,r}]
 function partnerDay(k){const s=SY();if(!s||!s.pls)return[];const out=[];
@@ -161,13 +172,19 @@ const syInvite=s=>"FPL1-"+btoa(JSON.stringify({k:s.k,p:s.p,c:s.code})).replace(/
 function syParseInvite(t){const m=String(t).match(/FPL1-([A-Za-z0-9_-]+)/);if(!m)return null;
   try{const b=m[1].replace(/-/g,"+").replace(/_/g,"/");const o=JSON.parse(atob(b+"===".slice((b.length+3)%4)));return o.k&&o.p&&/^[A-Z0-9]{20}$/.test(o.c)?o:null}catch(e){return null}}
 function syParseCfg(t){const g=k=>{const m=String(t).match(new RegExp('["\']?'+k+'["\']?\\s*:\\s*["\']([^"\']+)["\']'));return m&&m[1].trim()};const k=g("apiKey"),p=g("projectId");return k&&p?{k,p}:null}
-function syShare(s){const t="Lass uns FitPlan gemeinsam nutzen (Einkaufsliste, Kalender, Geburtstage, Rezepte):\n1. FitPlan öffnen → Familie → „👥 Mit der Familie teilen“\n2. „Einladung annehmen“ wählen und diese Nachricht einfügen:\n\n"+syInvite(s);
+function syShare(s){const t="Lass uns FitPlan gemeinsam nutzen (Einkaufsliste, Kalender, Geburtstage, Rezepte, Essen):\n1. FitPlan öffnen → Familie → „👥 Mit der Familie teilen“\n2. „Einladung annehmen“ wählen und diese Nachricht einfügen:\n\n"+syInvite(s);
   const copy=()=>{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast("Einladung kopiert – jetzt verschicken"),()=>{$("syx").style.display="";$("syx").value=t;$("syx").select()});else{$("syx").style.display="";$("syx").value=t;$("syx").select()}};
   if(navigator.share)navigator.share({title:"FitPlan gemeinsam nutzen",text:t}).catch(e=>{if(e.name!=="AbortError")copy()});else copy()}
 function sySheet(){const s=SY();
   if(s){openSheet("Gemeinsam mit der Familie",
-    '<p class="sm" style="margin:0 0 10px">Verbunden. Neue Einträge und Haken erscheinen nach wenigen Sekunden auch auf den anderen Handys. Über Firebase geteilt werden die Einkaufsliste (mit der FamilyWall-Liste), Kalender, Geburtstage, gemeinsame Rezepte und – wenn eingeschaltet – dein Essensplan. Alle anderen Daten bleiben auf dem Handy.</p>'+
+    '<p class="sm" style="margin:0 0 10px">Verbunden. Neue Einträge und Haken erscheinen nach wenigen Sekunden auch auf den anderen Handys. Über Firebase geteilt werden die Einkaufsliste (mit der FamilyWall-Liste), Kalender, Geburtstage, gemeinsame Rezepte und – wenn eingeschaltet – dein Essensplan, deine Essen zur Auswahl und deine Daten für deine anderen Geräte.</p>'+
     '<label class="f">Dein Name (sieht die andere Person bei deinen Einträgen)</label><div style="display:flex;gap:8px"><input id="syn" maxlength="30"><button id="synok">Speichern</button></div>'+
+    '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="syps" style="width:auto"> Meine Daten auf meinen Geräten abgleichen</label>'+
+    '<p class="sm" style="margin:2px 0 0">Verbinde Handy, Tablet & Co. mit <b>demselben Namen</b> – dann sind dort Essen, Wasser, Sport, Gewicht, Maße, Wochenplan, Rezepte, Favoriten, Produkte und Ziele gleich. Änderungen kommen nach wenigen Sekunden auf den anderen Geräten an.</p>'+
+    '<p class="sm" id="sypsi" style="margin:4px 0 0"></p><p class="err" id="symy" style="margin-top:6px"></p>'+
+    '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="syks" style="width:auto"> Was ich esse, steht allen zur Auswahl</label>'+
+    '<p class="sm" style="margin:2px 0 0">Eigene Rezepte, Gegessenes der letzten 4 Monate, Favoriten und gescannte Produkte finden alle Verbundenen bei den Rezepten, in der Suche, im freien Eintrag und im Wochenplan – mit „von …“.</p>'+
+    '<p class="err" id="sykat" style="margin-top:6px"></p>'+
     '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="syap" style="width:auto"> Zutaten aus meinem Plan automatisch auf die Liste</label>'+
     '<p class="sm" style="margin:2px 0 0">Kommt ein Essen in den Plan, stehen seine Zutaten gleich auf der gemeinsamen Liste. Fliegt es raus, verschwinden sie wieder. Es gilt der oben gewählte Zeitraum.</p>'+
     '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="sysp" style="width:auto"> Meinen Essensplan mit Rezepten teilen</label>'+
@@ -180,17 +197,22 @@ function sySheet(){const s=SY();
     '<textarea id="syx" rows="5" style="display:none;margin-top:8px" readonly></textarea>'+
     '<button class="full" id="synow" style="margin-top:12px">↻ Jetzt abgleichen</button>'+
     '<button class="full del" id="syoff" style="margin-top:8px">Verbindung trennen</button>',
-    ()=>{$("syn").value=s.name||"";syStat();$("sysp").checked=s.sp!==false;$("syap").checked=s.ap!==false;
+    ()=>{$("syn").value=s.name||"";syStat();$("sysp").checked=s.sp!==false;$("syap").checked=s.ap!==false;$("syps").checked=s.ps!==false;$("syks").checked=s.ks!==false;myShow();myShow2();
+      const psi=()=>{$("sypsi").textContent=s.ps===false?"":!myPid(s)?"Trag oben deinen Namen ein – er verbindet deine Geräte.":"Deine Geräte mit dem Namen „"+s.name+"“ gleichen ab."+(myAt?" Zuletzt hochgeladen: "+new Date(myAt).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr.":"")};psi();
+      $("syps").onchange=()=>{s.ps=$("syps").checked;myErr="";myErrT=0;s.pj="";save();psi();myShow();if(s.ps)sySync().then(()=>{psi();if(!myErr)toast("Deine Geräte sind abgeglichen")});else toast("Deine Daten bleiben jetzt auf diesem Gerät")};
+      $("syks").onchange=()=>{s.ks=$("syks").checked;katErr="";katErrT=0;s.km="";save();myShow2();if(s.ks)sySync();toast(s.ks?"Deine Essen stehen allen zur Auswahl":"Deine Essen werden nicht mehr geteilt");renderFood()};
       $("syap").onchange=()=>{s.ap=$("syap").checked;const wk=ekK();if(S.ek[wk])S.ek[wk].sh={};
-        if(s.ap)syAutoPlan();else Object.entries(s.it).forEach(([id,x])=>{if(x.p&&x.d===s.me)syOp({id,v:null})});
+        if(s.ap)syAutoPlan();else Object.entries(s.it).forEach(([id,x])=>{if(x.p&&syMe(s,x.d))syOp({id,v:null})});
         save();renderShop();toast(s.ap?"Plan-Zutaten kommen automatisch auf die Liste":"Plan-Zutaten bleiben jetzt erst einmal auf diesem Handy")};$("sype").textContent=syPlErr;$("syfe").textContent=syFamErr;
       $("sysp").onchange=()=>{s.sp=$("sysp").checked;syPlErrT=0;save();sySync();toast(s.sp?"Essensplan wird geteilt":"Essensplan wird nicht mehr geteilt")};
-      $("synok").onclick=()=>{s.name=$("syn").value.trim();save();toast("Name gespeichert")};
+      $("synok").onclick=()=>{const n=$("syn").value.trim(),same=nrm(n)===nrm(s.name);s.name=n;save();psi();
+        if(same||s.ps===false||!n){toast("Name gespeichert");return}
+        toast("Name gespeichert – wird mit deinen Geräten abgeglichen …");myErr="";myErrT=0;sySync().then(()=>{psi();if(!myErr)toast("Abgeglichen mit deinen Geräten „"+n+"“")})};
       $("syinv").onclick=()=>syShare(s);
       $("synow").onclick=()=>{toast("Wird abgeglichen …");syPlT=0;syPlErrT=0;sySync().then(()=>{if(!syErr)toast("Liste ist aktuell")})};
       $("syoff").onclick=()=>{if(!confirm("Dieses Handy von der gemeinsamen Liste trennen? Offene Einträge bleiben hier als eigene Einträge erhalten, Kalender, Geburtstage und Rezepte ebenfalls. Auf dem anderen Handy ändert sich nichts."))return;
-        const wk=ekK(),E=S.ek[wk]=ekOf(wk);syVis(s).filter(x=>!x.c&&!(x.p&&x.d===s.me)).forEach(x=>E.x.push({n:x.n,c:false}));E.sh={};
-        const mp=Object.entries(s.it).filter(([,x])=>x.p&&x.d===s.me).map(([id])=>({id,v:null}));if(mp.length){const b=syBody(mp);syCall(s,"PATCH",b.qs,b.body).catch(()=>{})}  // eigene Plan-Zutaten dort entfernen
+        const wk=ekK(),E=S.ek[wk]=ekOf(wk);syVis(s).filter(x=>!x.c&&!(x.p&&syMe(s,x.d))).forEach(x=>E.x.push({n:x.n,c:false}));E.sh={};
+        const mp=Object.entries(s.it).filter(([,x])=>x.p&&syMe(s,x.d)).map(([id])=>({id,v:null}));if(mp.length){const b=syBody(mp);syCall(s,"PATCH",b.qs,b.body).catch(()=>{})}  // eigene Plan-Zutaten dort entfernen
         if(s.ph)syCall(s,"PATCH",syPlPath(s),{fields:{}}).catch(()=>{});  // eigenen Essensplan dort entfernen
         FAMC.forEach(c=>{S.fam[c]={...(S.fam[c]||{}),...(s.fm&&s.fm[c]||{})}});  // Kalender, Geburtstage, Rezepte bleiben hier gespeichert
         S.sy=null;syErr="";syPlErr="";syFamErr="";save();closeSheet();renderPlan();renderFam();toast("Verbindung getrennt")}});return}
@@ -199,6 +221,7 @@ function sySheet(){const s=SY();
     '<p class="sm" style="margin:0 0 10px">Mehrere Handys teilen sich Einkaufsliste, Kalender, Geburtstage und Rezepte: Was einer einträgt oder abhakt, sehen die anderen nach wenigen Sekunden. Dafür braucht es einmal ein kostenloses Firebase-Projekt – die Schritte stehen in der Anleitung. Alles andere (Essen, Gewicht, Sport) bleibt auf dem Handy.</p>'+
     '<div class="chips" id="sym"></div>'+
     '<label class="f">Dein Name</label><input id="syn" maxlength="30" placeholder="z. B. Laura">'+
+    '<p class="sm" style="margin:4px 0 0">Eigenes Tablet oder zweites Handy? Dort denselben Namen eintragen – dann gleichen deine Geräte alle deine Daten ab.</p>'+
     '<div id="syneu"><label class="f">Firebase-Konfiguration</label><textarea id="syc" rows="7" placeholder="const firebaseConfig = {\n  apiKey: &quot;…&quot;,\n  projectId: &quot;…&quot;,\n  …\n};"></textarea>'+
     '<p class="sm" style="margin:6px 0 0">Aus Firebase: ⚙️ Projekteinstellungen → Allgemein → Meine Apps → Web-App. Den ganzen Block mit <b>firebaseConfig</b> kopieren und hier einfügen.</p></div>'+
     '<div id="syjoin" style="display:none"><label class="f">Einladung</label><textarea id="syi" rows="5" placeholder="Nachricht mit der Einladung hier einfügen (enthält FPL1-…)"></textarea></div>'+
@@ -215,6 +238,6 @@ function sySheet(){const s=SY();
           else if(!d.fields){E.textContent="Diese Liste gibt es nicht (mehr). Lass dir eine neue Einladung schicken.";return}
           S.sy=s;syErr="";
           syMigrate();await sySync();renderShop();renderFam();syLoop();
-          if(mode==="neu"){sySheet();toast("Liste angelegt – jetzt die andere Person einladen")}else{closeSheet();toast("Verbunden mit der gemeinsamen Liste")}}
+          if(mode==="neu"){sySheet();toast("Liste angelegt – jetzt die andere Person einladen")}else{closeSheet();toast(Object.keys(s.pm||{}).length?"Verbunden – deine Daten vom anderen Gerät sind da":"Verbunden mit der gemeinsamen Liste")}}
         catch(e){E.textContent=syMsg(e)}finally{if($("syok")===btn){btn.disabled=false;btn.textContent="Verbinden"}}}})}
 $("eksy").onclick=sySheet;
