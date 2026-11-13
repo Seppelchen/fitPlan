@@ -338,7 +338,8 @@ Daten für deine eigenen Geräte liegen dort (siehe unten). Einrichten geht im T
            && request.resource.data.get('pv', {}).size() <= 200;
          // Eigene Daten je Person (für mehrere eigene Geräte) und Essen der Familie zur Auswahl
          match /u/{doc} {
-           allow get, create, update: if request.auth != null
+           allow get: if request.auth != null && code.size() == 20;
+           allow create, update: if request.auth != null
              && code.size() == 20 && doc.size() <= 40
              && request.resource.data.keys().hasOnly(['e']);
          }
@@ -350,7 +351,7 @@ Daten für deine eigenen Geräte liegen dort (siehe unten). Einrichten geht im T
    Damit kann nur lesen und schreiben, wer den 20-stelligen Listen-Code aus der Einladung kennt.
    Listen durchsuchen oder löschen kann niemand.
 
-   **Schon eingerichtet?** Wer die Regeln von vor dem 13.11.2026 hat, ersetzt sie einmal durch diese
+   **Schon eingerichtet?** Wer die Regeln von vor dem 13.11.2026 (Abend) hat, ersetzt sie einmal durch diese
    (Firestore Database → Regeln → einfügen → Veröffentlichen). Sonst gleichen deine eigenen Geräte nicht
    ab und deine Essen stehen den anderen nicht zur Auswahl (bei Regeln von vor dem 07.11.2026 auch keine
    Kalender, Geburtstage und Rezepte) – FitPlan zeigt dann unter **👥 Verwalten** einen roten Hinweis.

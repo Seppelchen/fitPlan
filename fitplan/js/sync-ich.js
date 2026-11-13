@@ -84,7 +84,8 @@ async function syMine(s,pv){const pid=myPid(s);if(!pid||s.ps===false||myErr&&Dat
     const M={};bl.forEach(b=>M[pre+b]={stringValue:syRnd(8)});
     await syCall(s,"PATCH","?"+bl.map(b=>"updateMask.fieldPaths="+encodeURIComponent("pv."+pre+b)).join("&"),{fields:{pv:{mapValue:{fields:M}}}});
     bl.forEach(b=>by[b].forEach(o=>sh[o.id]=[o.h,o.c,o.k]));myAt=Date.now();save();myOk()}
-  catch(e){if(e.off)throw e;myErrT=Date.now();const n=e.st===403?myRules:syMsg(e);if(n!==myErr){myErr=n;if(!e.off&&e.st===403)toast("⚠️ Abgleich deiner Geräte: Firebase-Regeln aktualisieren (Anleitung)")}myShow()}}
+  catch(e){if(e.off)throw e;myErrT=Date.now();const n=e.st===403?myRules:syMsg(e);if(n!==myErr){myErr=n;let last="";try{last=localStorage.getItem(KEY+".myerr")||""}catch(x){}
+      if(e.st===403&&last!==todayK()){try{localStorage.setItem(KEY+".myerr",todayK())}catch(x){}toast("⚠️ Abgleich deiner Geräte: Firebase-Regeln aktualisieren (Anleitung)")}}myShow()}}  // höchstens einmal am Tag
 function myOk(){if(myErr){myErr="";myShow()}}
 function myShow(){const e=$("symy");if(e)e.textContent=myErr}
 
