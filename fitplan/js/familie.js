@@ -152,15 +152,20 @@ function renderCalSub(){const W=$("cfw"),c=S.icu;W.innerHTML="";if(!c)return;
   $("cfx").onclick=()=>{if(!confirm("Verknüpfung mit dem FamilyWall-Kalender lösen? Die übernommenen Termine bleiben im Kalender."))return;S.icu=null;save();renderCal()}}
 
 /* Geburtstage */
-function renderBd(){const L=$("blist"),t=todayK();L.innerHTML="";
-  const all=famList("bd").map(x=>({x,...bdNext(x)})).sort((a,b)=>a.k.localeCompare(b.k)||a.x.n.localeCompare(b.x.n,"de"));
-  if(!all.length){L.innerHTML='<p class="sm" style="margin:0">Noch keine Geburtstage. Tippe auf ＋ Geburtstag – oder übernimm sie mit dem Kalender aus FamilyWall.</p>';return}
+// Suche nach Person: alle Wörter müssen im Namen vorkommen (Jörg = Joerg, Müller = Mueller, Groß/klein egal)
+const bdFold=s=>String(s).toLowerCase().replace(/ä|ae/g,"a").replace(/ö|oe/g,"o").replace(/ü|ue/g,"u").replace(/ß/g,"ss");
+function renderBd(){const L=$("blist"),t=todayK(),Q=$("bq");L.innerHTML="";
+  const every=famList("bd").map(x=>({x,...bdNext(x)})).sort((a,b)=>a.k.localeCompare(b.k)||a.x.n.localeCompare(b.x.n,"de"));
+  Q.style.display=every.length?"":"none";
+  if(!every.length){L.innerHTML='<p class="sm" style="margin:0">Noch keine Geburtstage. Tippe auf ＋ Geburtstag – oder übernimm sie mit dem Kalender aus FamilyWall.</p>';return}
+  const q=Q.value.trim(),w=bdFold(q).split(/\s+/).filter(Boolean),all=w.length?every.filter(o=>{const n=bdFold(o.x.n);return w.every(t=>n.includes(t))}):every;
+  if(w.length)L.appendChild(el("p","sm",all.length?all.length+(all.length===1?" Person gefunden":" Personen gefunden"):"Niemand gefunden für „"+esc(q)+"“.")).style.margin="0 0 4px";
   let g="";all.forEach(o=>{const mk=o.k.slice(0,7);
     if(mk!==g){g=mk;const h=el("div","gh",'<span>'+MONS[+mk.slice(5)-1]+(mk.slice(0,4)!==t.slice(0,4)?" "+mk.slice(0,4):"")+'</span><span></span>');if(!L.children.length)h.style.marginTop="0";L.appendChild(h)}
     const when=o.in===0?'<b style="color:var(--accent)">heute 🎉</b>':o.in===1?'morgen':'in '+o.in+' Tagen';
     const r=el("div","row",'<span class="fi">'+(o.in===0?"🎉":"🎂")+'</span><div class="t">'+esc(o.x.n)+'<div class="sm">'+wd(o.k)+' '+dd(o.k)+(o.age?' · wird '+o.age:'')+' · '+when+(famMine(o.x)||!o.x.b?'':' · von '+esc(o.x.b))+'</div></div>');
     r.style.cursor="pointer";r.onclick=()=>bdForm(o.x.id);L.appendChild(r)})}
-$("badd").onclick=()=>bdForm(null);
+$("badd").onclick=()=>bdForm(null);$("bq").oninput=renderBd;
 function bdForm(id){const old=id?famMap("bd")[id]:null;if(id&&!bdOk(old))return;const x=old||{n:"",d:""},yr=new Date().getFullYear();
   openSheet(id?"Geburtstag bearbeiten":"Neuer Geburtstag",
   '<label class="f">Name</label><input id="bdN" maxlength="60" placeholder="z. B. Oma Helga">'+

@@ -330,6 +330,9 @@ Import verdoppelt nichts, gleiche Termine werden nur aktualisiert. Direkt danach
 - Liste nach dem nächsten Geburtstag sortiert, mit „in 5 Tagen“ und – wenn das Geburtsjahr eingetragen
   ist – „wird 34“. Geburtstage stehen auch im Kalender und oben bei „Heute & nächste 7 Tage“.
 - **＋ Geburtstag:** Name, Tag, Monat, Jahr (optional). Antippen zum Ändern oder Löschen.
+- **🔍 Person suchen:** Über der Liste einen Namen (oder einen Teil davon) eintippen, z. B. „Oma“ oder
+  „mül“. Groß-/Kleinschreibung ist egal, „Jörg“ findet man auch mit „joerg“, „Müller“ auch mit „Mueller“.
+  Das ✕ im Feld zeigt wieder alle.
 
 ### 📖 Gemeinsame Rezepte
 
