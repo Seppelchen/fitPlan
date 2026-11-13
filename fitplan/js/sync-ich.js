@@ -227,7 +227,8 @@ function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||
     // genauer Treffer ohne Antippen: gleich übernehmen
     const l=nrm(qn.value),ex=!sel&&l&&!$("qk").value&&qSuggest(qn.value.trim()).find(x=>nrm(x.n)===l);if(ex){pick(ex,1);return}
     show()});
-  $("qa").addEventListener("input",()=>{chips();fill()});
+  // 200 bei „Stück“ ist fast immer als Gramm gemeint → auf g/ml umstellen
+  $("qa").addEventListener("input",()=>{if(sel&&un&&un.g>1&&num($("qa").value)>=30){const b=qUnits(sel).find(z=>z.g===1);if(b){un=b;units();toast("Als "+b.u+" gerechnet")}}chips();fill()});
   QF.forEach(i=>$(i).addEventListener("input",()=>{auto=false;if(sel)btn(i==="qk"&&$("qk").value?fmt(num($("qk").value))+" kcal":"")}));
   // Eintragen mit genauen Werten (inkl. Ballaststoffe), solange die Felder nicht von Hand geändert wurden
   const reset=()=>{qn.value="";QF.forEach(i=>$(i).value="");drop();G.innerHTML="";$("qm").value=guessMeal()};
