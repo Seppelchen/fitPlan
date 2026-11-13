@@ -219,7 +219,7 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 ## Einkaufsmodus
 
-- **Am schnellsten: der runde 🛒-Knopf** unten rechts – er ist in jedem Tab da. Die Zahl daran zeigt,
+- **Am schnellsten: der runde 🛒-Knopf** unten rechts im Tab **Plan** – er bleibt beim Scrollen stehen. Die Zahl daran zeigt,
   wie viele Artikel noch offen sind. Beim Tippen in ein Eingabefeld blendet er sich kurz aus.
 - **Android:** Lange auf das FitPlan-Symbol auf dem Startbildschirm drücken → **Einkaufen** öffnet die
   Liste direkt. Die Verknüpfung lässt sich auch als eigenes Symbol auf den Startbildschirm ziehen.

@@ -107,7 +107,7 @@ $("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);$("today").onclic
 
 let view="essen";
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
-function show(v){view=v;try{localStorage.setItem(KEY+".tab",v)}catch(e){}document.body.classList.toggle("nohd",v==="fam");document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));window.scrollTo(0,0);
+function show(v){view=v;try{localStorage.setItem(KEY+".tab",v)}catch(e){}document.body.classList.toggle("nohd",v==="fam");document.body.classList.toggle("vplan",v==="plan");document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));window.scrollTo(0,0);
   if(v==="fort"){renderReview();renderWeight()}else if(v==="plan"){syPlT=0;renderPlan();syLoop()}else if(v==="essen"){syPlT=0;renderFood();syLoop()}else if(v==="fam"){calOnShow();renderFam();syLoop();calSubRefresh()}}
 
 // L2: zweite Ebene über einem offenen Sheet (Zutat fürs Rezept auswählen, Formular bleibt darunter erhalten)
