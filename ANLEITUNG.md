@@ -123,8 +123,11 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Ab 2 Buchstaben schlägt FitPlan unter dem Namensfeld passende Lebensmittel vor: schon Gegessenes (auch
   von der Familie), deine gescannten Produkte, Produkte der Familie und die Grundnahrungsmittel (offline).
 - **Antippen übernimmt** Kalorien, Eiweiß, Kohlenhydrate, Fett und Ballaststoffe. Darunter steht die
-  **Menge** (Gramm/ml, bei schon Gegessenem Portionen) mit Knöpfen wie „1 Stück · 150 g“ – die Werte
-  rechnen sich mit. Der Knopf zeigt die Kalorien: „＋ Eintragen · 108 kcal“.
+  **Menge** mit der **Einheit zum Umschalten**: **Stück** (bzw. Scheibe, Glas, Becher, EL … – je nachdem,
+  was zum Lebensmittel passt), **g** oder **ml** (ml bei Getränken, Milch, Joghurt & Co., gerechnet mit
+  1 ml ≈ 1 g). Beim Umschalten wird die Menge umgerechnet (2 Stück Apfel → 300 g). Schnellknöpfe wie
+  „2 Stück · 300 g“ oder „200 g“ helfen. Bei schon Gegessenem zählen Portionen. Die Werte rechnen sich
+  mit, der Knopf zeigt die Kalorien: „＋ Eintragen · 162 kcal“. Eingetragen wird z. B. „Apfel · 2 Stück (300 g)“.
 - Tippst du den Namen genau so ein, wie es ihn schon gibt (z. B. „Banane“), wird er auch ohne Antippen
   übernommen.
 - Werte lassen sich danach noch von Hand ändern. Nichts Passendes dabei? **🔍 … auch online suchen**
