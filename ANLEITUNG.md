@@ -118,6 +118,18 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Fortschritt → Wochenrückblick:** Das Balkendiagramm lässt sich umschalten auf
   **Kalorien**, **Mahlzeiten** oder **Nährstoffe**. Einen Tag antippen zeigt die genauen Werte.
 
+## Freier Eintrag mit Vorschlägen
+
+- Ab 2 Buchstaben schlägt FitPlan unter dem Namensfeld passende Lebensmittel vor: schon Gegessenes (auch
+  von der Familie), deine gescannten Produkte, Produkte der Familie und die Grundnahrungsmittel (offline).
+- **Antippen übernimmt** Kalorien, Eiweiß, Kohlenhydrate, Fett und Ballaststoffe. Darunter steht die
+  **Menge** (Gramm/ml, bei schon Gegessenem Portionen) mit Knöpfen wie „1 Stück · 150 g“ – die Werte
+  rechnen sich mit. Der Knopf zeigt die Kalorien: „＋ Eintragen · 108 kcal“.
+- Tippst du den Namen genau so ein, wie es ihn schon gibt (z. B. „Banane“), wird er auch ohne Antippen
+  übernommen.
+- Werte lassen sich danach noch von Hand ändern. Nichts Passendes dabei? **🔍 … auch online suchen**
+  sucht Markenprodukte bei Open Food Facts.
+
 ## Rezepte bearbeiten und löschen
 
 - Die 100 Grundrezepte sind vegetarisch, mit gebratenem Lachs als einziger Ausnahme (kein Räucherlachs), und
@@ -450,8 +462,7 @@ gemeinsame Liste – ebenso Termine, Geburtstage und Rezepte aus dem Tab Familie
   - Tab **Essen → Rezepte:** unten „👥 Von der Familie“ mit „von …“. ＋ trägt direkt ein, Antippen zeigt
     Zutaten und Zubereitung, **📅 Einplanen** oder **＋ In meine Rezepte übernehmen**.
   - **Lebensmittel suchen:** „Schon eingetragen“ und „👥 Produkte der Familie“.
-  - **Freier Eintrag:** Beim Tippen des Namens werden bekannte Essen vorgeschlagen, Kalorien und
-    Nährwerte füllen sich von selbst.
+  - **Freier Eintrag:** Beim Tippen des Namens werden bekannte Essen vorgeschlagen (siehe unten).
   - **Wochenplan:** Bei der Rezeptauswahl stehen die Rezepte der Familie unten.
 - Falsches oder doppeltes Essen: antippen → **Für alle aus der Auswahl nehmen**.
 - Abschalten unter **👥 Verwalten → Was ich esse, steht allen zur Auswahl**.

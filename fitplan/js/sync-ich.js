@@ -175,14 +175,46 @@ function foodSheet(o,back){const pk=!!pickCb;let q=1;
       if(pk){const cb=pickCb;closeSheet();cb({n:o.n,a:q,u:"Portion",z:(q===1?"":fq(q)+" × ")+o.n,k:r1(o.k1),p:r1(o.p1),kh:r1(o.kh1),fe:r1(o.fe1),bs:r1(o.bs1)});return}
       const m=$("fsm").value;closeSheet();logFood(mkEntry(o.n,o.k1,o.p1,m,q,per1(o)))}})}
 
-// Freier Eintrag: bekannte Essen als Vorschlag, beim Treffer Kalorien und Nährwerte vorausfüllen
-(()=>{const qn=$("qn"),dl=el("datalist");dl.id="qnl";document.body.appendChild(dl);qn.setAttribute("list","qnl");qn.setAttribute("autocomplete","off");let auto=false;
-  qn.addEventListener("focus",()=>{dl.innerHTML=knownFoods().slice(0,300).map(f=>'<option value="'+esc(f.n)+'">'+fmt(f.k1)+' kcal'+(f.who?' · von '+esc(f.who):'')+'</option>').join("")});
-  qn.addEventListener("input",()=>{const l=nrm(qn.value),f=l&&knownFoods().find(x=>nrm(x.n)===l);
-    if(f){if(!$("qk").value||auto){const v=x=>x==null?"":String(Math.round(x));$("qk").value=v(f.k1);$("qp").value=v(f.p1);$("qkh").value=v(f.kh1);$("qfe").value=v(f.fe1);auto=true}}
-    else if(auto){$("qk").value=$("qp").value=$("qkh").value=$("qfe").value="";auto=false}});
-  ["qk","qp","qkh","qfe"].forEach(i=>$(i).addEventListener("input",()=>{auto=false}));
-  $("qadd").addEventListener("click",()=>{auto=false},true)})();
+// Freier Eintrag: beim Tippen passende Lebensmittel vorschlagen. Antippen übernimmt Kalorien und Nährwerte,
+// die Menge rechnet sie um (Gramm/ml bei Lebensmitteln und Produkten, Portionen bei schon Gegessenem).
+// sel = gewähltes Lebensmittel {o (Werte je 100 bzw. je Portion), per:100|1, u, n}
+function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||q.length<2)return[];const out=[],seen=new Set();
+  const add=(x,n)=>{const l=nrm(x.n);if(seen.has(l)||out.length>=n)return;seen.add(l);out.push(x)};
+  const ks=knownFoods().filter(f=>hit(f.n,w)).map(f=>({n:f.n,ic:f.ic,o:{k:f.k1,p:f.p1,kh:f.kh1,fe:f.fe1,bs:f.bs1},per:1,u:"Portion",sub:"1 Portion: "+fmt(f.k1)+" kcal"+(f.who?" · von "+f.who:" · schon gegessen")}));
+  const pr=Object.values(S.bc).filter(o=>o&&o.n&&hit(o.n,w)).map(o=>({n:o.n,o,per:100,u:o.u||"g",sub:"100 "+(o.u||"g")+": "+fmt(o.k)+" kcal · dein Produkt"}));
+  const kp=katProducts().filter(p=>hit(p.o.n,w)).map(p=>({n:p.o.n,o:p.o,per:100,u:p.o.u||"g",sub:"100 "+(p.o.u||"g")+": "+fmt(p.o.k)+" kcal · Produkt von "+(p.who||"dir")}));
+  const fd=fdFind(q).map(o=>({n:o.n,o,per:100,u:o.u,sub:"100 "+o.u+": "+fmt(o.k)+" kcal"+(o.sq&&o.sl?" · "+o.sl+" "+fmt(o.sq)+" "+o.u:"")}));
+  ks.forEach(x=>add(x,3));pr.concat(kp).forEach(x=>add(x,5));fd.forEach(x=>add(x,7));return out}
+(()=>{const qn=$("qn"),G=$("qsug"),QF=["qk","qp","qkh","qfe"];let sel=null,auto=false;
+  const r1=v=>v==null?"":String(Math.round(v));
+  const vals=()=>{const a=num($("qa").value);if(!sel||!(a>0))return null;const f=a/sel.per,o=sel.o,m=c=>o[c]==null?null:o[c]*f;return{a,k:o.k*f,p:o.p*f,kh:m("kh"),fe:m("fe"),bs:m("bs")}};
+  const btn=t=>{$("qadd").textContent="＋ Eintragen"+(t?" · "+t:"")};
+  const fill=()=>{const v=vals();btn(v?fmt(v.k)+" kcal":"");if(!v){QF.forEach(i=>$(i).value="");$("qai").textContent="";return}
+    $("qk").value=r1(v.k);$("qp").value=r1(v.p);$("qkh").value=r1(v.kh);$("qfe").value=r1(v.fe);auto=true;$("qerr").textContent="";
+    $("qai").textContent=(sel.per===100?"Werte je 100 "+sel.u+": "+mline(sel.o.k,sel.o.p,sel.o.kh,sel.o.fe):"Werte für 1 Portion: "+mline(sel.o.k,sel.o.p,sel.o.kh,sel.o.fe))+" – du kannst sie unten noch ändern."};
+  const chips=()=>{const C=$("qac"),a=num($("qa").value),o=sel.o;const L=sel.per===1?[.5,1,1.5,2].map(x=>[x,fq(x)+(x===1?" Portion":"")]):[...(o.sq?[[o.sq,(o.sl||"Portion")+" · "+fmt(o.sq)+" "+sel.u]]:[]),...[50,100,150,200,250].filter(x=>x!==o.sq).map(x=>[x,fmt(x)+" "+sel.u])];
+    C.innerHTML="";L.forEach(([x,l])=>{const b=el("button",x===a?"on":"",l);b.onclick=()=>{$("qa").value=x;chips();fill()};C.appendChild(b)})};
+  const pick=(x,keep)=>{sel=x;if(!keep)qn.value=x.n;G.innerHTML="";$("qaw").style.display="";$("qal").textContent=x.per===1?"Portionen":"Menge ("+x.u+")";$("qau").textContent=x.per===1?"":x.u;
+    $("qa").value=x.per===1?1:x.o.lastA||x.o.sq||100;chips();fill()};
+  const drop=()=>{sel=null;btn("");$("qaw").style.display="none";if(auto)QF.forEach(i=>$(i).value="");auto=false;$("qai").textContent=""};
+  const show=()=>{G.innerHTML="";const q=qn.value.trim();if(sel&&nrm(q)===nrm(sel.n))return;const L=qSuggest(q);if(!L.length)return;
+    L.forEach(x=>{const r=el("div","row",'<span class="fi">'+esc(x.ic||icOf(x.o.ic?x.o:x))+'</span><div class="t">'+esc(x.n)+'<div class="sm">'+esc(x.sub)+'</div></div><span class="sm" style="font-size:13px;color:var(--accent)">übernehmen</span>');
+      r.style.cursor="pointer";r.onclick=()=>pick(x);G.appendChild(r)});
+    if(q.length>=3){const b=el("button","full","🔍 „"+esc(q)+"“ auch online suchen");b.style.marginTop="6px";b.onclick=()=>foodSearch(q);G.appendChild(b)}};
+  qn.addEventListener("input",()=>{if(sel&&nrm(qn.value)!==nrm(sel.n))drop();
+    // genauer Treffer ohne Antippen: gleich übernehmen
+    const l=nrm(qn.value),ex=!sel&&l&&!$("qk").value&&qSuggest(qn.value.trim()).find(x=>nrm(x.n)===l);if(ex){pick(ex,1);return}
+    show()});
+  $("qa").addEventListener("input",()=>{chips();fill()});
+  QF.forEach(i=>$(i).addEventListener("input",()=>{auto=false;if(sel)btn(i==="qk"&&$("qk").value?fmt(num($("qk").value))+" kcal":"")}));
+  // Eintragen mit genauen Werten (inkl. Ballaststoffe), solange die Felder nicht von Hand geändert wurden
+  const reset=()=>{qn.value="";QF.forEach(i=>$(i).value="");drop();G.innerHTML="";$("qm").value=guessMeal()};
+  $("qadd").addEventListener("click",e=>{const v=vals();
+    if(sel&&auto&&v&&nrm(qn.value)===nrm(sel.n)){e.stopImmediatePropagation();
+      const per1=sel.per===1,x={kh:v.kh,fe:v.fe,bs:v.bs,ic:sel.ic||sel.o.ic};if(per1)MK.forEach(([c])=>{x[c]=sel.o[c]});
+      if(!per1&&Object.values(S.bc).includes(sel.o))sel.o.lastA=v.a;
+      logFood(per1?mkEntry(sel.n,sel.o.k,sel.o.p,$("qm").value,v.a,x):mkEntry(sel.n+" · "+nf(v.a)+" "+sel.u,v.k,v.p,$("qm").value,1,x));reset();return}
+    setTimeout(()=>{if(!qn.value)reset()},0)},true)})();
 
 // Nach jeder Speicherung: geänderte eigene Daten bald hochladen (nicht bei jeder Kleinigkeit sofort)
 function syKick(){if(!SY())return;clearTimeout(syKickT);syKickT=setTimeout(()=>{if(syBusy){syKick();return}if(myDirty()||katDirty())sySync()},2500)}
