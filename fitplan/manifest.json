@@ -48,5 +48,20 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Einkaufen",
+      "short_name": "Einkaufen",
+      "description": "Einkaufsliste im Vollbild öffnen",
+      "url": "./?einkaufen",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

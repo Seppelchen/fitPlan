@@ -149,3 +149,8 @@ label.ck{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:15px}l
 .cam video{width:100%;height:100%;object-fit:cover;display:block}
 .cam .fr{position:absolute;left:6%;right:6%;top:30%;bottom:30%;border:3px solid rgba(255,255,255,.9);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
 .cam .ln{position:absolute;left:9%;right:9%;top:50%;height:2px;background:#ff5252}
+/* Schwebender Einkaufen-Knopf (alle Tabs), Zahl = offene Artikel */
+.fab{position:fixed;right:max(16px,calc(50% - 304px));bottom:calc(70px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:#fff;font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.28);z-index:6}
+.fab:active{transform:scale(.94)}
+.fab b{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--warn);color:#fff;font-size:12px;line-height:22px;font-weight:700;display:none;box-shadow:0 0 0 2px var(--bg)}
+body.kb .fab{display:none}

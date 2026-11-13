@@ -28,5 +28,12 @@ function shopClose(fromPop){if(!shopOn)return;shopOn=false;$("shopm").classList.
 window.addEventListener("popstate",()=>{if(shopOn)shopClose(true)});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")shopWake()});
 $("ekgo").onclick=shopOpen;$("smx").onclick=()=>shopClose();
+// Schwebender 🛒-Knopf in allen Tabs: öffnet den Einkaufsmodus, die Zahl zeigt die offenen Artikel
+$("shopfab").onclick=shopOpen;
+// Beim Tippen (Tastatur offen) ausblenden, damit er keine Eingabefelder verdeckt
+document.addEventListener("focusin",e=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="checkbox")document.body.classList.add("kb")});
+document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))document.body.classList.remove("kb")},50));
+function shopFab(){let n=0;try{shopSecs().forEach(s=>s.items.forEach(g=>{if(!g.c)n++}))}catch(e){}const b=$("shopfabn");b.textContent=n>99?"99+":n;b.style.display=n?"block":"none";
+  $("shopfab").setAttribute("aria-label","Einkaufen – nur die Liste"+(n?", "+n+" offen":""))}
 $("sma").onclick=()=>{const n=$("smi").value.trim();if(!n)return;$("smi").value="";ekAdd(n);toast("„"+n+"“ eingetragen")};
 $("smi").onkeydown=e=>{if(e.key==="Enter")$("sma").click()};

@@ -81,7 +81,7 @@ function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=100
 const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};E.sh=E.sh||{};return E};
 const hid=(M,o)=>o.key in M&&M[o.key]===(o.a??0);
 const visItems=E=>shopItems().filter(o=>!hid(E.hd,o)&&!hid(E.sh,o));
-function renderShop(){renderShopList();renderShopMode()}
+function renderShop(){renderShopList();renderShopMode();if(typeof shopFab==="function")shopFab()}
 /* Einkaufsliste nach Kategorien: gleiche Artikel aus allen Quellen (Plan, Plan der anderen, eigene Einträge,
    FamilyWall) ergeben eine Zeile, Mengen je Einheit addiert – „150 ml Milch“ + „350 ml Milch 1,5 %“ = „500 ml Milch“. */
 const SHX=/\b(fettarme?|frische?|kalte?|warme?|gekochte?|ungesüßte?|natur|light|bio|gemischt|tk)\b/g;

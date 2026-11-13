@@ -11,6 +11,7 @@ function shareIn(ti,tx,u,files){const f=(files||[]).find(x=>/BEGIN:VCALENDAR|BEG
   if(!t){if(files&&files.length)toast("Diese Datei kann FitPlan nicht lesen");return}
   if(looksCal(t)){famTab="cal";show("fam");calImport(t)}else{show("plan");fwSheet(t)}}
 (()=>{const q=new URLSearchParams(location.search);
+  if(q.has("einkaufen")){history.replaceState(null,"",location.pathname);shopOpen();return}  // App-Verknüpfung „Einkaufen“
   if(q.has("shared")){history.replaceState(null,"",location.pathname);
     if(window.caches)caches.open("fitplan-share").then(c=>c.match("share-inbox").then(r=>r&&r.json().then(o=>{c.delete("share-inbox");shareIn(o.title||"",o.text||"",o.url||"",o.files||[])}))).catch(()=>{});return}
   const tx=q.get("text")||"",ti=q.get("title")||"",u=q.get("url")||"";if(!tx&&!ti&&!u)return;history.replaceState(null,"",location.pathname);shareIn(ti,tx,u)})();

@@ -219,8 +219,13 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 ## Einkaufsmodus
 
-- **Plan → Einkaufsliste → 🛒 Einkaufen – nur die Liste** öffnet die Liste im Vollbild, mit großen
-  Zeilen zum Abhaken mit einem Finger.
+- **Am schnellsten: der runde 🛒-Knopf** unten rechts – er ist in jedem Tab da. Die Zahl daran zeigt,
+  wie viele Artikel noch offen sind. Beim Tippen in ein Eingabefeld blendet er sich kurz aus.
+- **Android:** Lange auf das FitPlan-Symbol auf dem Startbildschirm drücken → **Einkaufen** öffnet die
+  Liste direkt. Die Verknüpfung lässt sich auch als eigenes Symbol auf den Startbildschirm ziehen.
+  (Erscheint erst, nachdem FitPlan das Update geladen hat – evtl. App einmal schließen und neu öffnen.)
+- Oder wie bisher **Plan → Einkaufsliste → 🛒 Einkaufen – nur die Liste**. Die Liste öffnet im Vollbild,
+  mit großen Zeilen zum Abhaken mit einem Finger.
 - Alles steht in einer Ansicht, nach Kategorien sortiert und gleiche Artikel zusammengefasst: gemeinsame
   Liste, FamilyWall-Artikel, Zutaten aus dem Plan und eigene Einträge.
 - Abgehaktes wandert nach unten in **✓ Im Wagen**. Antippen klappt es auf, dort lässt sich ein Haken
