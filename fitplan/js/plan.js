@@ -82,46 +82,66 @@ const ekOf=wk=>{const E=S.ek[wk]||{c:{},x:[]};E.hd=E.hd||{};E.sh=E.sh||{};return
 const hid=(M,o)=>o.key in M&&M[o.key]===(o.a??0);
 const visItems=E=>shopItems().filter(o=>!hid(E.hd,o)&&!hid(E.sh,o));
 function renderShop(){renderShopList();renderShopMode()}
+/* Einkaufsliste nach Kategorien: gleiche Artikel aus allen Quellen (Plan, Plan der anderen, eigene Einträge,
+   FamilyWall) ergeben eine Zeile, Mengen je Einheit addiert – „150 ml Milch“ + „350 ml Milch 1,5 %“ = „500 ml Milch“. */
+const SHX=/\b(fettarme?|frische?|kalte?|warme?|gekochte?|ungesüßte?|natur|light|bio|gemischt|tk)\b/g;
+function shopCn(n){const s=String(n).toLowerCase().replace(/\([^)]*\)/g," ").replace(/\d+(?:[.,]\d+)?\s*%/g," ").replace(SHX," ").replace(/\s+/g," ").trim();
+  return(s||String(n).toLowerCase()).split(" ").map(w=>w==="eier"?"ei":w.length>4&&/(en|ln|rn)$/.test(w)?w.slice(0,-1):w).join(" ")}
+// Reihenfolge wie im Supermarkt; geprüft wird in der Reihenfolge von SHC (z. B. „passierte Tomaten“ vor „Tomate“)
+const SHO=["Obst & Gemüse","Brot & Backwaren","Milchprodukte & Eier","Fleisch, Fisch & Tofu","Nudeln, Reis & Trockenware","Konserven & Soßen","Gewürze, Öl & Backen","Tiefkühl","Süßes & Snacks","Getränke","Haushalt & Drogerie"];
+const SHC=[["Haushalt & Drogerie",/spül|wasch|reinig|putz|toilettenpapier|klopapier|küchenrolle|küchenpapier|müllbeutel|müllsäcke|zahnpasta|zahnbürste|shampoo|duschgel|seife|deo|windel|taschentüch|alufolie|frischhaltefolie|backpapier|schwamm|batterie|kerze|tabs\b/],
+  ["Tiefkühl",/tiefkühl|\btk\b|pommes|fischstäbchen|\beis\b|eiscreme|tiefgefroren/],
+  ["Getränke",/wasser|saft|schorle|\bcola|limo|\bbier|\bwein\b|kaffee|\btee\b|sprudel|eistee/],
+  ["Konserven & Soßen",/passiert|tomatenmark|stückige tomaten|\bdose|soße|sauce|ketchup|senf|mayo|remoulade|brühe|\bfond|pesto|kokosmilch|apfelmus|gewürzgurke|essiggurke|sojasoße|sojasauce|dressing|marmelade|konfitüre|erdnussmus|nussmus|hummus/],
+  ["Gewürze, Öl & Backen",/\bsalz|pfeffer|gewürz|paprikapulver|currypulver|\bcurry\b|zimt|muskat|oregano|thymian|rosmarin|kurkuma|kreuzkümmel|kümmel|chili|cayenne|majoran|lorbeer|öl\b|essig|zucker|honig|sirup|backpulver|natron|hefe|vanille|kakao|stärke|puderzucker|süßstoff|sesam|brühwürfel/],
+  ["Süßes & Snacks",/schoko|keks|\bchips|gummi|bonbon|riegel|praline|nougat|popcorn|salzstangen|kekse/],
+  ["Milchprodukte & Eier",/(^|\s)ei$|(^|\s)eier$|milch(?!reis)|joghurt|quark|skyr|käse|feta|mozzarella|parmesan|gouda|sahne|schmand|butter|kefir|margarine|crème|creme|haferdrink|sojadrink|mandeldrink|drink\b|ayran/],
+  ["Fleisch, Fisch & Tofu",/fleisch|hack|hähnchen|huhn|hühn|pute|\brind|schwein|schnitzel|wurst|würstchen|salami|schinken|speck|bacon|lachs|fisch|thunfisch|garnele|shrimp|filet|geschnetzelt|gyros|tofu|tempeh|frikadelle|leberkäse|kassler|kotelett|steak|jagdwurst/],
+  ["Brot & Backwaren",/brot|brötchen|toast|baguette|brezel|croissant|knäcke|wrap|tortilla|fladen|semmel|kuchen|zwieback|laugen/],
+  ["Nudeln, Reis & Trockenware",/nudel|pasta|spaghetti|penne|fusilli|lasagne|\breis|milchreis|couscous|bulgur|quinoa|hafer|flocken|müsli|granola|mehl|grieß|polenta|linse|kichererbse|chia|leinsamen|nüsse|nuss|mandel|walnuss|cashew|erdnüss|samen|kerne|rosinen|datteln|spätzle|gnocchi|cornflakes/],
+  ["Obst & Gemüse",/apfel|äpfel|banane|birne|orange|mandarine|clementine|zitrone|limette|kiwi|beere|traube|ananas|mango|melone|pfirsich|nektarine|pflaume|kirsche|avocado|tomate|gurke|paprika|karotte|möhre|brokkoli|blumenkohl|zucchini|spinat|salat|rucola|kohl|zwiebel|knoblauch|lauch|porree|sellerie|kartoffel|pilz|champignon|aubergine|kürbis|radieschen|ingwer|petersilie|basilikum|schnittlauch|dill|koriander|minze|kräuter|obst|gemüse|\bmais|erbse|bohne|fenchel|spargel|rote bete|feldsalat|eisberg|grapefruit|feige|rhabarber|physalis|granatapfel|süßkartoffel/]];
+const shopCat=n=>{const s=String(n).toLowerCase();for(const [c,re] of SHC)if(re.test(s))return c;return"Sonstiges"};
+// Alle Einträge aller Quellen → Kategorien mit zusammengefassten Zeilen [{t, items:[{label,sub,c,set(v),del()}]}]
+function shopSecs(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto(),R=[],keep=()=>{S.ek[wk]=E;save()};
+  const one=t=>{const p=parseZ(t);return p.length===1&&p[0].a!=null?p[0]:{a:null,u:"",n:t}};
+  const add=(it,c,set,del,src,g,m)=>R.push({n:it.n,a:it.a,u:it.u||"",c:!!c,set,del,src,g,m:m||0,w:it.w});
+  if(sy)syVis(sy).forEach(x=>{const mine=syMe(sy,x.d),who=x.b||"der anderen Person";
+    const it=x.p&&x.nn?{n:x.nn,a:x.a==null||x.a===""?null:num(x.a),u:x.u||""}:one(x.n);if(x.w)it.w=1;
+    add(it,x.c,v=>syOp({id:x.id,f:"c",v}),()=>syDel(x),x.f?"FamilyWall":x.p?(mine?"aus deinem Plan":"Plan von "+who):mine?"":"von "+who,x.g)});
+  if(!auto)visItems(E).forEach(o=>add({n:o.n,a:o.a,u:o.u,w:o.a==null},E.c[o.key],v=>{if(v)E.c[o.key]=1;else delete E.c[o.key];keep()},()=>{E.hd[o.key]=o.a??0;delete E.c[o.key];keep()},sy?"aus deinem Plan · nur hier":"",null,o.s.size));
+  E.x.forEach(x=>add(one(x.n),x.c,v=>{x.c=v;keep()},()=>{E.x=E.x.filter(y=>y!==x);keep()},""));
+  if(S.fw)S.fw.items.forEach(x=>add(one(x.n),x.c,v=>{x.c=v;save()},()=>{if(!S.fw)return;S.fw.items=S.fw.items.filter(y=>y!==x);if(!S.fw.items.length)S.fw=null;save()},"FamilyWall",x.g));
+  const G={};R.forEach(r=>{const k=shopCn(r.n);(G[k]=G[k]||[]).push(r)});
+  const secs={};Object.values(G).forEach(rs=>{const sum={};rs.forEach(r=>{if(r.a!=null&&r.a>0)sum[r.u]=(sum[r.u]||0)+r.a});const us=Object.keys(sum);
+    // Name: kürzeste Form („Milch“ statt „Milch 1,5 %“), bei Stückzahl über 1 die Mehrzahl („3 Bananen“)
+    const ns=rs.map(r=>r.n).sort((a,b)=>a.length-b.length),n=us.length===1&&us[0]===""&&sum[""]>1?ns[ns.length-1]:ns[0];
+    const label=!us.length?n:us.length===1?shopLabel({a:sum[us[0]],u:us[0],n}):us.map(u=>shopLabel({a:sum[u],u,n:""}).trim()).join(" + ")+" "+n;
+    const src=[...new Set(rs.map(r=>r.src).filter(Boolean))],m=rs.reduce((a,r)=>a+r.m,0);if(m>1&&!sy)src.push("für "+m+" Mahlzeiten");
+    let t=shopCat(n);if(t==="Sonstiges"){const g=rs.map(r=>r.g).find(g=>g&&g!=="Sonstiges");if(g)t=g;else if(rs.every(r=>r.w))t="Gewürze, Öl & Backen"}
+    (secs[t]=secs[t]||[]).push({label,sub:src.join(" · "),c:rs.every(r=>r.c),set:v=>rs.forEach(r=>r.set(v)),del:()=>rs.forEach(r=>r.del()),sk:shopCn(n)})});
+  const rk=t=>{const i=SHO.indexOf(t);return i>=0?i:t==="Sonstiges"?99:50};
+  return Object.keys(secs).sort((a,b)=>rk(a)-rk(b)||a.localeCompare(b,"de")).map(t=>({t,items:secs[t].sort((a,b)=>(a.c-b.c)||a.sk.localeCompare(b.sk,"de"))}))}
 function renderShopList(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto();
   const ch=$("ekm");ch.innerHTML="";ch.style.display=auto?"none":"";[["w",prd().auto?"Ganze Woche":"Ganzer Zeitraum"],["r","Ab heute"]].forEach(([v,l])=>{const b=el("button",v===ekMode?"on":"",l);b.onclick=()=>{ekMode=v;renderShop()};ch.appendChild(b)});
-  const its=auto?[]:visItems(E),nh=auto?0:shopItems().filter(o=>hid(E.hd,o)&&!hid(E.sh,o)).length,L=$("ekl");L.innerHTML="";
+  const nh=auto?0:shopItems().filter(o=>hid(E.hd,o)&&!hid(E.sh,o)).length,L=$("ekl");L.innerHTML="";
   $("eksy").textContent=sy?"👥 Gemeinsame Liste verwalten":"👥 Mit anderem Handy teilen";
-  const FW=S.fw&&S.fw.items.length?S.fw:null,keep=()=>{S.ek[wk]=E;save()};
-  const restore=()=>{if(!nh)return;const b=el("button","full","↺ "+nh+(nh===1?" gelöschte Zutat":" gelöschte Zutaten")+" aus dem Plan wieder anzeigen");b.style.cssText="margin-top:10px;font-size:13px";b.onclick=()=>{E.hd={};keep();renderShop()};L.appendChild(b)};
-  if(!sy&&!its.length&&!E.x.length&&!FW){L.innerHTML='<p class="sm" style="margin:0">'+(nh?'Die Liste ist leer.':'Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch.')+'</p>';restore();return}
-  const row=(label,sub,on,tog,del)=>{const r=el("div","ek"+(on?" ok":""),'<input type="checkbox"'+(on?' checked':'')+'><div class="t" style="flex:1;min-width:0">'+esc(label)+(sub?'<div class="sm">'+sub+'</div>':'')+'</div>');
-    r.onclick=e=>{if(e.target.tagName==="BUTTON")return;tog();keep();renderShop()};
-    if(del){const b=el("button","ic","✕");b.setAttribute("aria-label","Entfernen");b.onclick=()=>{del();keep();renderShop()};r.appendChild(b)}L.appendChild(r)};
-  const srt=(a,b)=>(!!E.c[a.key]-!!E.c[b.key])||a.n.localeCompare(b.n,"de");
-  const wa=its.filter(o=>o.a!=null).sort(srt),wo=its.filter(o=>o.a==null).sort(srt);
+  const restore=()=>{if(!nh)return;const b=el("button","full","↺ "+nh+(nh===1?" gelöschte Zutat":" gelöschte Zutaten")+" aus dem Plan wieder anzeigen");b.style.cssText="margin-top:10px;font-size:13px";b.onclick=()=>{E.hd={};S.ek[wk]=E;save();renderShop()};L.appendChild(b)};
+  const secs=shopSecs();
   if(sy){const h=el("div","gh",'<span>👥 Gemeinsame Liste</span><span class="sm" id="syst"></span>');h.style.marginTop="0";L.appendChild(h);
-    const all=syVis(sy).sort((a,b)=>(!!a.c-!!b.c)||(a.t||0)-(b.t||0)),sh=all.filter(x=>!x.f&&!x.p),fw=all.filter(x=>x.f),pl=all.filter(x=>x.p).sort((a,b)=>(!!a.c-!!b.c)||a.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,"").localeCompare(b.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,""),"de"));
-    if(!all.length)L.appendChild(el("p","sm",auto?"Noch leer. Plane oben Rezepte ein – die Zutaten landen automatisch hier, auch auf dem anderen Handy.":"Noch leer. Neue Einträge unten landen hier – auch auf dem anderen Handy.")).style.margin="6px 0 0";
-    const srow=x=>{const mine=syMe(sy,x.d),who=x.b&&!mine?esc(x.b):"";
-      row(x.n,x.f?"":x.p?(mine?"aus deinem Plan":"aus dem Plan von "+(who||"der anderen Person")):who?"von "+who:"",!!x.c,()=>syOp({id:x.id,f:"c",v:!x.c}),()=>syDel(x))};
-    sh.forEach(srow);
-    const pa=pl.filter(x=>!x.w),pw=pl.filter(x=>x.w);
-    if(pa.length){const h=el("div","gh","<span>🗓️ Aus dem Plan</span><span></span>");h.style.marginTop="18px";L.appendChild(h);pa.forEach(srow)}
-    if(pw.length){L.appendChild(el("div","gh","<span>Vorrat & Gewürze</span><span></span>"));pw.forEach(srow)}
-    if(fw.length){const h=el("div","gh",'<span>📋 FamilyWall · gemeinsam</span>');const rb=el("button","","Entfernen");rb.style.cssText="font-size:12px;padding:2px 10px";
-      rb.onclick=()=>{if(!confirm("FamilyWall-Artikel auf beiden Handys aus der Liste nehmen?"))return;const old=fw.map(x=>{const{id,...v}=x;return{id,v}});old.forEach(o=>syOp({id:o.id,v:null}));renderShop();
-        toast("FamilyWall-Liste entfernt",()=>{if(SY()===sy){old.forEach(syOp);renderShop()}})};
-      h.appendChild(rb);h.style.cssText="margin-top:18px;align-items:center";L.appendChild(h);
-      const gs=[];fw.forEach(x=>{const g=x.g||"Sonstiges";if(!gs.includes(g))gs.push(g)});gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"));
-      gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";fw.filter(x=>(x.g||"Sonstiges")===g).forEach(srow)})}
-    syStat();
-    const open=its.filter(o=>!E.c[o.key]).length;
-    if(its.length){const h2=el("div","gh",'<span>🗓️ Aus deinem Plan · nur hier</span>');h2.style.cssText="margin-top:18px;align-items:center";
-      if(open){const b=el("button","pri","↑ "+open+" teilen");b.style.cssText="font-size:12px;padding:4px 10px";b.onclick=()=>syPushPlan(E);h2.appendChild(b)}L.appendChild(h2)}}
-  wa.forEach(o=>row(shopLabel(o),o.s.size>1?"für "+o.s.size+" Mahlzeiten":"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}));
-  if(wo.length){L.appendChild(el("div","gh","<span>Vorrat & Gewürze</span><span></span>"));wo.forEach(o=>row(o.n,"",!!E.c[o.key],()=>{if(E.c[o.key])delete E.c[o.key];else E.c[o.key]=1}))}
-  if(E.x.length){L.appendChild(el("div","gh","<span>Eigene Einträge</span><span></span>"));E.x.forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{E.x=E.x.filter(y=>y!==x)}))}
-  if(FW){const h=el("div","gh",'<span>📋 FamilyWall-Liste vom '+dd(FW.at)+'</span>');const rb=el("button","","Entfernen");rb.style.cssText="font-size:12px;padding:2px 10px";
-    rb.onclick=()=>{const old=S.fw;S.fw=null;save();renderShop();toast("FamilyWall-Liste entfernt",()=>{S.fw=old;save();renderShop()})};h.appendChild(rb);h.style.marginTop="18px";h.style.alignItems="center";L.appendChild(h);
-    const gs=[];FW.items.forEach(x=>{if(!gs.includes(x.g))gs.push(x.g)});gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"));
-    gs.forEach(g=>{L.appendChild(el("p","lb",esc(g))).style.margin="10px 0 0";
-      FW.items.filter(x=>x.g===g).sort((a,b)=>a.c-b.c).forEach(x=>row(x.n,"",x.c,()=>{x.c=!x.c},()=>{FW.items=FW.items.filter(y=>y!==x)}))})}
-  restore()}
+    const open=auto?0:visItems(E).filter(o=>!E.c[o.key]).length;
+    if(open){const d=el("div","",'<span class="sm" style="flex:1">🗓️ '+open+(open===1?' Zutat':' Zutaten')+' aus deinem Plan stehen nur hier</span>');d.style.cssText="display:flex;align-items:center;gap:8px;margin:6px 0 0";
+      const b=el("button","pri","↑ teilen");b.style.cssText="font-size:12px;padding:4px 10px";b.onclick=()=>syPushPlan(E);d.appendChild(b);L.appendChild(d)}}
+  if(!secs.length){L.appendChild(el("p","sm",sy?(auto?"Noch leer. Plane oben Rezepte ein – die Zutaten landen automatisch hier, auch auf dem anderen Handy.":"Noch leer. Neue Einträge oben landen hier – auch auf dem anderen Handy."):nh?"Die Liste ist leer.":"Plane oben Rezepte ein – die Zutaten erscheinen dann hier automatisch. Eigenes trägst du oben ein.")).style.margin=sy?"6px 0 0":"0";if(sy)syStat();restore();return}
+  const row=g=>{const r=el("div","ek"+(g.c?" ok":""),'<input type="checkbox"'+(g.c?' checked':'')+'><div class="t" style="flex:1;min-width:0">'+esc(g.label)+(g.sub?'<div class="sm">'+esc(g.sub)+'</div>':'')+'</div>');
+    r.onclick=e=>{if(e.target.tagName==="BUTTON")return;g.set(!g.c);save();renderShop()};
+    const b=el("button","ic","✕");b.setAttribute("aria-label","Entfernen");b.onclick=()=>{g.del();save();renderShop()};r.appendChild(b);L.appendChild(r)};
+  secs.forEach((s,i)=>{const open=s.items.filter(g=>!g.c).length,h=el("div","gh",'<span>'+esc(s.t)+'</span><span class="sm">'+(open?open+" offen":"✓")+'</span>');if(i===0&&!sy)h.style.marginTop="0";L.appendChild(h);s.items.forEach(row)});
+  const fwN=sy?syVis(sy).filter(x=>x.f):S.fw?S.fw.items:[];
+  if(fwN.length){const b=el("button","full","📋 FamilyWall-Artikel entfernen ("+fwN.length+")");b.style.cssText="margin-top:12px;font-size:13px";
+    b.onclick=()=>{if(sy){if(!confirm("FamilyWall-Artikel auf allen Handys aus der Liste nehmen?"))return;const old=fwN.map(x=>{const{id,...v}=x;return{id,v}});old.forEach(o=>syOp({id:o.id,v:null}));renderShop();
+        toast("FamilyWall-Artikel entfernt",()=>{if(SY()===sy){old.forEach(syOp);renderShop()}})}
+      else{const old=S.fw;S.fw=null;save();renderShop();toast("FamilyWall-Liste entfernt",()=>{S.fw=old;save();renderShop()})}};L.appendChild(b)}
+  if(sy)syStat();restore()}
 function shopBulk(all){const sy=SY(),auto=syAuto();if(all&&sy&&syVis(sy).length&&!confirm("Die gemeinsame Liste wird auch auf dem anderen Handy geleert. Fortfahren?"))return;
   const wk=ekK(),E=ekOf(wk),bak=JSON.stringify({E,fw:S.fw});let n=0;const go=x=>all||x;
   if(!auto)visItems(E).forEach(o=>{if(go(E.c[o.key])){E.hd[o.key]=o.a??0;delete E.c[o.key];n++}});
@@ -190,7 +210,7 @@ $("eka").onclick=()=>{const n=$("eki").value.trim();if(!n)return;$("eki").value=
 $("eki").onkeydown=e=>{if(e.key==="Enter")$("eka").click()};
 $("ekr").onclick=()=>{const wk=ekK(),E=S.ek[wk];if(E){E.c={};E.x.forEach(x=>x.c=false)}if(S.fw)S.fw.items.forEach(x=>x.c=false);const sy=SY();if(sy)syVis(sy).forEach(x=>{if(x.c)syOp({id:x.id,f:"c",v:false})});save();renderShop();toast("Haken zurückgesetzt")};
 $("eksh").onclick=()=>{const wk=ekK(),E=ekOf(wk);
-  const lines=(syAuto()?[]:visItems(E)).filter(o=>!E.c[o.key]).sort((a,b)=>(a.a==null)-(b.a==null)||a.n.localeCompare(b.n,"de")).map(shopLabel).concat(SY()?syVis(SY()).filter(x=>!x.c).sort((a,b)=>(a.t||0)-(b.t||0)).map(x=>x.n):[],E.x.filter(x=>!x.c).map(x=>x.n),S.fw?S.fw.items.filter(x=>!x.c).map(x=>x.n):[]);
+  const lines=[];shopSecs().forEach(s=>s.items.forEach(g=>{if(!g.c)lines.push(g.label)}));  // nach Kategorien, gleiche Artikel zusammengefasst
   if(!lines.length){toast("Nichts mehr offen");return}
   const W=weekKeys(),boxed="Einkaufsliste "+(prd().auto?"KW "+kw(wk):dd(W[0])+" – "+dd(W[W.length-1]))+"\n"+lines.map(l=>"☐ "+l).join("\n"),plain=lines.join("\n");
   const copy=t=>{const ok=()=>{toast("Liste kopiert – jetzt einfügen")},show=()=>{$("ekx").style.display="";$("ekx").value=t;$("ekx").select();toast("Text markiert – jetzt kopieren")};

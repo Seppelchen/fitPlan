@@ -82,13 +82,15 @@ const syDel=x=>x.p?syOp({id:x.id,f:"x",v:true}):syOp({id:x.id,v:null});
 // Automatik: Zutaten des gewählten Zeitraums ↔ eigene Plan-Einträge der gemeinsamen Liste (nur bei Änderungen schreiben)
 // Nur bei sichtbarem Plan (bzw. Einkaufsmodus): es gilt der dort gezeigte Zeitraum
 function syAutoPlan(){const s=SY();if(!s||s.ap===false||view!=="plan"&&!shopOn)return;const want={},t=Date.now();let i=0;
-  const who=syWho(s);shopItems(true).forEach(o=>{want["p"+syHash(who+"|"+o.key)]={n:o.a==null?o.n:shopLabel(o),w:o.a==null}});
-  Object.entries(want).forEach(([id,w])=>{const cur=s.it[id];if(cur&&cur.n===w.n)return;
-    const v={n:w.n,c:false,b:s.name||"",d:who,p:true,t:t+i++};if(w.w)v.w=true;syOp({id,v})});
+  const who=syWho(s);shopItems(true).forEach(o=>{want["p"+syHash(who+"|"+o.key)]={n:o.a==null?o.n:shopLabel(o),w:o.a==null,o}});
+  Object.entries(want).forEach(([id,w])=>{const cur=s.it[id];if(cur&&cur.n===w.n&&cur.nn)return;
+    const v={n:w.n,c:false,b:s.name||"",d:who,p:true,t:t+i++,...syAmt(w.o)};if(cur&&cur.n===w.n)v.c=!!cur.c;if(w.w)v.w=true;syOp({id,v})});
   Object.entries(s.it).forEach(([id,x])=>{if(x.p&&syMe(s,x.d)&&!want[id])syOp({id,v:null})})}
+// Menge, Einheit und Name einer Plan-Zutat (andere Handys fassen gleiche Artikel damit zusammen)
+const syAmt=o=>({nn:o.n,u:o.u||"",...(o.a!=null?{a:String(Math.round(o.a*100)/100)}:{})});
 // Offene Plan-Zutaten in die gemeinsame Liste – gleiche Zutat aus demselben Plan wird aktualisiert statt verdoppelt
 function syPushPlan(E){const s=SY(),wk=ekK(),its=visItems(E).filter(o=>!E.c[o.key]);if(!s||!its.length)return;const ids=[],t=Date.now();
-  its.forEach((o,i)=>{const id="p"+syHash(syWho(s)+"|"+o.key);ids.push([id,o.key]);syOp({id,v:{n:shopLabel(o),c:false,b:s.name,d:syWho(s),p:true,t:t+i}});E.sh[o.key]=o.a??0});
+  its.forEach((o,i)=>{const id="p"+syHash(syWho(s)+"|"+o.key);ids.push([id,o.key]);syOp({id,v:{n:shopLabel(o),c:false,b:s.name,d:syWho(s),p:true,t:t+i,...syAmt(o)}});E.sh[o.key]=o.a??0});
   S.ek[wk]=E;save();renderShop();
   toast(its.length+(its.length===1?" Zutat":" Zutaten")+" geteilt",()=>{if(SY()!==s)return;ids.forEach(([id,k])=>{syOp({id,v:null});delete E.sh[k]});save();renderShop()})}
 // FamilyWall-Artikel in die gemeinsame Liste: gleiche Artikel (Name) von beiden Handys ergeben einen Eintrag.

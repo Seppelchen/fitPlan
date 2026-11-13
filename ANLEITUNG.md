@@ -201,12 +201,28 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Einmal gescannte Produkte merkt sich FitPlan – sie funktionieren danach auch ohne Internet.
 - Klappt die Kamera nicht, die Nummer unter dem Barcode einfach eintippen.
 
+## Einkaufsliste: zusammengefasst und nach Kategorien
+
+- **Gleiche Artikel ergeben einen Eintrag** – egal ob aus verschiedenen Rezepten, aus dem Plan der anderen
+  Person, als eigener Eintrag oder aus FamilyWall. Die Mengen werden addiert: 150 ml Milch + 350 ml
+  Milch 1,5 % = **500 ml Milch**. Zusätze wie „1,5 %“, „fettarm“, „natur“ oder „TK“ und Einzahl/Mehrzahl
+  („Banane“/„2 Bananen“) zählen dabei als derselbe Artikel. Verschiedene Einheiten stehen in einer Zeile
+  („400 g + 1 Dose Tomaten“). Darunter steht klein, woher der Artikel kommt („aus deinem Plan · Plan von Ben“).
+- **Sortiert nach Kategorien** in Supermarkt-Reihenfolge: Obst & Gemüse, Brot & Backwaren, Milchprodukte &
+  Eier, Fleisch, Fisch & Tofu, Nudeln, Reis & Trockenware, Konserven & Soßen, Gewürze, Öl & Backen,
+  Tiefkühl, Süßes & Snacks, Getränke, Haushalt & Drogerie, Sonstiges. Neben jeder Kategorie steht, wie
+  viel noch offen ist. Abgehaktes rutscht innerhalb der Kategorie nach unten.
+- Abhaken oder ✕ wirkt auf alle zusammengefassten Einträge (bei gemeinsamer Liste auf allen Handys).
+- **Neue Einträge** tippst du oben direkt über der Liste ein, gern mit Menge („1 l Milch“) – dann wird
+  auch das mit gleichen Artikeln zusammengerechnet.
+- Einkaufsmodus und **Exportieren** nutzen dieselbe Sortierung.
+
 ## Einkaufsmodus
 
 - **Plan → Einkaufsliste → 🛒 Einkaufen – nur die Liste** öffnet die Liste im Vollbild, mit großen
   Zeilen zum Abhaken mit einem Finger.
-- Alles steht in einer Ansicht: gemeinsame Liste, FamilyWall-Artikel nach Kategorien, Zutaten aus dem
-  Plan und eigene Einträge.
+- Alles steht in einer Ansicht, nach Kategorien sortiert und gleiche Artikel zusammengefasst: gemeinsame
+  Liste, FamilyWall-Artikel, Zutaten aus dem Plan und eigene Einträge.
 - Abgehaktes wandert nach unten in **✓ Im Wagen**. Antippen klappt es auf, dort lässt sich ein Haken
   wieder entfernen. Direkt nach dem Abhaken geht es auch über „Rückgängig“.
 - Oben zeigt ein Balken, wie viel schon erledigt ist. Unten kann man schnell noch etwas eintragen.

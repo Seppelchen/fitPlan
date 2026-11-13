@@ -3,21 +3,8 @@
    Alle Quellen (gemeinsame Liste, Plan, eigene Einträge, FamilyWall) in einer Ansicht. Offene Artikel
    oben nach Abschnitten, Abgehaktes wandert nach unten in „Im Wagen“. */
 let shopOn=false,shopWL=null,shopDoneOpen=false;
-function shopModel(){const wk=ekK(),E=ekOf(wk),sy=SY(),secs=[],keep=()=>{S.ek[wk]=E;save()};
-  const sec=(t,items)=>{if(items.length)secs.push({t,items})};
-  const grp=(arr,gf)=>{const gs=[];arr.forEach(x=>{const g=gf(x);if(!gs.includes(g))gs.push(g)});return gs.sort((a,b)=>(a==="Sonstiges")-(b==="Sonstiges"))};
-  if(sy){const all=syVis(sy).sort((a,b)=>(a.t||0)-(b.t||0)),pl=all.filter(x=>x.p).sort((a,b)=>a.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,"").localeCompare(b.n.replace(/^[\d.,½¼¾]+\s*\S*\s/,""),"de"));
-    const it=x=>({n:x.n,sub:x.f||!x.b||syMe(sy,x.d)?"":(x.p?"aus dem Plan von ":"von ")+x.b,c:!!x.c,set:v=>syOp({id:x.id,f:"c",v})});
-    sec("Gemeinsam",all.filter(x=>!x.f&&!x.p).map(it));
-    sec("Aus dem Plan",pl.filter(x=>!x.w).map(it));sec("Vorrat & Gewürze",pl.filter(x=>x.w).map(it));
-    const fw=all.filter(x=>x.f);grp(fw,x=>x.g||"Sonstiges").forEach(g=>sec(g,fw.filter(x=>(x.g||"Sonstiges")===g).map(it)))}
-  const its=syAuto()?[]:visItems(E),by=(a,b)=>a.n.localeCompare(b.n,"de");
-  const pi=o=>({n:o.a==null?o.n:shopLabel(o),sub:"",c:!!E.c[o.key],set:v=>{if(v)E.c[o.key]=1;else delete E.c[o.key];keep()}});
-  sec(sy?"Aus deinem Plan · nur hier":"Aus dem Plan",its.filter(o=>o.a!=null).sort(by).map(pi));
-  sec("Vorrat & Gewürze",its.filter(o=>o.a==null).sort(by).map(pi));
-  sec("Eigene Einträge",E.x.map(x=>({n:x.n,sub:"",c:!!x.c,set:v=>{x.c=v;keep()}})));
-  if(S.fw&&S.fw.items.length)grp(S.fw.items,x=>x.g).forEach(g=>sec(g,S.fw.items.filter(x=>x.g===g).map(x=>({n:x.n,sub:"",c:!!x.c,set:v=>{x.c=v;save()}}))));
-  return secs}
+// Dieselben Kategorien und zusammengefassten Artikel wie in der Liste (shopSecs in plan.js)
+function shopModel(){return shopSecs().map(s=>({t:s.t,items:s.items.map(g=>({n:g.label,sub:g.sub,c:g.c,set:v=>{g.set(v);save()}}))}))}
 function renderShopMode(){if(!shopOn)return;const L=$("sml"),st=L.scrollTop,secs=shopModel(),done=[];let tot=0,dn=0;
   secs.forEach(s=>s.items.forEach(x=>{tot++;if(x.c)dn++}));
   $("smc").textContent=tot?dn+" von "+tot+" erledigt":"";$("smb").style.width=(tot?dn/tot*100:0)+"%";
