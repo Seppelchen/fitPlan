@@ -204,7 +204,7 @@ function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||
   const btn=t=>{$("qadd").textContent="＋ Eintragen"+(t?" · "+t:"")};
   const fill=()=>{const v=vals();btn(v?fmt(v.k)+" kcal":"");if(!v){QF.forEach(i=>$(i).value="");$("qai").textContent="";return}
     $("qk").value=r1(v.k);$("qp").value=r1(v.p);$("qkh").value=r1(v.kh);$("qfe").value=r1(v.fe);auto=true;$("qerr").textContent="";
-    const conv=sel.per===100&&un.u!==sel.u?"= "+nf(Math.round(v.b))+" "+(un.u==="g"||un.u==="ml"?un.u:sel.u)+" · ":"";
+    const conv=sel.per===100&&un.g>1?"= "+nf(Math.round(v.b))+" "+sel.u+" · ":"";
     $("qai").textContent=conv+(sel.per===100?"Werte je 100 "+sel.u+": ":"Werte für 1 Portion: ")+mline(sel.o.k,sel.o.p,sel.o.kh,sel.o.fe)+" – unten noch änderbar."};
   const units=()=>{const C=$("qus");C.innerHTML="";qUnits(sel).forEach(x=>{const b=el("button",x.u===un.u?"on":"",x.u);
     b.onclick=()=>{if(x.u===un.u)return;const v=vals(),bb=v?v.b:null;un=x;   // gleiche Menge, andere Einheit

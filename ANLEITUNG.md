@@ -170,6 +170,11 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - Rund 130 Grundnahrungsmittel (Obst, Gemüse, Brot, Milchprodukte …) sind fest eingebaut und
   funktionieren auch ohne Internet. Dabei sind typische Portionen wie „1 Stück · 150 g“.
 - Markenprodukte sucht FitPlan online bei Open Food Facts. Gesendet wird nur der Suchbegriff.
+- **Menge in Stück, g oder ml:** Beim Eintragen (auch nach dem Barcode-Scan und bei Zutaten fürs Rezept)
+  lässt sich neben der Menge die Einheit umschalten – Stück bzw. Scheibe, Glas, Portion …, g oder ml
+  (ml bei Getränken, Milch & Co., 1 ml ≈ 1 g). Umschalten rechnet die Menge um. FitPlan merkt sich die
+  zuletzt gewählte Menge. 30 oder mehr bei „Stück“ wird als Gramm gerechnet.
+  Bei Zutaten steht dann z. B. „2 Scheiben Vollkornbrot“ in der Zutatenliste.
 
 ## Rezept aus Zutaten berechnen
 

@@ -56,27 +56,37 @@ async function refreshMac(code){try{const r=await offFetch(code);if(!r.ok)return
   const I=$("pinfo");if(I&&I.dataset.code===code){I.innerHTML=pinfo(o);amountSheet.up()}}catch(e){}}
 const pinfo=o=>'pro 100 '+o.u+': '+fmt(o.k)+' kcal · Eiweiß '+d1(o.p)+' g'+(o.kh!=null?' · Kohlenhydrate '+d1(o.kh)+' g'+(o.zu!=null?' (davon Zucker '+d1(o.zu)+' g)':''):'')+(o.fe!=null?' · Fett '+d1(o.fe)+' g':'')+(o.bs!=null?' · Ballaststoffe '+d1(o.bs)+' g':'');
 function productSheet(code){amountSheet(S.bc[code],{code})}
-// Menge wählen und eintragen – oder bei pickCb als Zutat ans Rezept geben
-function amountSheet(o,op){op=op||{};const code=op.code,pk=!!pickCb,a0=o.lastA||o.sq||100;
+// Menge wählen und eintragen – oder bei pickCb als Zutat ans Rezept geben.
+// Einheit umschaltbar: Stück (bzw. Scheibe, Glas …), g oder ml (qUnits in sync-ich.js); gerechnet wird in g/ml.
+function amountSheet(o,op){op=op||{};const code=op.code,pk=!!pickCb,x={n:o.n,o,per:100,u:o.u||"g"},U=qUnits(x),base=U.find(z=>z.g===1)||U[0];
+  let un=U[0];if(o.lastA){const pc=U.find(z=>z.g>1&&Math.abs(o.lastA/z.g-Math.round(o.lastA/z.g*2)/2)<.01);un=un.g>1&&pc===un?un:base}  // zuletzt eingetragene Menge passt nicht zum Stück → g/ml
+  const a0=un.g>1?(o.lastA?Math.round(o.lastA/un.g*2)/2:1):o.lastA||o.sq||100;
   openSheet(pk?"Zutat":"Produkt",(op.back?'<button id="pbk" style="margin:0 0 10px;font-size:14px;padding:5px 12px">‹ Zurück zur Suche</button>':'')+
   '<div style="display:flex;gap:10px;align-items:center"><span class="fi">'+icOf(o)+'</span><b>'+esc(o.n)+'</b></div><p class="sm" id="pinfo" data-code="'+esc(code||"")+'" style="margin:2px 0 4px">'+pinfo(o)+'</p>'+
-  '<label class="f">Menge ('+o.u+')</label><input id="pa" type="number" inputmode="decimal" value="'+a0+'"><div class="chips" id="pac" style="margin:8px 0"></div>'+
+  '<label class="f">Menge</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="pa" type="number" inputmode="decimal" step="any" value="'+a0+'" style="flex:1;min-width:90px"><div class="chips" id="pus" style="margin:0"></div></div>'+
+  '<div class="chips" id="pac" style="margin:8px 0"></div><p class="sm" id="pcv" style="margin:0 0 8px"></p>'+
   '<div class="g2"><div class="mc"><div class="sm">Kalorien</div><b id="pk"></b></div><div class="mc"><div class="sm">Eiweiß</div><b id="pp"></b></div></div>'+mt3("pm_")+
   (pk?'':'<label class="f">Mahlzeit</label>'+mealSel("pm",guessMeal())+
   '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="pf" style="width:auto"> Mit dieser Menge als Favorit merken</label>')+
   '<button class="full pri" id="pok" style="margin-top:12px">'+(pk?'＋ Zum Rezept hinzufügen':'＋ Eintragen')+'</button><p class="err" id="pe"></p>'+
   (code?'<div class="g2" style="margin-top:8px"><button id="ped">Werte korrigieren</button><button id="pscan">'+(pk?'Andere scannen':'Nächster Scan')+'</button></div><p class="sm" style="margin:10px 0 0">Barcode '+esc(code)+' · Nährwerte: Open Food Facts bzw. eigene Angabe</p>'
     :'<p class="sm" style="margin:10px 0 0">Durchschnittswerte – je nach Sorte und Marke etwas anders. Für Markenprodukte lieber den Barcode scannen.</p>'),
-  ()=>{const ch=[...(o.sq?[o.sq]:[]),50,100,150,200].filter((x,i,a)=>a.indexOf(x)===i);
-    $("pac").innerHTML=ch.map(x=>'<button data-a="'+x+'">'+(x===o.sq?(o.sl||"Portion")+" · ":"")+fmt(x)+' '+o.u+'</button>').join("");
-    const up=()=>{const v=num($("pa").value);$("pk").textContent=v>0?fmt(o.k*v/100)+" kcal":"–";$("pp").textContent=v>0?d1(o.p*v/100)+" g":"–";mt3set("pm_",c=>v>0&&o[c]!=null?o[c]*v/100:null,d1);$("pac").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.a===v))};
-    $("pac").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("pa").value=b.dataset.a;$("pe").textContent="";up()});
-    $("pa").oninput=()=>{$("pe").textContent="";up()};up();amountSheet.up=up;
-    $("pok").onclick=()=>{const v=num($("pa").value);if(!(v>0&&v<5000)){$("pe").textContent="Gib die Menge ein.";return}
-      o.lastA=v;const pv=c=>o[c]!=null?o[c]*v/100:null;
+  ()=>{const amt=()=>num($("pa").value),gr=()=>amt()*un.g;  // Menge in der Einheit / in g bzw. ml
+    const units=()=>{const C=$("pus");C.innerHTML="";U.forEach(z=>{const b=el("button",z===un?"on":"",z.u);
+      b.onclick=()=>{if(z===un)return;const g=gr();un=z;$("pa").value=g>0?(z.g>1?Math.max(.5,Math.round(g/z.g*2)/2):Math.round(g)):(z.g>1?1:100);units();up()};C.appendChild(b)})};
+    const chips=()=>{const a=amt();let L;
+      if(un.g>1)L=(/^(EL|TL|Handvoll)$/.test(un.u)?[1,2,3,4]:[.5,1,2,3]).map(v=>[v,fq(v)+" "+qUL(un.u,v)+" · "+fmt(v*un.g)+" "+x.u]);
+      else{const sq=o.sq&&!U.some(z=>z.g>1);L=[...(sq?[[o.sq,(o.sl||"Portion")+" · "+fmt(o.sq)+" "+un.u]]:[]),...[50,100,150,200,250].filter(v=>!sq||v!==o.sq).map(v=>[v,fmt(v)+" "+un.u])]}
+      $("pac").innerHTML="";L.forEach(([v,l])=>{const b=el("button",v===a?"on":"",l);b.onclick=()=>{$("pa").value=v;$("pe").textContent="";up()};$("pac").appendChild(b)})};
+    const up=()=>{const v=gr();chips();$("pk").textContent=v>0?fmt(o.k*v/100)+" kcal":"–";$("pp").textContent=v>0?d1(o.p*v/100)+" g":"–";mt3set("pm_",c=>v>0&&o[c]!=null?o[c]*v/100:null,d1);
+      $("pcv").textContent=v>0&&un.g>1?"= "+fmt(v)+" "+x.u:"";$("pcv").style.display=$("pcv").textContent?"":"none"};
+    // 200 bei „Stück“ ist fast immer als Gramm gemeint → auf g/ml umstellen
+    $("pa").oninput=()=>{$("pe").textContent="";if(un.g>1&&amt()>=30&&base.g===1){un=base;units();toast("Als "+base.u+" gerechnet")}up()};units();up();amountSheet.up=up;
+    $("pok").onclick=()=>{const v=gr(),a=amt();if(!(v>0&&v<5000)){$("pe").textContent="Gib die Menge ein.";return}
+      o.lastA=Math.round(v);const pv=c=>o[c]!=null?o[c]*v/100:null,lbl=un.g>1?nf(a)+" "+qUL(un.u,a):nf(Math.round(v))+" "+un.u;
       if(pk){const cb=pickCb,r1=x=>x==null?null:Math.round(x*10)/10;if(code)save();closeSheet();
-        cb({n:o.n,a:v,u:o.u,z:/^1 Stück/.test(o.sl||"")&&o.sq&&Number.isInteger(v/o.sq)?(v/o.sq)+" "+o.n:nf(v)+" "+o.u+" "+o.n,k:r1(o.k*v/100),p:r1(o.p*v/100),kh:r1(pv("kh")),fe:r1(pv("fe")),bs:r1(pv("bs"))});return}
-      const e=mkEntry(o.n+" · "+nf(v)+" "+o.u,o.k*v/100,o.p*v/100,$("pm").value,1,{kh:pv("kh"),fe:pv("fe"),bs:pv("bs")});
+        cb({n:o.n,a:Math.round(v),u:x.u,z:lbl+" "+o.n,k:r1(o.k*v/100),p:r1(o.p*v/100),kh:r1(pv("kh")),fe:r1(pv("fe")),bs:r1(pv("bs"))});return}
+      const e=mkEntry(o.n+" · "+lbl+(un.g>1?" ("+fmt(v)+" "+x.u+")":""),o.k*v/100,o.p*v/100,$("pm").value,1,{kh:pv("kh"),fe:pv("fe"),bs:pv("bs")});
       if($("pf").checked&&!isFav(e.n))S.fav.push(favOf(e));
       closeSheet();logFood(e)};
     if(op.back)$("pbk").onclick=op.back;
