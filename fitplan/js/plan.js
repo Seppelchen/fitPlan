@@ -112,19 +112,21 @@ const shopCat=n=>{const s=String(n).toLowerCase().replace(/ohne zucker|ohne salz
 // Alle Einträge aller Quellen → Kategorien mit zusammengefassten Zeilen [{t, items:[{label,sub,c,set(v),del()}]}]
 function shopSecs(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto(),R=[],keep=()=>{S.ek[wk]=E;save()};
   const one=t=>{const p=parseZ(t);return p.length===1&&p[0].a!=null?p[0]:{a:null,u:"",n:t}};
-  const add=(it,c,set,del,src,g,m)=>R.push({n:it.n,a:it.a,u:it.u||"",c:!!c,set,del,src,g,m:m||0,w:it.w});
+  const add=(it,c,set,del,src,g,m,wn)=>R.push({n:it.n,a:it.a,u:it.u||"",c:!!c,set,del,src,g,m:m||0,w:it.w,wn:wn||""});
   if(sy)syVis(sy).forEach(x=>{const mine=syMe(sy,x.d),who=x.b||"der anderen Person";
     const it=x.p&&x.nn?{n:x.nn,a:x.a==null||x.a===""?null:num(x.a),u:x.u||""}:one(x.n);if(x.w)it.w=1;
-    add(it,x.c,v=>syOp({id:x.id,f:"c",v}),()=>syDel(x),x.f?"FamilyWall":x.p?(mine?"aus deinem Plan":"Plan von "+who):mine?"":"von "+who,x.g)});
+    add(it,x.c,v=>syOp({id:x.id,f:"c",v}),()=>syDel(x),x.f?"FamilyWall":x.p?(mine?"aus deinem Plan":"Plan von "+who):mine?"":"von "+who,x.g,0,x.p&&x.ps&&x.ps>todayK()?"ab "+wd(x.ps)+" "+dd(x.ps):"")});
   if(!auto)visItems(E).forEach(o=>add({n:o.n,a:o.a,u:o.u,w:o.a==null},E.c[o.key],v=>{if(v)E.c[o.key]=1;else delete E.c[o.key];keep()},()=>{E.hd[o.key]=o.a??0;delete E.c[o.key];keep()},sy?"aus deinem Plan · nur hier":"",null,o.s.size));
   E.x.forEach(x=>add(one(x.n),x.c,v=>{x.c=v;keep()},()=>{E.x=E.x.filter(y=>y!==x);keep()},""));
   if(S.fw)S.fw.items.forEach(x=>add(one(x.n),x.c,v=>{x.c=v;save()},()=>{if(!S.fw)return;S.fw.items=S.fw.items.filter(y=>y!==x);if(!S.fw.items.length)S.fw=null;save()},"FamilyWall",x.g));
   const G={};R.forEach(r=>{const k=shopCn(r.n);(G[k]=G[k]||[]).push(r)});
-  const secs={};Object.values(G).forEach(rs=>{const sum={};rs.forEach(r=>{if(r.a!=null&&r.a>0)sum[r.u]=(sum[r.u]||0)+r.a});const us=Object.keys(sum);
+  // Teilweise abgehakt (z. B. diese Woche gekauft, nächste Woche noch nicht): nur der offene Rest zählt
+  const secs={};Object.values(G).forEach(rs=>{const sum={},op=rs.filter(r=>!r.c),cnt=op.length&&op.length<rs.length?op:rs;cnt.forEach(r=>{if(r.a!=null&&r.a>0)sum[r.u]=(sum[r.u]||0)+r.a});const us=Object.keys(sum);
     // Name: kürzeste Form („Milch“ statt „Milch 1,5 %“), bei Stückzahl über 1 die Mehrzahl („3 Bananen“)
     const ns=rs.map(r=>r.n).sort((a,b)=>a.length-b.length),n=us.length===1&&us[0]===""&&sum[""]>1?ns[ns.length-1]:ns[0];
     const label=!us.length?n:us.length===1?shopLabel({a:sum[us[0]],u:us[0],n}):us.map(u=>shopLabel({a:sum[u],u,n:""}).trim()).join(" + ")+" "+n;
-    const src=[...new Set(rs.map(r=>r.src).filter(Boolean))],m=rs.reduce((a,r)=>a+r.m,0);if(m>1&&!sy)src.push("für "+m+" Mahlzeiten");
+    const src=[...new Set(cnt.map(r=>r.src).filter(Boolean))],m=rs.reduce((a,r)=>a+r.m,0);if(m>1&&!sy)src.push("für "+m+" Mahlzeiten");
+    const wns=[...new Set(cnt.map(r=>r.wn).filter(Boolean))];if(wns.length)src.push((cnt.some(r=>!r.wn)?"jetzt + ":"")+wns.join(", "));
     let t=shopCat(n);if(t==="Sonstiges"){const g=rs.map(r=>r.g).find(g=>g&&g!=="Sonstiges");if(g)t=g;else if(rs.every(r=>r.w))t="Gewürze, Öl & Backen"}
     (secs[t]=secs[t]||[]).push({label,sub:src.join(" · "),c:rs.every(r=>r.c),set:v=>rs.forEach(r=>r.set(v)),del:()=>rs.forEach(r=>r.del()),sk:shopCn(n)})});
   const rk=t=>{const i=SHO.indexOf(t);return i>=0?i:t==="Sonstiges"?99:50};

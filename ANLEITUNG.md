@@ -491,8 +491,13 @@ gemeinsame Liste – ebenso Termine, Geburtstage und Rezepte aus dem Tab Familie
 - **🗓️ Aus dem Plan:** Die Zutaten der geplanten Essen stehen automatisch auf der gemeinsamen Liste –
   bei beiden. Kommt ein Essen in den Plan, sind seine Zutaten gleich drauf. Fliegt es raus, verschwinden
   sie wieder. Ändert sich die Menge, wird der Eintrag angepasst (und der Haken entfernt, damit man
-  nachkauft). Es gilt der Zeitraum, der im Tab **Plan** angezeigt wird. Blättern im Tab **Essen**
-  ändert die Liste nicht.
+  nachkauft). Jede Plan-Zutat gehört zu ihrem Zeitraum (Woche bzw. gewählter Zeitraum):
+  - Zurück- oder Vorblättern nimmt nichts von der Liste – Haken und Gelöschtes bleiben erhalten.
+  - Schaust du dir einen Zeitraum an, der höchstens eine Woche in der Zukunft beginnt, kommen seine Zutaten
+    dazu („ab Mo 23.11.“). Gleiche Artikel aus beiden Zeiträumen stehen in einer Zeile („jetzt + ab …“);
+    ist der Teil für jetzt schon abgehakt, zeigt die Zeile nur noch die offene Menge.
+  - Ist ein Zeitraum vorbei, verschwinden seine Zutaten von selbst.
+  - Geräte mit gleichem Namen, die gerade andere Wochen zeigen, nehmen sich nichts mehr gegenseitig weg.
 - Eine Plan-Zutat, die man mit ✕ oder **Abgehakte löschen** entfernt (z. B. weil sie noch im Schrank
   ist), bleibt weg, bis sich ihre Menge im Plan ändert.
 - Abschalten unter **👥 Gemeinsame Liste verwalten → „Zutaten aus meinem Plan automatisch auf die

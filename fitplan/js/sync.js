@@ -81,11 +81,18 @@ const syAuto=()=>{const s=SY();return!!s&&s.ap!==false};
 const syDel=x=>x.p?syOp({id:x.id,f:"x",v:true}):syOp({id:x.id,v:null});
 // Automatik: Zutaten des gewählten Zeitraums ↔ eigene Plan-Einträge der gemeinsamen Liste (nur bei Änderungen schreiben)
 // Nur bei sichtbarem Plan (bzw. Einkaufsmodus): es gilt der dort gezeigte Zeitraum
-function syAutoPlan(){const s=SY();if(!s||s.ap===false||view!=="plan"&&!shopOn)return;const want={},t=Date.now();let i=0;
-  const who=syWho(s);shopItems(true).forEach(o=>{want["p"+syHash(who+"|"+o.key)]={n:o.a==null?o.n:shopLabel(o),w:o.a==null,o}});
-  Object.entries(want).forEach(([id,w])=>{const cur=s.it[id];if(cur&&cur.n===w.n&&cur.nn)return;
-    const v={n:w.n,c:false,b:s.name||"",d:who,p:true,t:t+i++,...syAmt(w.o)};if(cur&&cur.n===w.n)v.c=!!cur.c;if(w.w)v.w=true;syOp({id,v})});
-  Object.entries(s.it).forEach(([id,x])=>{if(x.p&&syMe(s,x.d)&&!want[id])syOp({id,v:null})})}
+// Jede Plan-Zutat gehört zu ihrem Zeitraum (ps–pe). Blättern zu einer anderen Woche nimmt nichts weg – sonst kämen
+// abgehakte und gelöschte Zutaten beim Zurückblättern neu (und ungehakt) wieder. Abgelaufene Zeiträume fallen weg.
+// Zeiträume, die vorbei sind oder mehr als eine Woche in der Zukunft beginnen, ändern die Liste nicht.
+function syAutoPlan(){const s=SY();if(!s||s.ap===false||view!=="plan"&&!shopOn)return;const want={},t=Date.now(),td=todayK(),W=weekKeys(),ps=W[0],pe=W[W.length-1],who=syWho(s);let i=0;
+  Object.entries(s.it).forEach(([id,x])=>{if(x.p&&syMe(s,x.d)&&x.pe&&x.pe<td)syOp({id,v:null})});
+  if(pe<td||ps>addDays(td,7))return;
+  shopItems(true).forEach(o=>{want["p"+syHash(who+"|"+ps+"|"+o.key)]={n:o.a==null?o.n:shopLabel(o),w:o.a==null,o,old:"p"+syHash(who+"|"+o.key)}});
+  Object.entries(want).forEach(([id,w])=>{const cur=s.it[id];if(cur&&cur.n===w.n&&cur.nn&&cur.ps)return;
+    const prev=cur||s.it[w.old],v={n:w.n,c:false,b:s.name||"",d:who,p:true,ps,pe,t:t+i++,...syAmt(w.o)};
+    if(prev&&prev.n===w.n){v.c=!!prev.c;if(prev.x)v.x=true}  // Haken und „gelöscht“ behalten, solange die Menge gleich ist
+    if(w.w)v.w=true;syOp({id,v})});
+  Object.entries(s.it).forEach(([id,x])=>{if(x.p&&syMe(s,x.d)&&!want[id]&&(x.ps===ps||!x.ps))syOp({id,v:null})})}
 // Menge, Einheit und Name einer Plan-Zutat (andere Handys fassen gleiche Artikel damit zusammen)
 const syAmt=o=>({nn:o.n,u:o.u||"",...(o.a!=null?{a:String(Math.round(o.a*100)/100)}:{})});
 // Offene Plan-Zutaten in die gemeinsame Liste – gleiche Zutat aus demselben Plan wird aktualisiert statt verdoppelt
@@ -188,7 +195,7 @@ function sySheet(){const s=SY();
     '<p class="sm" style="margin:2px 0 0">Eigene Rezepte, Gegessenes der letzten 4 Monate, Favoriten und gescannte Produkte finden alle Verbundenen bei den Rezepten, in der Suche, im freien Eintrag und im Wochenplan – mit „von …“.</p>'+
     '<p class="err" id="sykat" style="margin-top:6px"></p>'+
     '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="syap" style="width:auto"> Zutaten aus meinem Plan automatisch auf die Liste</label>'+
-    '<p class="sm" style="margin:2px 0 0">Kommt ein Essen in den Plan, stehen seine Zutaten gleich auf der gemeinsamen Liste. Fliegt es raus, verschwinden sie wieder. Es gilt der oben gewählte Zeitraum.</p>'+
+    '<p class="sm" style="margin:2px 0 0">Kommt ein Essen in den Plan, stehen seine Zutaten gleich auf der gemeinsamen Liste. Fliegt es raus, verschwinden sie wieder. Blättern zu anderen Wochen nimmt nichts weg, vergangene Zeiträume fallen von selbst raus.</p>'+
     '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="sysp" style="width:auto"> Meinen Essensplan mit Rezepten teilen</label>'+
     '<p class="sm" style="margin:2px 0 0">Die andere Person sieht deine geplanten Essen ab gestern bis 4 Wochen voraus – mit Zutaten und Zubereitung.</p>'+
     '<p class="err" id="sype" style="margin-top:6px"></p>'+
