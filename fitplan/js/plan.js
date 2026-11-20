@@ -64,10 +64,10 @@ const NUM=/^(\d+(?:[.,]\d+)?|½|¼|¾)/;
 const RXZ=/^(\d+(?:[.,]\d+)?|½|¼|¾)(?:\s*[–-]\s*\d+(?:[.,]\d+)?)?\s*(?:(kg|g|ml|l|liter|EL|TL|Prisen?|Scheiben?|Stück|Dosen?|Bund)\.?\s+)?(.+)$/i;
 function parseZ(line){const segs=line.split(/,\s+/),lead=NUM.test(line.trim()),parts=[];let cur=null;
   // „150 g Karotte, Gurke“ gehört zusammen, „½ TL Kurkuma, Ingwer“ sind zwei Zutaten
-  segs.forEach(s=>{s=s.trim();if(!s)return;if(cur!==null&&lead&&!NUM.test(s)&&/^\S+\s*(kg|g|ml|l)\s/i.test(cur))cur+=", "+s;else{if(cur!==null)parts.push(cur);cur=s}});if(cur!==null)parts.push(cur);
+  segs.forEach(s=>{s=s.trim();if(!s)return;if(cur!==null&&(/^(hart|weich|fein|grob|geschrotet|gehackt|gewürfelt|gerieben|abgetropft|optional|nach\s)/.test(s)||lead&&!NUM.test(s)&&/^\S+\s*(kg|g|ml|l)\s/i.test(cur)))cur+=", "+s;else{if(cur!==null)parts.push(cur);cur=s}});if(cur!==null)parts.push(cur);
   return parts.map(s=>{const m=s.match(RXZ);let a=null,u="",n=s;
     if(m){a={"½":.5,"¼":.25,"¾":.75}[m[1]]??num(m[1]);n=m[3];if(m[2]){const x=UN[m[2].toLowerCase()];u=x[0];a*=x[1]}}
-    n=n.replace(/\s*\([^)]*\)/g,"").trim();if(!u&&/^eier?$/i.test(n))n="Ei";return{a,u,n}}).filter(x=>x.n)}
+    n=n.replace(/\s*\([^)]*\)/g,"").replace(/,\s+(hart|weich|fein|grob|geschrotet|gehackt|gewürfelt|gerieben|abgetropft|optional|nach\s).*$/,"").trim();if(!u&&/^eier?$/i.test(n))n="Ei";return{a,u,n}}).filter(x=>x.n)}
 function shopItems(full){let W=weekKeys();if(ekMode==="r"&&!full)W=W.filter(k=>k>=todayK());const A={};
   const add=(r,slot,depth,f)=>{f/=(r.pz||1);(r.z||[]).forEach(line=>{
     if(/^wie\s/i.test(line)&&depth<2){const t=S.R.find(x=>x.n.toLowerCase()===line.slice(4).trim().toLowerCase());if(t){add(t,slot,depth+1,f);return}}
@@ -90,17 +90,17 @@ function shopCn(n){const s=String(n).toLowerCase().replace(/\([^)]*\)/g," ").rep
 // Reihenfolge wie im Supermarkt; geprüft wird in der Reihenfolge von SHC (z. B. „passierte Tomaten“ vor „Tomate“)
 const SHO=["Obst & Gemüse","Brot & Backwaren","Milchprodukte & Eier","Fleisch, Fisch & Tofu","Nudeln, Reis & Trockenware","Konserven & Soßen","Gewürze, Öl & Backen","Tiefkühl","Süßes & Snacks","Getränke","Haushalt & Drogerie"];
 const SHC=[["Haushalt & Drogerie",/spül|wasch|reinig|putz|toilettenpapier|klopapier|küchenrolle|küchenpapier|müllbeutel|müllsäcke|zahnpasta|zahnbürste|shampoo|duschgel|seife|deo|windel|taschentüch|alufolie|frischhaltefolie|backpapier|schwamm|batterie|kerze|tabs\b/],
-  ["Tiefkühl",/tiefkühl|\btk\b|pommes|fischstäbchen|\beis\b|eiscreme|tiefgefroren/],
+  ["Tiefkühl",/tiefkühl|\btk\b|edamame|pommes|fischstäbchen|\beis\b|eiscreme|tiefgefroren/],
   ["Getränke",/wasser|saft|schorle|\bcola|limo|\bbier|\bwein\b|kaffee|\btee\b|sprudel|eistee/],
-  ["Konserven & Soßen",/passiert|tomatenmark|stückige tomaten|\bdose|soße|sauce|ketchup|senf|mayo|remoulade|brühe|\bfond|pesto|kokosmilch|apfelmus|gewürzgurke|essiggurke|sojasoße|sojasauce|dressing|marmelade|konfitüre|erdnussmus|nussmus|hummus/],
-  ["Gewürze, Öl & Backen",/\bsalz|pfeffer|gewürz|paprikapulver|currypulver|\bcurry\b|zimt|muskat|oregano|thymian|rosmarin|kurkuma|kreuzkümmel|kümmel|chili|cayenne|majoran|lorbeer|öl\b|essig|zucker|honig|sirup|backpulver|natron|hefe|vanille|kakao|stärke|puderzucker|süßstoff|sesam|brühwürfel/],
+  ["Konserven & Soßen",/passiert|tomatenmark|stückige tomate|gehackte tomate|geschälte tomate|kidney|\bmais\b|\bdose|soße|sauce|ketchup|senf|mayo|remoulade|brühe|\bfond|pesto|kokosmilch|apfelmus|gewürzgurke|essiggurke|sojasoße|sojasauce|dressing|marmelade|konfitüre|erdnussmus|nussmus|hummus/],
+  ["Gewürze, Öl & Backen",/salz(?!stange)|balsamico|kokosraspel|pfeffer|gewürz|paprikapulver|currypulver|\bcurry\b|zimt|muskat|oregano|thymian|rosmarin|kurkuma|kreuzkümmel|kümmel|chili|cayenne|majoran|lorbeer|öl\b|essig|zucker|honig|sirup|backpulver|natron|hefe|vanille|kakao|stärke|puderzucker|süßstoff|sesam|brühwürfel/],
   ["Süßes & Snacks",/schoko|keks|\bchips|gummi|bonbon|riegel|praline|nougat|popcorn|salzstangen|kekse/],
-  ["Milchprodukte & Eier",/(^|\s)ei$|(^|\s)eier$|milch(?!reis)|joghurt|quark|skyr|käse|feta|mozzarella|parmesan|gouda|sahne|schmand|butter|kefir|margarine|crème|creme|haferdrink|sojadrink|mandeldrink|drink\b|ayran/],
-  ["Fleisch, Fisch & Tofu",/fleisch|hack|hähnchen|huhn|hühn|pute|\brind|schwein|schnitzel|wurst|würstchen|salami|schinken|speck|bacon|lachs|fisch|thunfisch|garnele|shrimp|filet|geschnetzelt|gyros|tofu|tempeh|frikadelle|leberkäse|kassler|kotelett|steak|jagdwurst/],
+  ["Milchprodukte & Eier",/(^|\s)ei$|(^|\s)eier$|milch(?!reis)|joghurt|quark|skyr|käse|feta|halloumi|ricotta|mascarpone|burrata|emmentaler|cheddar|mozzarella|parmesan|gouda|sahne|schmand|butter|kefir|margarine|crème|creme|haferdrink|sojadrink|mandeldrink|drink\b|ayran/],
+  ["Fleisch, Fisch & Tofu",/fleisch|hack|hähnchen|huhn|hühn|pute|\brind|schwein|schnitzel|wurst|würstchen|salami|schinken|speck|bacon|lachs|fisch|thunfisch|garnele|shrimp|filet|geschnetzelt|gyros|tofu|tempeh|sojaschnetzel|seitan|frikadelle|leberkäse|kassler|kotelett|steak|jagdwurst/],
   ["Brot & Backwaren",/brot|brötchen|toast|baguette|brezel|croissant|knäcke|wrap|tortilla|fladen|semmel|kuchen|zwieback|laugen/],
-  ["Nudeln, Reis & Trockenware",/nudel|pasta|spaghetti|penne|fusilli|lasagne|\breis|milchreis|couscous|bulgur|quinoa|hafer|flocken|müsli|granola|mehl|grieß|polenta|linse|kichererbse|chia|leinsamen|nüsse|nuss|mandel|walnuss|cashew|erdnüss|samen|kerne|rosinen|datteln|spätzle|gnocchi|cornflakes/],
-  ["Obst & Gemüse",/apfel|äpfel|banane|birne|orange|mandarine|clementine|zitrone|limette|kiwi|beere|traube|ananas|mango|melone|pfirsich|nektarine|pflaume|kirsche|avocado|tomate|gurke|paprika|karotte|möhre|brokkoli|blumenkohl|zucchini|spinat|salat|rucola|kohl|zwiebel|knoblauch|lauch|porree|sellerie|kartoffel|pilz|champignon|aubergine|kürbis|radieschen|ingwer|petersilie|basilikum|schnittlauch|dill|koriander|minze|kräuter|obst|gemüse|\bmais|erbse|bohne|fenchel|spargel|rote bete|feldsalat|eisberg|grapefruit|feige|rhabarber|physalis|granatapfel|süßkartoffel/]];
-const shopCat=n=>{const s=String(n).toLowerCase();for(const [c,re] of SHC)if(re.test(s))return c;return"Sonstiges"};
+  ["Nudeln, Reis & Trockenware",/nudel|pasta|spaghetti|penne|fusilli|lasagne|reis|milchreis|couscous|bulgur|quinoa|hafer|flocken|müsli|granola|mehl|grieß|polenta|linse|kichererbse|chia|leinsamen|nüsse|nuss|mandel|walnuss|cashew|erdnüss|samen|kerne|rosinen|datteln|spätzle|gnocchi|cornflakes/],
+  ["Obst & Gemüse",/apfel|äpfel|banane|birne|orange|mandarine|clementine|zitrone|limette|kiwi|beere|traube|ananas|mango|melone|pfirsich|nektarine|pflaume|kirsche|avocado|tomate|gurke|paprika|karotte|möhre|brokkoli|blumenkohl|zucchini|spinat|salat|rucola|kohl|zwiebel|knoblauch|lauch|porree|sellerie|kartoffel|pilz|champignon|aubergine|kürbis|radieschen|ingwer|petersilie|basilikum|schnittlauch|dill|koriander|minze|kräuter|obst|gemüse|\bmais|erbse|bohne|fenchel|spargel|rote bete|feldsalat|eisberg|grapefruit|feige|rhabarber|physalis|granatapfel|süßkartoffel|kresse|kohlrabi/]];
+const shopCat=n=>{const s=String(n).toLowerCase().replace(/ohne zucker|ohne salz/g,"");for(const [c,re] of SHC)if(re.test(s))return c;return"Sonstiges"};
 // Alle Einträge aller Quellen → Kategorien mit zusammengefassten Zeilen [{t, items:[{label,sub,c,set(v),del()}]}]
 function shopSecs(){const wk=ekK(),E=ekOf(wk),sy=SY(),auto=syAuto(),R=[],keep=()=>{S.ek[wk]=E;save()};
   const one=t=>{const p=parseZ(t);return p.length===1&&p[0].a!=null?p[0]:{a:null,u:"",n:t}};

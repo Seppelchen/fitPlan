@@ -72,7 +72,7 @@ function fix(){
   // Einmalig: Standardrezepte vegetarisch (nur gebratener Lachs erlaubt, kein Räucherlachs) und ohne Pilze – gleiche ID, damit der Wochenplan erhalten bleibt
   if((S.veg||0)<2&&Array.isArray(S.R)){S.R.forEach(r=>{const nn=VEG[r.n];const row=nn&&RB.find(x=>x[1]===nn);if(row&&!S.R.some(y=>y!==r&&y.n===nn)){const id=r.id;Object.assign(r,mkR(row),{id});delete r.ci;delete r.pz}});S.veg=2}
   // Neue mitgelieferte Rezepte je Version einmalig ergänzen (gelöschte kommen nicht zurück)
-  const RBV=[[2,RB2],[3,RB3],[4,RB4]],top=RBV[RBV.length-1][0];
+  const RBV=[[2,RB2],[3,RB3],[4,RB4],[5,RB5]],top=RBV[RBV.length-1][0];
   if(!Array.isArray(S.R)){S.R=defR();S.rbv=top;S.veg=2}
   if((S.rbv||1)<top){const have=new Set(S.R.map(r=>r.n.toLowerCase()));RBV.forEach(([v,L])=>{if(v>(S.rbv||1))L.forEach(r=>{if(!have.has(r[1].toLowerCase()))S.R.push(mkR(r))})});S.rbv=top}
   S.R.forEach(r=>{r.id=r.id||uid();if(!Array.isArray(r.z)){const d=RB.find(x=>x[1]===r.n);if(d){r.t=d[4];r.z=d[5].slice();r.s=d[6];r.tg=d[7]||""}else{r.z=[];r.s=r.s||"";r.t=r.t||"";r.tg=r.tg||""}}

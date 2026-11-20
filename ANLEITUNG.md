@@ -137,9 +137,10 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 
 - Die 100 Grundrezepte sind vegetarisch, mit gebratenem Lachs als einziger Ausnahme (kein Räucherlachs), und
   ohne Pilze. Statt Parmesan steht „vegetarischer Hartkäse (Parmesan-Art)“ im Rezept.
-- Dazu kommen 7 Familienrezepte (je 1 Portion): Jägerschnitzel mit Kartoffeln und Mischgemüse, Bratreis,
-  Kaiserschmarren, Currywurst mit Currysoße und Kartoffeln, Milchreis, Geflügel-Geschnetzeltes mit Reis
-  (alle unter Mittag) und Kartoffel-Feta-Hack-Auflauf (Abend). Sie erscheinen nach dem Update von selbst.
+- Dazu kommen 10 Familienrezepte (je 1 Portion): Jägerschnitzel mit Kartoffeln und Mischgemüse, Bratreis,
+  Kaiserschmarren, Currywurst mit Currysoße und Kartoffeln, Milchreis, Geflügel-Geschnetzeltes mit Reis,
+  Chili con Carne, Ziegenkäse-Risotto (alle unter Mittag), Kartoffel-Feta-Hack-Auflauf und Bratkartoffeln
+  (Abend). Sie erscheinen nach dem Update von selbst.
 - Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
 - Bei schon gegessenen Einträgen aus einem Rezept steht unter **Essen → Gegessen** rechts ein **📖**: antippen
   öffnet das Rezept mit Zubereitung. Im Eintrag selbst (antippen) gibt es oben **📖 Zutaten & Zubereitung**
