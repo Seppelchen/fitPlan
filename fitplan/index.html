@@ -70,6 +70,7 @@
 </div>
 <div class="card">
 <div class="hd"><h2>Rezepte</h2><div style="display:flex;gap:6px"><button id="rman">Verwalten</button><button class="pri" id="newR">＋ Neu</button></div></div>
+<button class="full" id="rbo" style="margin-bottom:10px">📖 Rezeptbuch – alle Rezepte durchblättern</button>
 <div id="rmb" style="display:none"></div>
 <div class="chips" id="rcats"></div>
 <div class="chips" id="rsub"></div>
@@ -259,6 +260,9 @@
 <button class="fab" id="shopfab" aria-label="Einkaufen – nur die Liste">🛒<b id="shopfabn"></b></button>
 <div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
 <div class="sheet" id="sheet2" style="z-index:30"><div class="in" id="sheet2In"></div></div>
+<div class="shopm rbook" id="rbook"><div class="top"><div style="flex:1;min-width:0"><h2>📖 Rezeptbuch</h2><div class="sm" id="rbc"></div></div><button class="pri" id="rbx">Fertig</button></div>
+<div class="rbf"><input id="rbq" type="search" placeholder="Rezept oder Zutat suchen" autocomplete="off" enterkeyhint="search"><div class="chips" id="rbcat" style="margin:8px 0 0"></div><div class="chips" id="rbtag" style="margin:6px 0 0"></div></div>
+<div class="lst" id="rbl"></div></div>
 <div class="shopm" id="shopm"><div class="top"><div style="flex:1;min-width:0"><h2>🛒 Einkaufen</h2><div class="sm"><span id="smc"></span> <span id="smst" style="margin-left:6px"></span></div><div class="bar"><i id="smb"></i></div></div><button class="pri" id="smx">Fertig</button></div>
 <div class="lst" id="sml"></div>
 <div class="add"><input id="smi" placeholder="Noch etwas eintragen" enterkeyhint="done"><button class="pri" id="sma" aria-label="Hinzufügen">＋</button></div></div>
@@ -277,6 +281,7 @@
 <script src="js/einkaufsmodus.js"></script>
 <script src="js/familie.js"></script>
 <script src="js/sync-ich.js"></script>
+<script src="js/rezeptbuch.js"></script>
 <script src="js/familie-import.js"></script>
 <script src="js/kalender.js"></script>
 <script src="js/fortschritt.js"></script>

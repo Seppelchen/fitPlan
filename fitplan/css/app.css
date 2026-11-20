@@ -158,3 +158,10 @@ ul.zt li{cursor:pointer;padding:2px 0}ul.zt li.off{text-decoration:line-through;
 .slote{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.slote button{font-size:12px;padding:3px 10px;border-radius:999px;border-style:dashed;color:var(--muted)}
 .pfold{font-size:13px;color:var(--muted);text-align:left;padding:8px 12px;margin:2px 0 4px}
 details>summary.fold{cursor:pointer;font-size:14px;font-weight:600;color:var(--accent);padding:6px 0}
+/* Rezeptbuch: wie der Einkaufsmodus, aber unter den Fenstern (Rezept öffnet sich darüber) */
+.shopm.rbook{z-index:15}
+.rbook .rbf{padding:10px 16px 8px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box;border-bottom:1px solid var(--border)}
+.rbook .chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.rbook .chips::-webkit-scrollbar{display:none}
+.rbook .chips button{flex:none}
+.rbook .sec{position:sticky;top:0;background:var(--bg);padding:8px 0 4px;margin:6px 0 0;z-index:1}

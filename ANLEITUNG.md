@@ -127,6 +127,19 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   Eigene Menge und die Liste der Einträge stecken unter **Eigene Menge & Verlauf**.
 - Ganz unten die **Rezepte**.
 
+## 📖 Rezeptbuch
+
+- **Essen → Rezepte → 📖 Rezeptbuch** öffnet alle Rezepte im Vollbild zum Durchscrollen – mitgelieferte,
+  eigene und (wenn verbunden) die der Familie. Oben steht, wie viele es sind und wie viele gerade passen.
+- **Suche** nach Name oder Zutat („linsen“, „feta“).
+- **Mahlzeit:** Alle, Frühstück, Mittag, Abend, Snack.
+- **Filter** (mehrere gleichzeitig): 🌱 Vegetarisch, ⚡ Bis 20 Min., 🪶 Bis 450 kcal, 🍬 Süß, ⭐ Favoriten,
+  👥 Familie. Die Filterzeilen lassen sich seitlich wischen.
+- **↕ A–Z / Kalorien:** sortiert alphabetisch mit Buchstaben-Überschriften oder nach Kalorien in Stufen
+  (bis 300, 300–450, 450–600, über 600 kcal).
+- Rezept antippen öffnet es wie gewohnt (Portion, Zutaten weglassen, Zubereitung, einplanen …), **＋** trägt
+  1 Portion direkt ein. **Fertig** oder die Zurück-Taste (Android) schließt das Rezeptbuch.
+
 ## Freier Eintrag mit Vorschlägen
 
 - Ab 2 Buchstaben schlägt FitPlan unter dem Namensfeld passende Lebensmittel vor: schon Gegessenes (auch

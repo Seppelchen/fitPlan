@@ -37,6 +37,7 @@ function renderFood(){
     MB.innerHTML='<p class="sm" style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">Tippe 🗑 zum Löschen – auch bei den mitgelieferten Rezepten. Antippen öffnet das Rezept zum Bearbeiten.</p>'+
       (miss.length?'<button class="full" id="rres" style="margin-bottom:10px">↺ '+miss.length+' gelöschte'+(miss.length===1?'s Standardrezept':' Standardrezepte')+' wiederherstellen</button>':'');
     if(miss.length)$("rres").onclick=()=>{miss.forEach(x=>S.R.push(mkR(x)));save();renderFood();toast(miss.length+(miss.length===1?" Rezept":" Rezepte")+" wiederhergestellt")}}
+  if(typeof rbRefresh==="function")rbRefresh();
   items.forEach(r=>{const row=el("div","row",'<span class="fi">'+icOf(r)+'</span><div class="t" style="cursor:pointer">'+esc(r.n)+(r.tg==="s"?'<span class="bdg s">süß</span>':'')+(quick(r)?'<span class="bdg">schnell</span>':'')+'<div class="sm">'+mline(r.k,r.p,r.kh,r.fe)+(r.t?' · '+esc(r.t):'')+'</div></div>'+(rMan?'<button class="ic del" aria-label="Löschen">🗑</button>':'<button class="ic" aria-label="Eintragen">＋</button>'));
     row.querySelector(".t").onclick=row.querySelector(".fi").onclick=()=>rMan?recipeForm(r.id):recipeDetail(r.id);row.querySelector("button").onclick=()=>rMan?delRecipe(r):addRecipe(r,1);RL.appendChild(row)});
   if(ext.length)RL.appendChild(el("p","lb","👥 Von "+(ext.every(o=>!o.who)?"deinen anderen Geräten":"der Familie"))).style.margin="12px 0 0";
