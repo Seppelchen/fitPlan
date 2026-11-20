@@ -179,12 +179,12 @@ function foodSheet(o,back){const pk=!!pickCb;let q=1;
 // die Menge rechnet sie um – in g, ml oder Stück (bzw. Scheibe, Glas, EL …), bei schon Gegessenem in Portionen.
 // sel = gewähltes Lebensmittel {o (Werte je 100 g/ml bzw. je Portion), per:100|1, u (g/ml/Portion), n}
 const QLIQ=/milch|joghurt|kefir|skyr|quark|saft|schorle|sahne|soße|sauce|öl\b|brühe|suppe|smoothie|shake|drink|getränk|wasser|limo|cola|bier|wein|kaffee|cappuccino|latte|tee\b|kakao|sirup|honig|apfelmus|pudding|dressing|essig|ketchup|senf/i;
-const QPL={Scheibe:"Scheiben",Tasse:"Tassen",Flasche:"Flaschen",Kugel:"Kugeln",Schale:"Schalen",Dose:"Dosen",Portion:"Portionen",Pizza:"Pizzen",Glas:"Gläser"};
+const QPL={Zehe:"Zehen",Scheibe:"Scheiben",Tasse:"Tassen",Flasche:"Flaschen",Kugel:"Kugeln",Schale:"Schalen",Dose:"Dosen",Portion:"Portionen",Pizza:"Pizzen",Glas:"Gläser"};
 const qUL=(u,a)=>a>1&&QPL[u]?QPL[u]:u;
 // Einheiten zu einem Lebensmittel: [{u, g}] – g = Gramm/ml (bzw. Portionen) je 1 Einheit
 function qUnits(x){if(x.per===1)return[{u:"Portion",g:1}];const o=x.o,base=x.u||"g",L=[];
-  const m=String(o.sl||"").match(/^(?:(\d+|½)\s+)?(Stück|Scheibe|Glas|Dose|Tasse|Flasche|Becher|Riegel|Kugel|Pizza|Schale|Handvoll|EL|TL|Portion)/);
-  if(o.sq>0){if(m)L.push({u:m[2],g:o.sq/(m[1]==="½"?.5:+m[1]||1)});else if(!o.sl)L.push({u:"Portion",g:o.sq})}
+  const m=String(o.sl||"").match(/^(?:(\d+|½)\s+)?(Stück|Scheibe|Glas|Dose|Tasse|Flasche|Becher|Riegel|Kugel|Pizza|Schale|Handvoll|EL|TL|Portion|Zehe)/);
+  if(o.sq>0){if(m){const c=m[1]==="½"?.5:+m[1]||1;L.push({u:m[2],g:o.sq/c,n0:c})}else if(!o.sl)L.push({u:"Portion",g:o.sq})}
   L.push({u:base,g:1});if(base==="ml")L.push({u:"g",g:1});else if(QLIQ.test(x.n))L.push({u:"ml",g:1});
   return L}
 function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||q.length<2)return[];const out=[],seen=new Set();
@@ -217,7 +217,7 @@ function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||
     C.innerHTML="";L.forEach(([x,l])=>{const b=el("button",x===a?"on":"",l);b.onclick=()=>{$("qa").value=x;chips();fill()};C.appendChild(b)})};
   const pick=(x,keep)=>{sel=x;if(!keep)qn.value=x.n;G.innerHTML="";$("qaw").style.display="";$("qal").textContent=x.per===1?"Portionen":"Menge";$("qau").textContent="";
     const U=qUnits(x);un=U[0];if(x.per===100&&x.o.lastA&&U[0].g>1&&!(x.o.lastA%U[0].g===0))un=U.find(z=>z.g===1);  // zuletzt eingetragene Grammzahl passt nicht zum Stück
-    $("qa").value=x.per===1?1:un.g>1?(x.o.lastA&&x.o.lastA%un.g===0?x.o.lastA/un.g:1):x.o.lastA||x.o.sq||100;units();chips();fill()};
+    $("qa").value=x.per===1?1:un.g>1?(x.o.lastA&&x.o.lastA%un.g===0?x.o.lastA/un.g:un.n0||1):x.o.lastA||x.o.sq||100;units();chips();fill()};
   const drop=()=>{sel=null;un=null;btn("");$("qaw").style.display="none";if(auto)QF.forEach(i=>$(i).value="");auto=false;$("qai").textContent=""};
   const show=()=>{G.innerHTML="";const q=qn.value.trim();if(sel&&nrm(q)===nrm(sel.n))return;const L=qSuggest(q);if(!L.length)return;
     L.forEach(x=>{const r=el("div","row",'<span class="fi">'+esc(x.ic||icOf(x.o.ic?x.o:x))+'</span><div class="t">'+esc(x.n)+'<div class="sm">'+esc(x.sub)+'</div></div><span class="sm" style="font-size:13px;color:var(--accent)">übernehmen</span>');

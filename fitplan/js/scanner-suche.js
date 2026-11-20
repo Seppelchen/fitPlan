@@ -60,7 +60,7 @@ function productSheet(code){amountSheet(S.bc[code],{code})}
 // Einheit umschaltbar: Stück (bzw. Scheibe, Glas …), g oder ml (qUnits in sync-ich.js); gerechnet wird in g/ml.
 function amountSheet(o,op){op=op||{};const code=op.code,pk=!!pickCb,x={n:o.n,o,per:100,u:o.u||"g"},U=qUnits(x),base=U.find(z=>z.g===1)||U[0];
   let un=U[0];if(o.lastA){const pc=U.find(z=>z.g>1&&Math.abs(o.lastA/z.g-Math.round(o.lastA/z.g*2)/2)<.01);un=un.g>1&&pc===un?un:base}  // zuletzt eingetragene Menge passt nicht zum Stück → g/ml
-  const a0=un.g>1?(o.lastA?Math.round(o.lastA/un.g*2)/2:1):o.lastA||o.sq||100;
+  const a0=un.g>1?(o.lastA?Math.round(o.lastA/un.g*2)/2:un.n0||1):o.lastA||o.sq||100;
   openSheet(pk?"Zutat":"Produkt",(op.back?'<button id="pbk" style="margin:0 0 10px;font-size:14px;padding:5px 12px">‹ Zurück zur Suche</button>':'')+
   '<div style="display:flex;gap:10px;align-items:center"><span class="fi">'+icOf(o)+'</span><b>'+esc(o.n)+'</b></div><p class="sm" id="pinfo" data-code="'+esc(code||"")+'" style="margin:2px 0 4px">'+pinfo(o)+'</p>'+
   '<label class="f">Menge</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="pa" type="number" inputmode="decimal" step="any" value="'+a0+'" style="flex:1;min-width:90px"><div class="chips" id="pus" style="margin:0"></div></div>'+

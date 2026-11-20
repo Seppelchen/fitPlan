@@ -147,14 +147,41 @@ function scaleZ(line,q){if(q===1)return line;
     .replace(/\((\d+(?:[.,]\d+)?)\s*(g|ml)\)/g,(m,a,u)=>"("+qfmt(pnum(a)*q,u)+" "+u+")")
     .replace(/\((\d+)\s+Scheiben?\)/g,(m,a)=>{const v=pnum(a)*q;return"("+qfr(v)+" Scheibe"+(v>1?"n":"")+")"})
     .replace(/\((\d+)\s+Stück\)/g,(m,a)=>"("+qfr(pnum(a)*q)+" Stück)")}
-function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=1;const pk=ctx&&ctx.pick,pl=ctx&&!pk,when=ctx?wd(ctx.k)+" "+dd(ctx.k):"";
+/* ---------- Nährwerte einer Zutatenzeile schätzen ----------
+   Damit Kalorien & Co. neu berechnet werden, wenn eine Zutat wegfällt (Rezept ansehen) oder im Rezept gelöscht/
+   ergänzt wird (Rezept bearbeiten). Grundlage: Grundnahrungsmittel (FD) und eigene Produkte, Mengen aus der Zeile
+   („150 g“, „2 EL“, „1 Stück“, „½ Zwiebel“). Gewürze zählen 0. zEst → {k,p,kh,fe,bs,miss:[unbekannt],hit:[erkannt]} */
+const ZZERO=/salz|pfeffer|gewürz|zimt|curry(?!soße|sauce)|chili|paprikapulver|kreuzkümmel|kümmel|kurkuma|muskat|oregano|thymian|rosmarin|majoran|lorbeer|vanille|backpulver|natron|essig|zitronensaft|kräuter|petersilie|basilikum|dill|schnittlauch|minze|koriander|wasser|süßstoff|ingwer|zitrone|limette|knoblauch|brühe|kresse|frühlingszwiebel|balsamico|senf/i;
+function zFood(n){const l=norm(n).replace(/[()]/g," ").replace(/sauce/g,"sosse").trim();if(!l)return null;const pool=[...Object.values(S.bc).filter(o=>o&&o.n&&o.k!=null),...FD];
+  const ex=pool.find(o=>norm(o.n)===l);if(ex)return ex;
+  if(/(^|[\s-])öl$|öl\b/.test(n.toLowerCase()))return FD.find(o=>/rapsöl/i.test(o.n));
+  for(const c of [l,...l.split(/\s+oder\s+/)]){const h=fdFind(c.replace(/-$/,""));if(h.length)return h[0]}
+  const ws=l.split(/[\s,/-]+/).filter(w=>w.length>=3);  // „Kochschinkenwürfel“ → Kochschinken, „Babyspinat“ → Spinat
+  let best=null;FD.forEach(o=>{const f=norm(o.n).split(/[\s,(/]+/)[0];if(f.length>=4&&ws.some(w=>w.includes(f))&&(!best||f.length>norm(best.n).split(/[\s,(/]+/)[0].length))best=o});if(best)return best;
+  ws.sort((a,b)=>b.length-a.length);for(const w of ws){const h=fdFind(w);if(h.length)return h[0]}return null}
+function zGrams(it,o){const a=it.a,u=it.u;if(a==null)return null;if(u==="g"||u==="ml")return a;if(u==="Prise")return 0;
+  const m=String(o.sl||"").match(/^(\d+|½)?\s*(Stück|Scheibe|EL|TL|Dose|Zehe|Handvoll|Becher|Kugel|Glas)/),per=m&&o.sq?o.sq/(m[1]==="½"?.5:+m[1]||1):null,unit=m&&m[2];
+  if(u==="EL")return a*(unit==="EL"?per:unit==="TL"?per*3:12);if(u==="TL")return a*(unit==="TL"?per:unit==="EL"?per/3:4);
+  if(u==="Scheibe")return a*(unit==="Scheibe"?per:30);if(u==="Dose")return a*(unit==="Dose"?per:/bohne|erbse|mais/i.test(o.n)?250:400);if(u==="Bund")return a*50;
+  return per!=null&&(!unit||/Stück|Zehe|Becher|Kugel/.test(unit))?a*per:o.sq?a*o.sq:null}
+function zEst(lines){const t={k:0,p:0,kh:0,fe:0,bs:0,miss:[],hit:[]};
+  (Array.isArray(lines)?lines:[lines]).forEach(line=>{
+    if(/^wie\s/i.test(line)){const r=S.R.find(x=>nrm(x.n)===nrm(line.slice(4)));if(!r){t.miss.push(line);return}  // „wie Gemüse-Omelett“ = Werte dieses Rezepts
+      t.k+=r.k;t.p+=r.p;MK.forEach(([c])=>{t[c]+=r[c]||0});t.hit.push(r.n);return}
+    parseZ(line).forEach(it=>{if(ZZERO.test(it.n)&&!/öl/i.test(it.n)){t.hit.push(it.n);return}const o=zFood(it.n),g=o&&zGrams(it,o);
+      if(!o||g==null){t.miss.push(it.n);return}const f=g/100;t.k+=o.k*f;t.p+=o.p*f;MK.forEach(([c])=>{t[c]+=(o[c]||0)*f});t.hit.push(it.n)})});
+  return t}
+// Zutaten weglassen (Rezept ansehen): Zeilen r.z[i] für i in off → Abzug je Portion
+function zOff(r,off){const L=[...off].map(i=>r.z[i]).filter(Boolean);if(!L.length)return null;const e=zEst(L),pz=r.pz||1;
+  return{k:e.k/pz,p:e.p/pz,kh:e.kh/pz,fe:e.fe/pz,bs:e.bs/pz,miss:e.miss,names:L.map(z=>parseZ(z).map(x=>x.n).join(", "))}}
+function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=1;const off=new Set();const pk=ctx&&ctx.pick,pl=ctx&&!pk,when=ctx?wd(ctx.k)+" "+dd(ctx.k):"";
   openSheet(icOf(r)+" "+esc(r.n),
   (pk?'<button id="rdBk" style="margin:0 0 10px;font-size:14px;padding:5px 12px">‹ Zurück zur Auswahl</button>':'')+
   (ctx?'<p class="sm" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:var(--accbg);color:var(--text)">📅 '+(pk?'Auswahl für ':'Geplant für ')+when+' · '+esc(ctx.c)+'</p>':'')+
   '<p class="lb">Portion</p><div class="chips" id="rdq"></div>'+
   '<div class="g2"><div class="mc"><div class="sm">Kalorien</div><b id="rdk"></b></div><div class="mc"><div class="sm">Eiweiß</div><b id="rdp"></b></div></div>'+mt3("rd_")+
   '<p class="sm" style="margin:10px 0 8px">'+esc(r.c)+(r.t?' · ⏱ '+esc(r.t):'')+'</p>'+
-  (r.z&&r.z.length?'<p class="lb" id="rdzl"></p><ul class="z" id="rdz"></ul>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
+  (r.z&&r.z.length?'<p class="lb" id="rdzl"></p><ul class="z zt" id="rdz"></ul><p class="sm" id="rdzo" style="margin:6px 0 0"></p>':'<p class="sm">Keine Zutatenliste hinterlegt.</p>')+
   '<p class="lb" style="margin-top:12px">Zubereitung</p>'+(steps(r.s).length?'<ol class="st">'+steps(r.s).map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>':'<p class="sm" style="margin:0 0 6px">Noch keine Zubereitung hinterlegt.</p><button id="rdS">＋ Zubereitung hinzufügen</button>')+
   (pk?'<button class="full pri" id="rdPl" style="margin-top:16px">📅 Für '+when+' · '+esc(ctx.c)+' einplanen</button>':
   (pl?'':'<label class="f" style="margin-top:16px">Mahlzeit</label>'+mealSel("rdm",r.c))+
@@ -163,17 +190,24 @@ function recipeDetail(id,ctx){const r=S.R.find(x=>x.id===id);if(!r)return;let q=
     :'<div class="g2" style="margin-top:8px"><button id="rdEd">Bearbeiten</button><button class="del" id="rdDel">Löschen</button></div>')+'<button class="full" id="rdSh" style="margin-top:8px"></button>'),
   ()=>{if($("rdS"))$("rdS").onclick=()=>recipeForm(r.id,"fS");
     // Portion ändert Nährwerte und – außer bei Rezepten für mehrere Portionen – die Zutatenmengen
-    const show=()=>{qChips("rdq",q,v=>{q=v;show()});$("rdk").textContent=fmt(r.k*q)+" kcal";$("rdp").textContent=fmt(r.p*q)+" g";mt3set("rd_",c=>r[c]==null?null:r[c]*q);
+    // Werte je Portion nach Abzug weggelassener Zutaten
+    const per=()=>{const d=zOff(r,off),v={n:r.n,k:r.k,p:r.p,kh:r.kh,fe:r.fe,bs:r.bs,d};if(!d)return v;
+      v.n=r.n+" (ohne "+d.names.join(", ")+")";v.k=Math.max(0,r.k-d.k);v.p=Math.max(0,r.p-d.p);MK.forEach(([c])=>{if(r[c]!=null)v[c]=Math.max(0,r[c]-d[c])});return v};
+    const show=()=>{const v=per();qChips("rdq",q,x=>{q=x;show()});$("rdk").textContent=fmt(v.k*q)+" kcal";$("rdp").textContent=fmt(v.p*q)+" g";mt3set("rd_",c=>v[c]==null?null:v[c]*q);
       if($("rdz")){const pz=r.pz>1;$("rdzl").textContent="Zutaten "+(pz?"(für alle "+r.pz+" Portionen – Nährwerte oben gelten für "+(q===1?"1 Portion":fq(q)+" Portionen")+")":"("+(q===1?"1 Portion":fq(q)+(q<=1?" Portion":" Portionen"))+")");
-        $("rdz").innerHTML=r.z.map(z=>'<li>'+esc(pz?z:scaleZ(z,q))+'</li>').join("")}
-      if($("rdAdd"))$("rdAdd").textContent="＋ Eintragen"+(pl?" für "+when:"")+" · "+fq(q)+(q<=1?" Portion":" Portionen")+" · "+fmt(r.k*q)+" kcal"};show();
+        $("rdz").innerHTML=r.z.map((z,i)=>'<li data-i="'+i+'"'+(off.has(i)?' class="off"':'')+'>'+esc(pz?z:scaleZ(z,q))+'</li>').join("");
+        $("rdz").querySelectorAll("li").forEach(li=>li.onclick=()=>{const i=+li.dataset.i;if(off.has(i))off.delete(i);else off.add(i);show()});
+        const d=v.d;$("rdzo").innerHTML=!d?"Zutat antippen, um sie wegzulassen – die Kalorien werden dann neu berechnet.":
+          '<b style="color:var(--accent)">Ohne '+esc(d.names.join(", "))+': −'+fmt(d.k*q)+' kcal</b>'+(d.miss.length?'<br><span style="color:var(--warn)">Für „'+esc(d.miss.join("“, „"))+'“ kennt FitPlan keine Nährwerte – dafür wird nichts abgezogen.</span>':'')}
+      if($("rdAdd"))$("rdAdd").textContent="＋ Eintragen"+(pl?" für "+when:"")+" · "+fq(q)+(q<=1?" Portion":" Portionen")+" · "+fmt(v.k*q)+" kcal"};show();
+    const entry=(m)=>{const v=per(),e=mkEntry(v.n,v.k,v.p,m,q,{...r,kh:v.kh,fe:v.fe,bs:v.bs,n:v.n});e.rid=r.id;return e};
     if(pk){$("rdBk").onclick=()=>pickRecipe(ctx.k,ctx.c);$("rdPl").onclick=()=>{planSet(ctx.k,ctx.c,r.id);closeSheet();toast("Eingeplant · "+when)};return}
     $("rdEd").onclick=()=>recipeForm(r.id);
     const shd=()=>{$("rdSh").textContent=rzShared(r)?"👥 Mit der Familie geteilt ✓ – nicht mehr teilen":"👥 Mit der Familie teilen"};shd();$("rdSh").onclick=()=>{rzToggle(r);shd()};
-    if(pl){$("rdAdd").onclick=()=>{const D=S.d[ctx.k]||(S.d[ctx.k]={f:[],s:[],x:{},h:[]});D.f.push(mkEntry(r.n,r.k,r.p,ctx.c,q,r));save();closeSheet();renderFood();renderPlan();toast("Eingetragen · "+ctx.c+", "+when)};
+    if(pl){$("rdAdd").onclick=()=>{const D=S.d[ctx.k]||(S.d[ctx.k]={f:[],s:[],x:{},h:[]});D.f.push(entry(ctx.c));save();closeSheet();renderFood();renderPlan();toast("Eingetragen · "+ctx.c+", "+when)};
       $("rdCh").onclick=()=>pickRecipe(ctx.k,ctx.c);
       $("rdRm").onclick=()=>{planSet(ctx.k,ctx.c,null);closeSheet();toast("Aus dem Plan genommen",()=>{planSet(ctx.k,ctx.c,r.id)})};return}
-    $("rdAdd").onclick=()=>{addRecipe(r,q,$("rdm").value);closeSheet()};
+    $("rdAdd").onclick=()=>{const e=entry($("rdm").value);closeSheet();logFood(e)};
     $("rdDel").onclick=()=>{closeSheet();delRecipe(r)}})}
 function delRecipe(r){const i=S.R.indexOf(r);if(i<0)return;S.R.splice(i,1);save();renderFood();renderPlan();
   toast("„"+r.n+"“ gelöscht",()=>{S.R.splice(Math.min(i,S.R.length),0,r);save();renderFood();renderPlan()})}
@@ -193,7 +227,7 @@ function recipeForm(id,focus,after){const r=id?S.R.find(x=>x.id===id):null;
   '<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="pri" id="rca">＋ Zutat</button><span class="sm" style="margin-left:auto">Ergibt Portionen</span><input id="rcp" type="number" inputmode="numeric" min="1" max="50" value="'+(r&&r.pz||1)+'" style="width:64px"></div>'+
   '<p class="sm" id="rcs" style="margin:8px 0 0"></p></div>'+
   '<label class="f">Zubereitungszeit</label><input id="fZt" value="'+esc(r?r.t:"")+'" placeholder="10 Min.">'+
-  '<label class="f" id="fZl">Zutaten – eine pro Zeile, mit Menge</label><textarea id="fZ" rows="6" placeholder="50 g Haferflocken&#10;200 ml Milch 1,5 %">'+esc(r?(r.z||[]).join("\n"):"")+'</textarea>'+
+  '<label class="f" id="fZl">Zutaten – eine pro Zeile, mit Menge</label><textarea id="fZ" rows="6" placeholder="50 g Haferflocken&#10;200 ml Milch 1,5 %">'+esc(r?(r.z||[]).join("\n"):"")+'</textarea><p class="sm" id="fZi" style="margin:6px 0 0"></p>'+
   '<label class="f">Zubereitung – ein Schritt pro Zeile</label><textarea id="fS" rows="6" placeholder="Zwiebel würfeln und anbraten.&#10;Tomaten zugeben und 10 Min. köcheln.&#10;Mit Salz und Pfeffer abschmecken.">'+esc(r?r.s:"")+'</textarea>'+
   (r?'':'<label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px"><input type="checkbox" id="fNow" style="width:auto"> Heute direkt eintragen</label>')+
   '<button class="full pri" id="fSave" style="margin-top:14px">Speichern</button><p class="err" id="fErr"></p>',
@@ -203,13 +237,28 @@ function recipeForm(id,focus,after){const r=id?S.R.find(x=>x.id===id):null;
       ICS.forEach(e=>{const b=el("button",e===ic?"on":"",e);b.setAttribute("aria-label","Bild "+e);b.onclick=()=>{ic=e;icd()};B.appendChild(b)})};icd();
     $("fN").addEventListener("input",()=>{if(!ic)$("fIc").firstChild.lastChild.textContent=" "+foodIc($("fN").value)});
     let ci=(r&&r.ci||[]).map(x=>({...x}));const pzv=()=>Math.min(50,Math.max(1,parseInt($("rcp").value)||1));
+    // Zutatenzeile gelöscht oder ergänzt → Nährwerte oben anpassen (Ausgangswerte + geschätzte Zutaten, je Portion)
+    const zls=()=>$("fZ").value.split("\n").map(x=>x.trim()).filter(Boolean),FV=[["k","fK"],["p","fP"],["kh","f_kh"],["fe","f_fe"],["bs","f_bs"]];
+    const rdF=()=>Object.fromEntries(FV.map(([c,i])=>[c,num($(i).value)]));let base={z:zls(),v:rdF()},zT=null;
+    const rebase=()=>{base={z:zls(),v:rdF()};$("fZi").textContent=""};
+    const zdiff=(a,b)=>{const m={};b.forEach(x=>m[x]=(m[x]||0)+1);return a.filter(x=>{if(m[x]){m[x]--;return false}return true})};
+    const zUpd=()=>{const cur=zls(),rem=zdiff(base.z,cur),add=zdiff(cur,base.z),I=$("fZi");
+      const fromCi=rem.map(l=>ci.findIndex(x=>(x.z||nf(x.a)+" "+x.u+" "+x.n)===l)).filter(i=>i>=0);  // Zeile aus „Aus Zutaten berechnen“ → dort mit entfernen
+      if(fromCi.length){ci=ci.filter((x,i)=>!fromCi.includes(i));if(ci.length){calc(true);return}calc(false)}
+      if(!(base.v.k>=0))return;const er=zEst(rem),ea=zEst(add),pz=pzv(),d=c=>(ea[c]-er[c])/pz;
+      FV.forEach(([c,i])=>{const b=base.v[c];if(!isFinite(b))return;const v=Math.max(0,b+d(c));$(i).value=c==="k"||c==="p"?Math.round(v):String(Math.round(v*10)/10).replace(".",",")});
+      if(!rem.length&&!add.length){I.textContent="";return}const dk=Math.round(d("k")),nm=L=>L.map(l=>parseZ(l).map(x=>x.n).join(", ")).join(", ");
+      I.innerHTML='<b style="color:var(--accent)">Kalorien angepasst: '+(dk>0?"+":dk<0?"−":"±")+fmt(Math.abs(dk))+' kcal'+(pz>1?' pro Portion':'')+'</b> ('+[rem.length?"ohne "+esc(nm(rem)):"",add.length?"mit "+esc(nm(add)):""].filter(Boolean).join(", ")+')'+
+        (er.miss.length||ea.miss.length?'<br><span style="color:var(--warn)">Für „'+esc([...er.miss,...ea.miss].join("“, „"))+'“ kennt FitPlan keine Nährwerte – bitte dort selbst anpassen.</span>':'')};
+    $("fZ").addEventListener("input",()=>{clearTimeout(zT);zT=setTimeout(zUpd,600)});
+    FV.forEach(([c,i])=>$(i).addEventListener("input",()=>{clearTimeout(zT);rebase()}));  // von Hand geändert = neuer Ausgangswert
     const calc=fill=>{const L=$("rcl"),pz=pzv();L.innerHTML="";$("fZl").textContent="Zutaten – eine pro Zeile, mit Menge"+(pz>1?" (für alle "+pz+" Portionen)":"");
       const zl=x=>x.z||nf(x.a)+" "+x.u+" "+x.n;
       ci.forEach((x,i)=>{const row=el("div","row",'<div class="t">'+esc(zl(x))+'<div class="sm">'+mline(x.k,x.p,x.kh,x.fe)+'</div></div><button class="ic" aria-label="Entfernen">✕</button>');
         row.querySelector("button").onclick=()=>{ci.splice(i,1);const z=$("fZ"),ln=zl(x),ls=z.value.split("\n"),j=ls.findIndex(l=>l.trim()===ln);if(j>=0){ls.splice(j,1);z.value=ls.join("\n")}calc(true)};L.appendChild(row)});
       if(!ci.length){$("rcs").textContent="";return}
       const t={k:0,p:0,kh:0,fe:0,bs:0},has={};ci.forEach(x=>["k","p","kh","fe","bs"].forEach(c=>{if(x[c]!=null){t[c]+=x[c];has[c]=1}}));
-      if(fill){$("fK").value=Math.round(t.k/pz);$("fP").value=Math.round(t.p/pz);MK.forEach(([c])=>$("f_"+c).value=has[c]?String(Math.round(t[c]/pz*10)/10).replace(".",","):"");$("fErr").textContent=""}
+      if(fill){$("fK").value=Math.round(t.k/pz);$("fP").value=Math.round(t.p/pz);MK.forEach(([c])=>$("f_"+c).value=has[c]?String(Math.round(t[c]/pz*10)/10).replace(".",","):"");$("fErr").textContent="";rebase()}
       $("rcs").textContent="Zusammen "+fmt(t.k)+" kcal"+(pz>1?", also "+fmt(t.k/pz)+" kcal pro Portion":"")+(fill?" – oben eingetragen.":"")};
     calc(false);$("rcp").oninput=()=>calc(ci.length>0);
     $("rca").onclick=()=>{pickCb=x=>{ci.push(x);const z=$("fZ");z.value=(z.value.trim()?z.value.trim()+"\n":"")+(x.z||nf(x.a)+" "+x.u+" "+x.n);calc(true);toast(x.n+" hinzugefügt")};L2=true;foodSearch()};

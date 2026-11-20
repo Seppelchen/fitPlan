@@ -43,5 +43,16 @@ const FD=[
 ["Pizza Margherita",240,10,30,9,2,350,"1 Pizza"],
 ["Orangensaft",45,.7,9,.2,.2,200,"1 Glas","ml"],["Apfelschorle",24,0,5.5,0,0,300,"1 Glas","ml"],["Cola",42,0,10.6,0,0,330,"1 Dose","ml"],
 ["Cola zero / light",.3,0,0,0,0,330,"1 Dose","ml"],["Cappuccino (Milch 1,5 %)",31,2.2,3.2,1,0,150,"1 Tasse","ml"],
-["Latte macchiato (Milch 1,5 %)",35,2.5,3.5,1.1,0,300,"1 Glas","ml"],["Bier",43,.5,3,0,0,500,"1 Flasche","ml"],["Wein",83,.1,2.6,0,0,200,"1 Glas","ml"]
+["Latte macchiato (Milch 1,5 %)",35,2.5,3.5,1.1,0,300,"1 Glas","ml"],["Bier",43,.5,3,0,0,500,"1 Flasche","ml"],["Wein",83,.1,2.6,0,0,200,"1 Glas","ml"],
+// Zutaten fürs Kochen (auch für das Nachrechnen von Rezepten, wenn Zutaten wegfallen)
+["Rinderhack",215,20,0,15,0,125,""],["Gemischtes Hack",250,18,0,20,0,125,""],["Hähnchenbrust",110,24,0,1.5,0,150,""],["Putenbrust",105,24,0,1,0,150,""],
+["Schweineschnitzel",110,22,0,2,0,150,"1 Stück"],["Speckwürfel",400,13,0,39,0,30,""],["Kochschinken",110,19,1,3.5,0,20,"1 Scheibe"],["Bockwurst",270,12,.5,24,0,100,"1 Stück"],
+["Kochsahne 15 %",160,3,4,15,0,50,"","ml"],["Schlagsahne 30 %",290,2.4,3.2,30,0,50,"","ml"],["Saure Sahne",115,3,4,10,0,50,""],["Schmand",240,2.8,3.5,24,0,50,""],
+["Buttermilch",37,3.5,4,.5,0,200,"1 Glas","ml"],["Ziegenfrischkäse",290,17,1,24,0,50,""],["Gemüsebrühe",5,.3,.5,.2,0,250,"","ml"],
+["Gehackte Tomaten (Dose)",22,1.2,3.5,.2,1,400,"1 Dose"],["Tomatenmark",80,4.5,13,.5,3,15,"1 EL"],["Champignons",22,3,.5,.3,2,100,""],
+["Knoblauch",140,6,28,.1,2,4,"1 Zehe"],["Kartoffeln, roh",72,2,15,.1,2,100,"1 Stück"],["Lauch (Porree)",25,2,3,.3,2.3,150,""],["Rucola",25,2.6,2,.7,1.6,30,"1 Handvoll"],
+["Frühlingszwiebel",30,1.8,4.5,.5,2.5,15,"1 Stück"],["Mischgemüse (TK)",40,2.2,6,.4,3.5,150,""],["Wokgemüse (TK)",35,2,5,.3,3,150,""],["Sesam",570,18,10,50,12,5,"1 TL"],["Erbsen und Möhren (TK)",50,3.5,7,.4,4.5,100,""],
+["Weizenmehl",345,10,72,1,4,10,"1 EL"],["Weichweizengrieß",330,10,69,1,4,40,""],["Milchreis, trocken",350,7,78,.6,1.4,60,""],["Risottoreis, trocken",350,7,78,.6,1.4,75,""],
+["Speisestärke",350,.5,86,.1,.5,5,"1 TL"],["Backkakao",350,20,11,22,30,5,"1 TL"],["Rosinen",300,2.5,66,.5,5,15,"1 EL"],["Kokosraspel",650,6,6,62,14,10,"1 EL"],
+["Sojasoße",60,8,6,.1,0,15,"1 EL","ml"],["Currysoße (fertig)",120,1,25,2,.5,80,"","ml"],["Jägersoße (zubereitet)",40,.8,6,1.5,.3,125,"","ml"]
 ].map(a=>({n:a[0],k:a[1],p:a[2],kh:a[3],fe:a[4],bs:a[5],zu:null,sq:a[6]||null,sl:a[7]||"",u:a[8]||"g"}));

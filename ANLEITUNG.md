@@ -142,6 +142,17 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   Chili con Carne, Ziegenkäse-Risotto (alle unter Mittag), Kartoffel-Feta-Hack-Auflauf und Bratkartoffeln
   (Abend). Sie erscheinen nach dem Update von selbst.
 - Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
+- **Zutat weglassen:** Im Rezept (Tab Essen → Rezept antippen) eine Zutat antippen – sie wird durchgestrichen,
+  und Kalorien, Eiweiß, Kohlenhydrate, Fett und Ballaststoffe werden ohne sie neu berechnet („Ohne
+  Speckwürfel: −120 kcal“). Eingetragen wird dann z. B. „Bratkartoffeln (ohne Speckwürfel)“ mit den neuen
+  Werten. Nochmal antippen nimmt die Zutat wieder dazu. Das Rezept selbst bleibt unverändert.
+- **Zutat im Rezept löschen oder ergänzen:** Beim Bearbeiten im Feld „Zutaten“ eine Zeile löschen oder neu
+  schreiben – die Nährwerte oben passen sich nach einem Moment an, darunter steht z. B. „Kalorien angepasst:
+  −120 kcal (ohne Speckwürfel)“. Zeile wieder einfügen stellt die alten Werte her. Änderst du die Werte oben
+  von Hand, gelten sie als neue Grundlage.
+- Gerechnet wird mit den eingebauten Lebensmitteln und deinen gescannten Produkten, die Menge kommt aus der
+  Zeile („30 g“, „2 EL“, „½ Zwiebel“, „1 Ei“). Gewürze zählen 0. Kennt FitPlan eine Zutat nicht, steht das
+  in Orange dabei – dort bitte selbst anpassen.
 - Bei schon gegessenen Einträgen aus einem Rezept steht unter **Essen → Gegessen** rechts ein **📖**: antippen
   öffnet das Rezept mit Zubereitung. Im Eintrag selbst (antippen) gibt es oben **📖 Zutaten & Zubereitung**
   zum Aufklappen – die Mengen passen sich der gewählten Portion an.
