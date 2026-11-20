@@ -26,6 +26,8 @@ function renderPlan(){const W=weekKeys(),G=S.g.k,t=todayK();
       const b=el("button","",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+icOf(r)+" "+esc(r.n));b.onclick=()=>recipeDetail(r.id,{k,c});g.appendChild(b)});
     if(g.children.length)d.appendChild(g);if(e.children.length)d.appendChild(e);const pc=partnerChips(k);if(pc)d.appendChild(pc);P.appendChild(d)});
   renderPartner();syAutoPlan();renderShop()}
+// Beim Öffnen des Tabs Plan: immer der Zeitraum, in dem heute liegt (eigener Zeitraum behält seinen Rhythmus, z. B. Do–Fr)
+function planToNow(){const t=todayK();if(S.pr&&S.pr.s&&S.pr.n>0){const k=Math.floor(dayDiff(S.pr.s,t)/S.pr.n);if(k){S.pr.s=addDays(S.pr.s,k*S.pr.n);save()}}dt.value=t}
 const pnav=d=>{if(S.pr&&!prd().auto){S.pr.s=addDays(S.pr.s,d*S.pr.n);save();renderPlan()}else shift(d*7)};
 $("pwp").onclick=()=>pnav(-1);$("pwn").onclick=()=>pnav(1);
 $("pzr").onclick=()=>{const W=weekKeys(),t=todayK();

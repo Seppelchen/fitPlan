@@ -202,6 +202,9 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   Schnellknöpfe.
 - Die Einkaufsliste gilt immer für genau den gewählten Zeitraum. ‹ › blättert zum vorherigen
   bzw. nächsten Zeitraum gleicher Länge.
+- **Beim Öffnen des Tabs Plan** steht immer der aktuelle Zeitraum da – der, in dem heute liegt (auch das
+  Datum oben springt auf heute). Bei einem eigenen Zeitraum bleibt der Rhythmus erhalten (z. B. immer
+  Donnerstag bis Freitag), es wird nur zum Durchgang mit dem heutigen Tag gesprungen.
 
 - Ein geplantes Essen antippen: Du siehst Nährwerte, Zutaten und Zubereitung. Von dort kannst du
   es für diesen Tag eintragen, ein anderes Rezept wählen oder es aus dem Plan nehmen.
