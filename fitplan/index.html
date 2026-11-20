@@ -38,14 +38,19 @@
 <p class="sm" id="mlg" style="margin:6px 0 0"></p>
 </div>
 <div class="card">
-<div class="hd"><h2>Wasser</h2><span class="sm" id="hz"></span></div>
-<div class="big" id="hc">0 ml</div>
-<div class="bar" style="margin-top:6px"><div id="hbar"></div></div>
-<p class="sm" id="hrest" style="margin:6px 0 10px"></p>
-<div class="chips" id="hq"></div>
-<div style="display:flex;gap:8px"><input id="hi" type="number" inputmode="numeric" placeholder="Eigene Menge in ml"><button class="pri" id="hadd" style="white-space:nowrap">＋ ml</button></div>
-<p class="err" id="herr"></p>
-<div id="hlist" style="margin-top:6px"></div>
+<h2>Eintragen</h2>
+<input id="qn" placeholder="Was hast du gegessen? z. B. Apfel, Brötchen" autocomplete="off">
+<div id="qsug"></div>
+<div id="qaw" style="display:none;margin-top:8px"><label class="f" id="qal" style="margin-top:0">Menge</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="qa" type="number" inputmode="decimal" step="any" style="flex:1;min-width:90px"><div class="chips" id="qus" style="margin:0"></div><span class="sm" id="qau"></span></div><div class="chips" id="qac" style="margin:8px 0 0"></div><p class="sm" id="qai" style="margin:6px 0 0"></p></div>
+<div id="qx" style="display:none"><div class="g2" style="margin-top:8px"><input id="qk" type="number" inputmode="numeric" placeholder="kcal"><input id="qp" type="number" inputmode="numeric" placeholder="Eiweiß g"></div>
+<div class="g2" style="margin-top:8px"><input id="qkh" type="number" inputmode="numeric" placeholder="Kohlenhydr. g (optional)"><input id="qfe" type="number" inputmode="numeric" placeholder="Fett g (optional)"></div>
+<select id="qm" style="margin-top:8px" aria-label="Mahlzeit"></select>
+<button class="full" id="qadd" style="margin-top:8px">＋ Eintragen</button>
+<p class="err" id="qerr"></p></div>
+<div style="margin-top:10px"><div class="g2"><button id="fsrch">🔍 Lebensmittel suchen</button><button id="scan">📷 Barcode scannen</button></div>
+<p class="lb" style="margin:12px 0 6px">Favoriten und zuletzt gegessen</p>
+<div class="chips" id="rec" style="margin:0"></div>
+</div>
 </div>
 <div class="card">
 <div class="hd"><h2>Gegessen</h2><button id="cpy">↺ Von gestern</button></div>
@@ -53,10 +58,15 @@
 <div id="flist"></div>
 </div>
 <div class="card">
-<h2>Schnell eintragen</h2>
-<div class="g2"><button class="pri" id="fsrch">🔍 Lebensmittel suchen</button><button class="pri" id="scan">📷 Barcode scannen</button></div>
-<p class="lb" style="margin:12px 0 6px">Favoriten und zuletzt gegessen</p>
-<div class="chips" id="rec" style="margin:0"></div>
+<div class="hd"><h2>💧 Wasser</h2><span class="sm" id="hz"></span></div>
+<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b id="hc" style="font-size:20px">0 ml</b><span class="sm" id="hrest"></span></div>
+<div class="bar" style="margin-top:6px"><div id="hbar"></div></div>
+<div class="chips" id="hq" style="margin:10px 0 0"></div>
+<details id="hmore" style="margin-top:8px"><summary class="fold" id="hmsum">Eigene Menge & Verlauf</summary>
+<div style="display:flex;gap:8px;margin-top:8px"><input id="hi" type="number" inputmode="numeric" placeholder="Eigene Menge in ml"><button class="pri" id="hadd" style="white-space:nowrap">＋ ml</button></div>
+<p class="err" id="herr"></p>
+<div id="hlist" style="margin-top:6px"></div>
+</details>
 </div>
 <div class="card">
 <div class="hd"><h2>Rezepte</h2><div style="display:flex;gap:6px"><button id="rman">Verwalten</button><button class="pri" id="newR">＋ Neu</button></div></div>
@@ -65,17 +75,6 @@
 <div class="chips" id="rsub"></div>
 <input id="rq" placeholder="Rezept oder Zutat suchen" style="margin-bottom:4px">
 <div id="rlist"></div>
-</div>
-<div class="card">
-<h2>Freier Eintrag</h2>
-<input id="qn" placeholder="z. B. Apfel, Brötchen mit Käse" autocomplete="off">
-<div id="qsug"></div>
-<div id="qaw" style="display:none;margin-top:8px"><label class="f" id="qal" style="margin-top:0">Menge</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="qa" type="number" inputmode="decimal" step="any" style="flex:1;min-width:90px"><div class="chips" id="qus" style="margin:0"></div><span class="sm" id="qau"></span></div><div class="chips" id="qac" style="margin:8px 0 0"></div><p class="sm" id="qai" style="margin:6px 0 0"></p></div>
-<div class="g2" style="margin-top:8px"><input id="qk" type="number" inputmode="numeric" placeholder="kcal"><input id="qp" type="number" inputmode="numeric" placeholder="Eiweiß g"></div>
-<div class="g2" style="margin-top:8px"><input id="qkh" type="number" inputmode="numeric" placeholder="Kohlenhydr. g (optional)"><input id="qfe" type="number" inputmode="numeric" placeholder="Fett g (optional)"></div>
-<select id="qm" style="margin-top:8px" aria-label="Mahlzeit"></select>
-<button class="full" id="qadd" style="margin-top:8px">＋ Eintragen</button>
-<p class="err" id="qerr"></p>
 </div>
 </section>
 
@@ -190,14 +189,18 @@
 </div>
 <div class="card">
 <h2>Körpermaße</h2>
-<p class="sm" style="margin:0 0 4px">Alle 2–4 Wochen morgens messen, immer an derselben Stelle. Das zeigt Fortschritt, auch wenn die Waage mal stehen bleibt.</p>
+<p class="sm" id="mzlast" style="margin:0 0 6px"></p>
+<div class="g2" id="mzsum"></div>
+<details id="mzd" style="margin-top:10px"><summary class="fold">📏 Neue Messung eintragen</summary>
+<p class="sm" style="margin:8px 0 4px">Alle 2–4 Wochen morgens messen, immer an derselben Stelle. Das zeigt Fortschritt, auch wenn die Waage mal stehen bleibt.</p>
 <div class="g2" id="mzin"></div>
 <button class="full pri" id="mzs" style="margin-top:12px">Maße speichern</button>
 <p class="sm" style="margin:6px 0 0">Wird für das oben gewählte Datum gespeichert.</p>
 <p class="err" id="mze"></p>
-<p class="sm" id="mzlast" style="margin:12px 0 6px"></p>
-<div class="g2" id="mzsum"></div>
+</details>
+<details id="mzh" style="margin-top:6px"><summary class="fold" id="mzhs">Alle Messungen</summary>
 <div id="mzl" style="margin-top:8px"></div>
+</details>
 </div>
 </section>
 

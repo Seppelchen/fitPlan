@@ -155,3 +155,6 @@ label.ck{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:15px}l
 .fab b{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--warn);color:#fff;font-size:12px;line-height:22px;font-weight:700;display:none;box-shadow:0 0 0 2px var(--bg)}
 .fab:not(.x){display:none}body.vplan .fab{display:flex}body.kb .fab{display:none}  /* 🛒 nur im Tab Plan */
 ul.zt li{cursor:pointer;padding:2px 0}ul.zt li.off{text-decoration:line-through;opacity:.45}
+.slote{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.slote button{font-size:12px;padding:3px 10px;border-radius:999px;border-style:dashed;color:var(--muted)}
+.pfold{font-size:13px;color:var(--muted);text-align:left;padding:8px 12px;margin:2px 0 4px}
+details>summary.fold{cursor:pointer;font-size:14px;font-weight:600;color:var(--accent);padding:6px 0}

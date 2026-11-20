@@ -294,12 +294,13 @@ $("bkl").onclick=()=>{S.bsz=Date.now()+3*864e5;save();renderBackup()};
 
 
 /* ---------- Wasser ---------- */
-const HQ=[200,250,330,350,500];
+const HQ=[200,250,330,500];
 const waterSum=()=>day().h.reduce((a,h)=>a+h.ml,0);
 function renderWater(){const D=day(),G=S.g.ml,tot=waterSum();
   $("hc").textContent=fmt(tot)+" ml";$("hz").textContent="Ziel "+fmt(G)+" ml";
   $("hbar").style.width=Math.min(100,tot/G*100)+"%";$("hbar").style.background=tot>=G?"var(--ok)":"var(--accent)";
-  $("hrest").textContent=tot>=G?"Ziel erreicht! 💧":"Noch "+fmt(G-tot)+" ml bis zum Ziel";
+  $("hrest").textContent=tot>=G?"Ziel erreicht 💧":"noch "+fmt(G-tot)+" ml";
+  $("hmsum").textContent="Eigene Menge & Verlauf"+(D.h.length?" ("+D.h.length+")":"");
   const q=$("hq");q.innerHTML="";HQ.forEach(m=>{const b=el("button","","＋ "+m+" ml");b.onclick=()=>addWater(m);q.appendChild(b)});
   const L=$("hlist");L.innerHTML="";
   D.h.slice().reverse().forEach(h=>{const r=el("div","row",'<div class="t">'+fmt(h.ml)+' ml'+(h.t?' <span class="sm">· '+esc(h.t)+' Uhr</span>':'')+'</div><button class="ic" aria-label="Löschen">✕</button>');

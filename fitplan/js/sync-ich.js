@@ -198,6 +198,8 @@ function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||
   const fd=fdFind(q).map(o=>({n:o.n,o,per:100,u:o.u,sub:"100 "+o.u+": "+fmt(o.k)+" kcal"+(o.sq&&o.sl?" · "+o.sl+" "+fmt(o.sq)+" "+o.u:"")}));
   ks.filter(x=>!x.cv).forEach(x=>add(x,3));pr.concat(kp).forEach(x=>add(x,5));fd.forEach(x=>add(x,7));ks.filter(x=>x.cv).forEach(x=>add(x,8));return out}  // umgerechnete zuletzt: Grundnahrungsmittel kennen Stückgrößen
 (()=>{const qn=$("qn"),G=$("qsug"),QF=["qk","qp","qkh","qfe"];let sel=null,auto=false,un=null;
+  const qxv=()=>{$("qx").style.display=qn.value.trim()||sel?"":"none"};  // Felder für kcal & Co. erst, wenn ein Name dasteht
+  qn.addEventListener("input",qxv);
   const r1=v=>v==null?"":String(Math.round(v));
   // a = Menge in der gewählten Einheit, b = Menge in g/ml (bzw. Portionen)
   const vals=()=>{const a=num($("qa").value);if(!sel||!un||!(a>0))return null;const b=a*un.g,f=b/sel.per,o=sel.o,m=c=>o[c]==null?null:o[c]*f;return{a,b,k:o.k*f,p:o.p*f,kh:m("kh"),fe:m("fe"),bs:m("bs")}};
@@ -231,7 +233,7 @@ function qSuggest(q){const w=norm(q).split(/\s+/).filter(Boolean);if(!w.length||
   $("qa").addEventListener("input",()=>{if(sel&&un&&un.g>1&&num($("qa").value)>=30){const b=qUnits(sel).find(z=>z.g===1);if(b){un=b;units();toast("Als "+b.u+" gerechnet")}}chips();fill()});
   QF.forEach(i=>$(i).addEventListener("input",()=>{auto=false;if(sel)btn(i==="qk"&&$("qk").value?fmt(num($("qk").value))+" kcal":"")}));
   // Eintragen mit genauen Werten (inkl. Ballaststoffe), solange die Felder nicht von Hand geändert wurden
-  const reset=()=>{qn.value="";QF.forEach(i=>$(i).value="");drop();G.innerHTML="";$("qm").value=guessMeal()};
+  const reset=()=>{qn.value="";QF.forEach(i=>$(i).value="");drop();G.innerHTML="";$("qm").value=guessMeal();qxv()};
   $("qadd").addEventListener("click",e=>{const v=vals();
     if(sel&&auto&&v&&nrm(qn.value)===nrm(sel.n)){e.stopImmediatePropagation();
       const per1=sel.per===1,x={kh:v.kh,fe:v.fe,bs:v.bs,ic:sel.ic||sel.o.ic};if(per1)MK.forEach(([c])=>{x[c]=sel.o[c]});

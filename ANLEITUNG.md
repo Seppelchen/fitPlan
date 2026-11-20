@@ -118,6 +118,15 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
 - **Fortschritt → Wochenrückblick:** Das Balkendiagramm lässt sich umschalten auf
   **Kalorien**, **Mahlzeiten** oder **Nährstoffe**. Einen Tag antippen zeigt die genauen Werte.
 
+## Aufbau des Tabs Essen
+
+- Oben die Tagesübersicht, direkt darunter **Eintragen**: Namen tippen (mit Vorschlägen, siehe unten) –
+  die Felder für kcal, Eiweiß usw. erscheinen erst dann. Darunter **🔍 Lebensmittel suchen**,
+  **📷 Barcode scannen** und Favoriten/zuletzt gegessen als Schnellknöpfe.
+- Danach **Gegessen**, dann **💧 Wasser** kompakt: Stand, Balken und Schnellknöpfe (200/250/330/500 ml).
+  Eigene Menge und die Liste der Einträge stecken unter **Eigene Menge & Verlauf**.
+- Ganz unten die **Rezepte**.
+
 ## Freier Eintrag mit Vorschlägen
 
 - Ab 2 Buchstaben schlägt FitPlan unter dem Namensfeld passende Lebensmittel vor: schon Gegessenes (auch
@@ -185,6 +194,10 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   es für diesen Tag eintragen, ein anderes Rezept wählen oder es aus dem Plan nehmen.
 - Beim Auswählen öffnet das Antippen eines Rezepts erst die Vorschau, **＋** plant es direkt ein.
 - Bereits gegessene Mahlzeiten bekommen im Plan ein „✓ gegessen“.
+- **Übersichtlicher:** Tage vor heute stehen eingeklappt in einer Zeile („▸ Mo 16.11. – Do 19.11. · vorbei“),
+  antippen klappt sie auf. Heute und Morgen sind beschriftet. Leere Mahlzeiten sind nur kleine Knöpfe
+  („＋ Snack“), geplante Essen stehen als Kästen darüber. Blätterst du in eine ganz vergangene Woche,
+  ist alles aufgeklappt.
 
 ## Lebensmittel suchen
 
@@ -213,6 +226,9 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   5-kg-Etappen und dein Ziel erreichst. Im Diagramm zeigt eine gestrichelte Linie den weiteren
   Verlauf.
 - Berechnet wird aus den letzten 4 Wochen. Die Prognose erscheint ab etwa 2 Wochen Messungen.
+- Unter dem Diagramm stehen die letzten 5 Gewichte, **Alle … Einträge anzeigen** zeigt den Rest.
+- **Körpermaße:** Oben die letzte Messung mit Veränderung. Eingeben unter **📏 Neue Messung eintragen**,
+  ältere Messungen unter **Alle Messungen** – beides ist eingeklappt.
 
 ## Barcode-Scanner
 

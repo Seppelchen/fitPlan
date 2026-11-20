@@ -64,10 +64,12 @@ function renderWeight(){const ks=wKeys(),st=S.g.s,zl=S.g.z;const now=ks.length?S
         '<p class="sm" style="margin:4px 0 8px">'+(r<-1.2?"Du nimmst gerade mehr als 1 kg pro Woche ab – empfohlen sind etwa 0,5–1 kg. Achte auf genug Eiweiß und iss nicht zu wenig. ":"")+"Berechnet aus deinem Verlauf der letzten 4 Wochen – je regelmäßiger du wiegst, desto genauer.</p>"}}
   $("wtr").innerHTML='<div class="mc"><div class="sm">Trend pro Woche</div><div class="v"'+(r!=null?' style="color:'+(r<=0?'var(--ok)':'var(--warn)')+'"':'')+'>'+(r==null?"–":(r>0?"+":"")+d1(r)+" kg")+'</div></div><div class="mc"><div class="sm">Ziel '+d1(zl)+' kg voraussichtlich</div><div style="font-weight:600">'+fc+'</div></div>';
   const L=$("wlist");L.innerHTML=ks.length?"":'<p class="sm" style="margin:0">Noch kein Gewicht eingetragen.</p>';
-  ks.slice().reverse().forEach((k,j)=>{const pk=ks[ks.length-2-j],diff=pk?S.w[k]-S.w[pk]:0;
+  ks.slice().reverse().forEach((k,j)=>{if(j>=5&&!wAll)return;const pk=ks[ks.length-2-j],diff=pk?S.w[k]-S.w[pk]:0;
     const r=el("div","row",'<div class="t">'+new Date(k+"T12:00").toLocaleDateString("de-DE")+'</div><div>'+d1(S.w[k])+' kg'+(pk?' <span class="sm">('+(diff>0?"+":"")+d1(diff)+')</span>':'')+'</div><button class="ic" aria-label="Löschen">✕</button>');
     r.querySelector("button").onclick=()=>{const v=S.w[k];delete S.w[k];save();renderWeight();renderReview();toast("Gewicht gelöscht",()=>{S.w[k]=v;save();renderWeight();renderReview()})};L.appendChild(r)});
+  if(ks.length>5){const b=el("button","full",wAll?"Weniger anzeigen":"Alle "+ks.length+" Einträge anzeigen");b.style.marginTop="8px";b.onclick=()=>{wAll=!wAll;renderWeight()};L.appendChild(b)}
   drawChart()}
+let wAll=false;  // Gewichtsliste: sonst nur die letzten 5
 function drawChart(){const c=$("wch"),W=c.clientWidth,H=180;if(!W)return;const dpr=window.devicePixelRatio||1;c.width=W*dpr;c.height=H*dpr;const x=c.getContext("2d");x.scale(dpr,dpr);x.clearRect(0,0,W,H);
   const cs=getComputedStyle(document.documentElement),col=v=>cs.getPropertyValue(v).trim();let ks=wKeys();
   if(wr&&ks.length){const from=addDays(ks[ks.length-1],-(wr-1));ks=ks.filter(k=>k>=from)}
@@ -96,6 +98,7 @@ function renderMeasure(){const cur=S.m[dt.value]||{};
   $("mzin").innerHTML=MZ.map(([k,l])=>'<div><label class="f">'+l+' (cm)</label><input id="mz_'+k+'" inputmode="decimal" value="'+(cur[k]!=null?String(cur[k]).replace(".",","):"")+'"></div>').join("");
   MZ.forEach(([k])=>$("mz_"+k).oninput=()=>$("mze").textContent="");
   const ks=Object.keys(S.m).sort();
+  $("mzh").style.display=ks.length?"":"none";$("mzhs").textContent="Alle Messungen ("+ks.length+")";
   if(!ks.length){$("mzlast").textContent="Noch keine Maße eingetragen.";$("mzsum").innerHTML="";$("mzl").innerHTML="";return}
   const ago=dayDiff(ks[ks.length-1],todayK());
   $("mzlast").textContent="Letzte Messung: "+new Date(ks[ks.length-1]+"T12:00").toLocaleDateString("de-DE")+(ago>=28?" – Zeit für eine neue Messung":"");$("mzlast").style.color=ago>=28?"var(--warn)":"";
@@ -107,4 +110,4 @@ function renderMeasure(){const cur=S.m[dt.value]||{};
 $("mzs").onclick=()=>{const o={};let bad=false;MZ.forEach(([k])=>{const s=$("mz_"+k).value.trim();if(!s)return;const v=num(s);if(v>=20&&v<=250)o[k]=Math.round(v*10)/10;else bad=true});
   if(bad){$("mze").textContent="Bitte gültige Werte in cm eingeben (z. B. 104,5).";return}
   if(!Object.keys(o).length){$("mze").textContent="Gib mindestens ein Maß ein.";return}
-  S.m[dt.value]=o;save();renderMeasure();toast("Maße gespeichert")};
+  S.m[dt.value]=o;save();$("mzd").open=false;renderMeasure();toast("Maße gespeichert")};

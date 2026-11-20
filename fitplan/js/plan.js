@@ -6,17 +6,25 @@ const prd=()=>S.pr&&S.pr.s&&S.pr.n>0?S.pr:{s:iso(weekStart()),n:7,auto:1};
 const weekKeys=()=>{const p=prd();return Array.from({length:p.n},(_,i)=>addDays(p.s,i))};
 const ekK=()=>prd().s;
 const wdL=k=>new Date(k+"T12:00").toLocaleDateString("de-DE",{weekday:"long"});
-function renderPlan(){const W=weekKeys(),G=S.g.k;
+// Vergangene Tage des Zeitraums eingeklappt (eine Zeile), leere Mahlzeiten als kleine „＋ Frühstück“-Knöpfe
+let pPastOpen=false;
+function renderPlan(){const W=weekKeys(),G=S.g.k,t=todayK();
   const p=prd(),e=W[W.length-1],past=!p.auto&&e<todayK();
   $("pwt").textContent=p.auto?"Wochenplan · KW "+kw(W[0]):"Essensplan";
   $("pwr").textContent=wd(W[0])+" "+dd(W[0])+" – "+wd(e)+" "+dd(e)+(p.auto?"":" · "+W.length+" Tage")+(past?" · vorbei":"");
   $("pclr").textContent=p.auto?"Woche leeren":"Zeitraum leeren";
   const P=$("pdays");P.innerHTML="";
-  W.forEach(k=>{const pl=S.pl[k]||{},rs=CATS.map(c=>rById(pl[c])).filter(Boolean),tot=rs.reduce((a,r)=>a+r.k,0),sm=c=>rs.reduce((a,r)=>a+(r[c]||0),0);
-    const d=el("div","pd",'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="white-space:nowrap'+(k===dt.value?';color:var(--accent)':'')+'">'+wd(k)+' '+dd(k)+'</b><span class="sm" style="text-align:right'+(tot>G?';color:var(--warn)':'')+'">'+(tot?mline(tot,sm("p"),sm("kh"),sm("fe")):'')+'</span></div>');
+  const pastK=W.filter(k=>k<t),fold=pastK.length>0&&pastK.length<W.length;
+  if(fold){const n=pastK.reduce((a,k)=>a+CATS.filter(c=>rById((S.pl[k]||{})[c])).length,0);
+    const b=el("button","full pfold",(pPastOpen?"▾ ":"▸ ")+(pastK.length===1?wd(pastK[0])+" "+dd(pastK[0]):wd(pastK[0])+" "+dd(pastK[0])+" – "+wd(pastK[pastK.length-1])+" "+dd(pastK[pastK.length-1]))+" · vorbei"+(n?" · "+n+(n===1?" Essen":" Essen"):""));
+    b.onclick=()=>{pPastOpen=!pPastOpen;renderPlan()};P.appendChild(b)}
+  W.forEach(k=>{if(fold&&k<t&&!pPastOpen)return;const pl=S.pl[k]||{},rs=CATS.map(c=>rById(pl[c])).filter(Boolean),tot=rs.reduce((a,r)=>a+r.k,0),sm=c=>rs.reduce((a,r)=>a+(r[c]||0),0);
+    const d=el("div","pd",'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="white-space:nowrap'+(k===dt.value?';color:var(--accent)':'')+(k<t?';color:var(--muted)':'')+'">'+(k===t?'Heute · ':k===addDays(t,1)?'Morgen · ':'')+wd(k)+' '+dd(k)+'</b><span class="sm" style="text-align:right'+(tot>G?';color:var(--warn)':'')+'">'+(tot?mline(tot,sm("p"),sm("kh"),sm("fe")):'')+'</span></div>');
     const ate=(S.d[k]||{f:[]}).f;
-    const g=el("div","slots");CATS.forEach(c=>{const r=rById(pl[c]),ok=r&&ate.some(f=>f.n===r.n);const b=el("button",r?"":"e",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+(r?icOf(r)+" "+esc(r.n):"＋ wählen"));b.onclick=()=>r?recipeDetail(r.id,{k,c}):pickRecipe(k,c);g.appendChild(b)});
-    d.appendChild(g);const pc=partnerChips(k);if(pc)d.appendChild(pc);P.appendChild(d)});
+    const g=el("div","slots"),e=el("div","slote");CATS.forEach(c=>{const r=rById(pl[c]),ok=r&&ate.some(f=>f.n===r.n);
+      if(!r){const b=el("button","","＋ "+c);b.onclick=()=>pickRecipe(k,c);e.appendChild(b);return}
+      const b=el("button","",'<div class="sm">'+c+(ok?' <span style="color:var(--ok)">✓ gegessen</span>':'')+'</div>'+icOf(r)+" "+esc(r.n));b.onclick=()=>recipeDetail(r.id,{k,c});g.appendChild(b)});
+    if(g.children.length)d.appendChild(g);if(e.children.length)d.appendChild(e);const pc=partnerChips(k);if(pc)d.appendChild(pc);P.appendChild(d)});
   renderPartner();syAutoPlan();renderShop()}
 const pnav=d=>{if(S.pr&&!prd().auto){S.pr.s=addDays(S.pr.s,d*S.pr.n);save();renderPlan()}else shift(d*7)};
 $("pwp").onclick=()=>pnav(-1);$("pwn").onclick=()=>pnav(1);
