@@ -71,7 +71,7 @@ function parseZ(line){const segs=line.split(/,\s+/),lead=NUM.test(line.trim()),p
 function shopItems(full){let W=weekKeys();if(ekMode==="r"&&!full)W=W.filter(k=>k>=todayK());const A={};
   const add=(r,slot,depth,f)=>{f/=(r.pz||1);(r.z||[]).forEach(line=>{
     if(/^wie\s/i.test(line)&&depth<2){const t=S.R.find(x=>x.n.toLowerCase()===line.slice(4).trim().toLowerCase());if(t){add(t,slot,depth+1,f);return}}
-    parseZ(line).forEach(it=>{const key=(it.a!=null?it.u:"-")+"|"+it.n.toLowerCase();const o=A[key]||(A[key]={key,n:it.n,u:it.u,a:it.a!=null?0:null,s:new Set()});if(it.a!=null)o.a+=it.a*f;o.s.add(slot)})})};
+    parseZ(line).forEach(it=>{if(/^(kaltes\s+|warmes\s+|heißes\s+|lauwarmes\s+)?wasser$/i.test(it.n))return;const key=(it.a!=null?it.u:"-")+"|"+it.n.toLowerCase();const o=A[key]||(A[key]={key,n:it.n,u:it.u,a:it.a!=null?0:null,s:new Set()});if(it.a!=null)o.a+=it.a*f;o.s.add(slot)})})};
   W.forEach(k=>{const pl=S.pl[k]||{};CATS.forEach(c=>{const r=rById(pl[c]);if(r)add(r,k+c,0,1)})});
   return Object.values(A)}
 function shopLabel(o){if(o.a==null)return o.n;let a=o.a,u=o.u;if(u==="g"&&a>=1000){a/=1000;u="kg"}if(u==="ml"&&a>=1000){a/=1000;u="l"}
@@ -85,20 +85,20 @@ function renderShop(){renderShopList();renderShopMode();if(typeof shopFab==="fun
 /* Einkaufsliste nach Kategorien: gleiche Artikel aus allen Quellen (Plan, Plan der anderen, eigene Einträge,
    FamilyWall) ergeben eine Zeile, Mengen je Einheit addiert – „150 ml Milch“ + „350 ml Milch 1,5 %“ = „500 ml Milch“. */
 const SHX=/\b(fettarme?|frische?|kalte?|warme?|gekochte?|ungesüßte?|natur|light|bio|gemischt|tk)\b/g;
-function shopCn(n){const s=String(n).toLowerCase().replace(/\([^)]*\)/g," ").replace(/\d+(?:[.,]\d+)?\s*%/g," ").replace(SHX," ").replace(/\s+/g," ").trim();
+function shopCn(n){const s=String(n).toLowerCase().replace(/\([^)]*\)/g," ").replace(/\s+oder\s+.*$/,"").replace(/\btyp\s*\d+\b|\b(405|550|630|812|1050|1150)\b/g," ").replace(/\d+(?:[.,]\d+)?\s*%/g," ").replace(SHX," ").replace(/\s+/g," ").trim();
   return(s||String(n).toLowerCase()).split(" ").map(w=>w==="eier"?"ei":w.length>4&&/(en|ln|rn)$/.test(w)?w.slice(0,-1):w).join(" ")}
 // Reihenfolge wie im Supermarkt; geprüft wird in der Reihenfolge von SHC (z. B. „passierte Tomaten“ vor „Tomate“)
 const SHO=["Obst & Gemüse","Brot & Backwaren","Milchprodukte & Eier","Fleisch, Fisch & Tofu","Nudeln, Reis & Trockenware","Konserven & Soßen","Gewürze, Öl & Backen","Tiefkühl","Süßes & Snacks","Getränke","Haushalt & Drogerie"];
 const SHC=[["Haushalt & Drogerie",/spül|wasch|reinig|putz|toilettenpapier|klopapier|küchenrolle|küchenpapier|müllbeutel|müllsäcke|zahnpasta|zahnbürste|shampoo|duschgel|seife|deo|windel|taschentüch|alufolie|frischhaltefolie|backpapier|schwamm|batterie|kerze|tabs\b/],
   ["Tiefkühl",/tiefkühl|\btk\b|edamame|pommes|fischstäbchen|\beis\b|eiscreme|tiefgefroren/],
   ["Getränke",/wasser|saft|schorle|\bcola|limo|\bbier|\bwein\b|kaffee|\btee\b|sprudel|eistee/],
-  ["Konserven & Soßen",/passiert|tomatenmark|stückige tomate|gehackte tomate|geschälte tomate|kidney|\bmais\b|\bdose|soße|sauce|ketchup|senf|mayo|remoulade|brühe|\bfond|pesto|kokosmilch|apfelmus|gewürzgurke|essiggurke|sojasoße|sojasauce|dressing|marmelade|konfitüre|erdnussmus|nussmus|hummus/],
-  ["Gewürze, Öl & Backen",/salz(?!stange)|balsamico|kokosraspel|pfeffer|gewürz|paprikapulver|currypulver|\bcurry\b|zimt|muskat|oregano|thymian|rosmarin|kurkuma|kreuzkümmel|kümmel|chili|cayenne|majoran|lorbeer|öl\b|essig|zucker|honig|sirup|backpulver|natron|hefe|vanille|kakao|stärke|puderzucker|süßstoff|sesam|brühwürfel/],
+  ["Konserven & Soßen",/passiert|currypaste|sauerkraut|schwarzwurzel|rotkohl \(glas|tahin|kapern|tomatenmark|stückige tomate|gehackte tomate|geschälte tomate|kidney|\bmais\b|\bdose|soße|sauce|ketchup|senf|mayo|remoulade|brühe|\bfond|pesto|kokosmilch|apfelmus|gewürzgurke|essiggurke|sojasoße|sojasauce|dressing|marmelade|konfitüre|erdnussmus|nussmus|hummus/],
+  ["Gewürze, Öl & Backen",/salz(?!stange)|beifuß|piment|balsamico|kokosraspel|pfeffer|gewürz|paprikapulver|currypulver|\bcurry\b|zimt|muskat|oregano|thymian|rosmarin|kurkuma|kreuzkümmel|kümmel|chili|cayenne|majoran|lorbeer|öl\b|essig|zucker|honig|sirup|backpulver|natron|hefe|vanille|kakao|stärke|puderzucker|süßstoff|sesam|brühwürfel/],
   ["Süßes & Snacks",/schoko|keks|\bchips|gummi|bonbon|riegel|praline|nougat|popcorn|salzstangen|kekse/],
   ["Milchprodukte & Eier",/(^|\s)ei$|(^|\s)eier$|milch(?!reis)|joghurt|quark|skyr|käse|feta|halloumi|ricotta|mascarpone|burrata|emmentaler|cheddar|mozzarella|parmesan|gouda|sahne|schmand|butter|kefir|margarine|crème|creme|haferdrink|sojadrink|mandeldrink|drink\b|ayran/],
-  ["Fleisch, Fisch & Tofu",/fleisch|hack|hähnchen|huhn|hühn|pute|\brind|schwein|schnitzel|wurst|würstchen|salami|schinken|speck|bacon|lachs|fisch|thunfisch|garnele|shrimp|filet|geschnetzelt|gyros|tofu|tempeh|sojaschnetzel|seitan|frikadelle|leberkäse|kassler|kotelett|steak|jagdwurst/],
+  ["Fleisch, Fisch & Tofu",/fleisch|hack|hähnchen|huhn|hühn|pute|\brind|schwein|schnitzel|wurst|würstchen|salami|schinken|speck|bacon|lachs|fisch|thunfisch|garnele|shrimp|filet|geschnetzelt|gyros|tofu|tempeh|falafel|sojaschnetzel|seitan|\bente|keule|leber|zunge|lamm|kalb|frikadelle|leberkäse|kassler|kotelett|steak|jagdwurst/],
   ["Brot & Backwaren",/brot|brötchen|toast|baguette|brezel|croissant|knäcke|wrap|tortilla|fladen|semmel|kuchen|zwieback|laugen/],
-  ["Nudeln, Reis & Trockenware",/nudel|pasta|spaghetti|penne|fusilli|lasagne|reis|milchreis|couscous|bulgur|quinoa|hafer|flocken|müsli|granola|mehl|grieß|polenta|linse|kichererbse|chia|leinsamen|nüsse|nuss|mandel|walnuss|cashew|erdnüss|samen|kerne|rosinen|datteln|spätzle|gnocchi|cornflakes/],
+  ["Nudeln, Reis & Trockenware",/nudel|pasta|spaghetti|penne|fusilli|lasagne|reis|kloß|klöße|knödel|paniermehl|milchreis|couscous|bulgur|quinoa|hafer|flocken|müsli|granola|mehl|grieß|polenta|linse|kichererbse|chia|leinsamen|nüsse|nuss|mandel|walnuss|cashew|erdnüss|samen|kerne|rosinen|datteln|spätzle|gnocchi|cornflakes/],
   ["Obst & Gemüse",/apfel|äpfel|banane|birne|orange|mandarine|clementine|zitrone|limette|kiwi|beere|traube|ananas|mango|melone|pfirsich|nektarine|pflaume|kirsche|avocado|tomate|gurke|paprika|karotte|möhre|brokkoli|blumenkohl|zucchini|spinat|salat|rucola|kohl|zwiebel|knoblauch|lauch|porree|sellerie|kartoffel|pilz|champignon|aubergine|kürbis|radieschen|ingwer|petersilie|basilikum|schnittlauch|dill|koriander|minze|kräuter|obst|gemüse|\bmais|erbse|bohne|fenchel|spargel|rote bete|feldsalat|eisberg|grapefruit|feige|rhabarber|physalis|granatapfel|süßkartoffel|kresse|kohlrabi/]];
 const shopCat=n=>{const s=String(n).toLowerCase().replace(/ohne zucker|ohne salz/g,"");for(const [c,re] of SHC)if(re.test(s))return c;return"Sonstiges"};
 // Alle Einträge aller Quellen → Kategorien mit zusammengefassten Zeilen [{t, items:[{label,sub,c,set(v),del()}]}]

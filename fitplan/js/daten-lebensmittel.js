@@ -52,7 +52,19 @@ const FD=[
 ["Gehackte Tomaten (Dose)",22,1.2,3.5,.2,1,400,"1 Dose"],["Tomatenmark",80,4.5,13,.5,3,15,"1 EL"],["Champignons",22,3,.5,.3,2,100,""],
 ["Knoblauch",140,6,28,.1,2,4,"1 Zehe"],["Kartoffeln, roh",72,2,15,.1,2,100,"1 Stück"],["Lauch (Porree)",25,2,3,.3,2.3,150,""],["Rucola",25,2.6,2,.7,1.6,30,"1 Handvoll"],
 ["Frühlingszwiebel",30,1.8,4.5,.5,2.5,15,"1 Stück"],["Mischgemüse (TK)",40,2.2,6,.4,3.5,150,""],["Wokgemüse (TK)",35,2,5,.3,3,150,""],["Sesam",570,18,10,50,12,5,"1 TL"],["Erbsen und Möhren (TK)",50,3.5,7,.4,4.5,100,""],
-["Weizenmehl",345,10,72,1,4,10,"1 EL"],["Weichweizengrieß",330,10,69,1,4,40,""],["Milchreis, trocken",350,7,78,.6,1.4,60,""],["Risottoreis, trocken",350,7,78,.6,1.4,75,""],
+["Weizenmehl",345,10,72,1,4,10,"1 EL"],["Altbrot (vom Vortag)",240,8,48,1.5,5,30,""],["Weichweizengrieß",330,10,69,1,4,40,""],["Milchreis, trocken",350,7,78,.6,1.4,60,""],["Risottoreis, trocken",350,7,78,.6,1.4,75,""],
 ["Speisestärke",350,.5,86,.1,.5,5,"1 TL"],["Backkakao",350,20,11,22,30,5,"1 TL"],["Rosinen",300,2.5,66,.5,5,15,"1 EL"],["Kokosraspel",650,6,6,62,14,10,"1 EL"],
-["Sojasoße",60,8,6,.1,0,15,"1 EL","ml"],["Currysoße (fertig)",120,1,25,2,.5,80,"","ml"],["Jägersoße (zubereitet)",40,.8,6,1.5,.3,125,"","ml"]
+["Sojasoße",60,8,6,.1,0,15,"1 EL","ml"],
+["Aubergine",20,1.2,2.5,.2,2.8,300,"1 Stück"],["Hokkaido-Kürbis",40,1.7,8,.2,2.5,300,""],["Rote Bete (gekocht)",40,1.5,8,.1,2.5,150,""],
+["Spitzkohl",30,1.5,4.5,.3,2.5,200,""],["Grüne Bohnen",30,2,5,.2,2,150,""],["Weiße Bohnen (Dose, abgetropft)",90,6.5,12,.5,6,120,""],
+["Tellerlinsen, trocken",330,24,48,1.5,15,50,""],["Bulgur, trocken",340,12,70,1.5,8,60,""],["Polenta (Maisgrieß), trocken",350,8,75,1.5,4,60,""],
+["Gnocchi (Kühlregal)",160,4,34,.5,1.5,200,""],["Spätzle (Kühlregal)",165,6,31,2,1.5,200,""],["Reisnudeln, trocken",360,6,82,.6,1.5,60,""],
+["Vollkorn-Tortilla",300,9,48,7,6,60,"1 Stück"],["Fladenbrot",260,9,52,1.5,2.5,80,""],["Ricotta",140,9,3.5,10,0,60,""],["Emmentaler",380,28,0,30,0,30,""],
+["Tahin",600,18,10,53,9,15,"1 EL"],["Pesto (grün)",450,5,6,45,2,15,"1 EL"],["Oliven",140,1,1,14,3,30,""],["Datteln",280,2,64,.4,8,8,"1 Stück"],
+["Ahornsirup",260,0,65,0,0,10,"1 TL"],["Rote Currypaste",100,2,12,5,2,15,"1 EL"],
+["Paniermehl",360,10,72,2,4,30,""],["Buchweizenmehl",340,11,70,2,6,50,""],["Lasagneplatten, trocken",350,12,70,1.5,3,60,""],["Baguette",260,8,52,1,3,60,""],
+["Pitabrot",260,9,52,1.5,2.5,60,"1 Stück"],["Hähnchenkeule (mit Knochen)",150,14,0,10,0,250,"1 Stück"],["Entenkeule (mit Knochen)",200,13,0,16,0,300,"1 Stück"],
+["Rinderleber",125,20,4,3.5,0,150,""],["Rinderzunge",220,16,0,17,0,150,""],["Wiener Würstchen",270,12,1,24,0,50,"1 Stück"],
+["Thunfisch (Dose, im eigenen Saft)",110,25,0,1,0,150,"1 Dose"],["Kartoffelklöße (fertig)",105,2,22,.5,1.5,90,"1 Stück"],["Sauerkraut",20,1.5,1,.3,3,200,""],
+["Schwarzwurzeln (Glas)",30,1,4,.3,3,200,""],["Rotkohl (Glas)",60,1,12,.5,2.5,150,""],["Currysoße (fertig)",120,1,25,2,.5,80,"","ml"],["Jägersoße (zubereitet)",40,.8,6,1.5,.3,125,"","ml"]
 ].map(a=>({n:a[0],k:a[1],p:a[2],kh:a[3],fe:a[4],bs:a[5],zu:null,sq:a[6]||null,sl:a[7]||"",u:a[8]||"g"}));

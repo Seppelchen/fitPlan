@@ -64,7 +64,7 @@ function undoDel(arr,i,label,re){if(i<0)return;const x=arr.splice(i,1)[0];save()
   toast(label+" gelöscht",()=>{arr.splice(Math.min(i,arr.length),0,x);save();re()})}
 
 const rMac=n=>{const m=RM[n];return m?{kh:m[0],fe:m[1],bs:m[2]}:{kh:null,fe:null,bs:null}};
-const mkR=r=>({id:uid(),c:r[0],n:r[1],k:r[2],p:r[3],...rMac(r[1]),ic:RI[r[1]],t:r[4],z:r[5].slice(),s:r[6],tg:r[7]||""});
+const mkR=r=>({id:uid(),c:r[0],n:r[1],k:r[2],p:r[3],...rMac(r[1]),ic:RI[r[1]],t:r[4],z:r[5].slice(),s:r[6],tg:r[7]||"",...(r[8]>1?{pz:r[8]}:{})});  // r[8] = Portionen (Teig, Brot …)
 function defR(){return RB.map(mkR)}
 function fix(){
   if(!S||typeof S!=="object")S={};
@@ -72,7 +72,7 @@ function fix(){
   // Einmalig: Standardrezepte vegetarisch (nur gebratener Lachs erlaubt, kein Räucherlachs) und ohne Pilze – gleiche ID, damit der Wochenplan erhalten bleibt
   if((S.veg||0)<2&&Array.isArray(S.R)){S.R.forEach(r=>{const nn=VEG[r.n];const row=nn&&RB.find(x=>x[1]===nn);if(row&&!S.R.some(y=>y!==r&&y.n===nn)){const id=r.id;Object.assign(r,mkR(row),{id});delete r.ci;delete r.pz}});S.veg=2}
   // Neue mitgelieferte Rezepte je Version einmalig ergänzen (gelöschte kommen nicht zurück)
-  const RBV=[[2,RB2],[3,RB3],[4,RB4],[5,RB5]],top=RBV[RBV.length-1][0];
+  const RBV=[[2,RB2],[3,RB3],[4,RB4],[5,RB5],[6,RB6],[7,RB7]],top=RBV[RBV.length-1][0];
   if(!Array.isArray(S.R)){S.R=defR();S.rbv=top;S.veg=2}
   if((S.rbv||1)<top){const have=new Set(S.R.map(r=>r.n.toLowerCase()));RBV.forEach(([v,L])=>{if(v>(S.rbv||1))L.forEach(r=>{if(!have.has(r[1].toLowerCase()))S.R.push(mkR(r))})});S.rbv=top}
   S.R.forEach(r=>{r.id=r.id||uid();if(!Array.isArray(r.z)){const d=RB.find(x=>x[1]===r.n);if(d){r.t=d[4];r.z=d[5].slice();r.s=d[6];r.tg=d[7]||""}else{r.z=[];r.s=r.s||"";r.t=r.t||"";r.tg=r.tg||""}}

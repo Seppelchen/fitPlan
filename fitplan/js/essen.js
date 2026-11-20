@@ -151,14 +151,20 @@ function scaleZ(line,q){if(q===1)return line;
    Damit Kalorien & Co. neu berechnet werden, wenn eine Zutat wegfällt (Rezept ansehen) oder im Rezept gelöscht/
    ergänzt wird (Rezept bearbeiten). Grundlage: Grundnahrungsmittel (FD) und eigene Produkte, Mengen aus der Zeile
    („150 g“, „2 EL“, „1 Stück“, „½ Zwiebel“). Gewürze zählen 0. zEst → {k,p,kh,fe,bs,miss:[unbekannt],hit:[erkannt]} */
-const ZZERO=/salz|pfeffer|gewürz|zimt|curry(?!soße|sauce)|chili|paprikapulver|kreuzkümmel|kümmel|kurkuma|muskat|oregano|thymian|rosmarin|majoran|lorbeer|vanille|backpulver|natron|essig|zitronensaft|kräuter|petersilie|basilikum|dill|schnittlauch|minze|koriander|wasser|süßstoff|ingwer|zitrone|limette|knoblauch|brühe|kresse|frühlingszwiebel|balsamico|senf/i;
-function zFood(n){const l=norm(n).replace(/[()]/g," ").replace(/sauce/g,"sosse").trim();if(!l)return null;const pool=[...Object.values(S.bc).filter(o=>o&&o.n&&o.k!=null),...FD];
+const ZZERO=/salz|pfeffer|gewürz|zimt|curry(?!soße|sauce|paste)|chili|paprikapulver|kreuzkümmel|kümmel|kurkuma|muskat|oregano|thymian|rosmarin|majoran|lorbeer|vanille|backpulver|natron|essig|zitronensaft|kräuter|petersilie|basilikum|dill|schnittlauch|minze|koriander|wasser|hefe|kapern|piment|beifuß|bohnenkraut|worcester|süßstoff|ingwer|zitrone|limette|knoblauch|brühe|kresse|frühlingszwiebel|balsamico|senf/i;
+// raw = ganze Zeile: „(trocken)“/„gekocht“ entscheidet bei Nudeln, Reis & Co. (Standard: trocken)
+const zTok=o=>norm(o.n).split(/[\s,(/]+/)[0];
+// Kandidaten: ganzer Name, „X oder Y“, Einzahl („Möhren“ → „Möhre“)
+function zFood(n,raw){const pre=/gekocht/i.test(raw||"")?"gekocht":/\broh\b/i.test(raw||"")?"roh":"trocken";
+  // unter gleichnamigen Einträgen („Nudeln, gekocht“/„Nudeln, trocken“) die passende Form wählen – nicht „Mais“ → „Polenta (Maisgrieß), trocken“
+  const pick=h=>{const t=zTok(h[0]);return h.filter(o=>zTok(o)===t).find(o=>norm(o.n).includes(pre))||h[0]};const l=norm(n).replace(/[()]/g," ").replace(/sauce/g,"sosse").trim();if(!l)return null;const pool=[...Object.values(S.bc).filter(o=>o&&o.n&&o.k!=null),...FD];
   const ex=pool.find(o=>norm(o.n)===l);if(ex)return ex;
   if(/(^|[\s-])öl$|öl\b/.test(n.toLowerCase()))return FD.find(o=>/rapsöl/i.test(o.n));
-  for(const c of [l,...l.split(/\s+oder\s+/)]){const h=fdFind(c.replace(/-$/,""));if(h.length)return h[0]}
+  for(const c of [l,...l.split(/\s+oder\s+/),l.replace(/e?n$/,""),l.replace(/n$/,"")]){const h=fdFind(c.replace(/-$/,""));if(h.length)return pick(h)}
   const ws=l.split(/[\s,/-]+/).filter(w=>w.length>=3);  // „Kochschinkenwürfel“ → Kochschinken, „Babyspinat“ → Spinat
-  let best=null;FD.forEach(o=>{const f=norm(o.n).split(/[\s,(/]+/)[0];if(f.length>=4&&ws.some(w=>w.includes(f))&&(!best||f.length>norm(best.n).split(/[\s,(/]+/)[0].length))best=o});if(best)return best;
-  ws.sort((a,b)=>b.length-a.length);for(const w of ws){const h=fdFind(w);if(h.length)return h[0]}return null}
+  const cs=FD.filter(o=>{const f=zTok(o);return f.length>=4&&ws.some(w=>w.includes(f))});
+  if(cs.length){const m=Math.max(...cs.map(o=>zTok(o).length));return pick(cs.filter(o=>zTok(o).length===m))}
+  ws.sort((a,b)=>b.length-a.length);for(const w of ws){const h=fdFind(w);if(h.length)return pick(h)}return null}
 function zGrams(it,o){const a=it.a,u=it.u;if(a==null)return null;if(u==="g"||u==="ml")return a;if(u==="Prise")return 0;
   const m=String(o.sl||"").match(/^(\d+|½)?\s*(Stück|Scheibe|EL|TL|Dose|Zehe|Handvoll|Becher|Kugel|Glas)/),per=m&&o.sq?o.sq/(m[1]==="½"?.5:+m[1]||1):null,unit=m&&m[2];
   if(u==="EL")return a*(unit==="EL"?per:unit==="TL"?per*3:12);if(u==="TL")return a*(unit==="TL"?per:unit==="EL"?per/3:4);
@@ -168,7 +174,7 @@ function zEst(lines){const t={k:0,p:0,kh:0,fe:0,bs:0,miss:[],hit:[]};
   (Array.isArray(lines)?lines:[lines]).forEach(line=>{
     if(/^wie\s/i.test(line)){const r=S.R.find(x=>nrm(x.n)===nrm(line.slice(4)));if(!r){t.miss.push(line);return}  // „wie Gemüse-Omelett“ = Werte dieses Rezepts
       t.k+=r.k;t.p+=r.p;MK.forEach(([c])=>{t[c]+=r[c]||0});t.hit.push(r.n);return}
-    parseZ(line).forEach(it=>{if(ZZERO.test(it.n)&&!/öl/i.test(it.n)){t.hit.push(it.n);return}const o=zFood(it.n),g=o&&zGrams(it,o);
+    parseZ(line).forEach(it=>{if(ZZERO.test(it.n)&&!/öl/i.test(it.n)){t.hit.push(it.n);return}const o=zFood(it.n,line),g=o&&zGrams(it,o);
       if(!o||g==null){t.miss.push(it.n);return}const f=g/100;t.k+=o.k*f;t.p+=o.p*f;MK.forEach(([c])=>{t[c]+=(o[c]||0)*f});t.hit.push(it.n)})});
   return t}
 // Zutaten weglassen (Rezept ansehen): Zeilen r.z[i] für i in off → Abzug je Portion

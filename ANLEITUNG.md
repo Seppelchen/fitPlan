@@ -141,6 +141,16 @@ Flugmodus an → FitPlan erneut über das Icon öffnen. Die App startet trotzdem
   Kaiserschmarren, Currywurst mit Currysoße und Kartoffeln, Milchreis, Geflügel-Geschnetzeltes mit Reis,
   Chili con Carne, Ziegenkäse-Risotto (alle unter Mittag), Kartoffel-Feta-Hack-Auflauf und Bratkartoffeln
   (Abend). Sie erscheinen nach dem Update von selbst.
+- **60 weitere vegetarische Rezepte** – je 20 für Frühstück (süß und herzhaft), Mittag und Abend, z. B.
+  Bircher-Müsli, Tofu-Rührei, Gnocchi-Tomaten-Pfanne, Käsespätzle light, Kürbissuppe, Falafel-Bowl,
+  Ofen-Aubergine mit Tahin, Weiße-Bohnen-Shakshuka, Minestrone.
+- **Gerichte aus der Familien-Essensliste** (56), z. B. Würzfleisch, Flammkuchen, Cordon bleu, Königsberger
+  Klopse, Lasagne, Frikadellen, Döner, Carbonara, Entenkeule mit Klößen und Rotkohl, Senfeier, Falscher
+  Hase, Schinkenfleckerl, Hefeklöße mit Vanillesoße.
+- **Eigene Brot- und Teigrezepte** mit Portionen: Milchbrot mit Mehlkochstück (30 Scheiben), Pizzateig mit
+  langer kalter Gare (3 Teiglinge), Pizzateig für 6 Pizzen, Weizenbrötchen mit Poolish (6 Stück),
+  Knoblauch-Käse-Brot mit Brühstück (10 Portionen). Die Nährwerte gelten je Portion.
+- Die Nährwerte der neuen Rezepte rechnet FitPlan aus den Zutaten aus (1 Portion, Gewürze zählen 0).
 - Jedes Rezept zeigt die Zubereitung als nummerierte Schritte.
 - **Zutat weglassen:** Im Rezept (Tab Essen → Rezept antippen) eine Zutat antippen – sie wird durchgestrichen,
   und Kalorien, Eiweiß, Kohlenhydrate, Fett und Ballaststoffe werden ohne sie neu berechnet („Ohne
